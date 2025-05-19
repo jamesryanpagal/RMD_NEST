@@ -15,6 +15,10 @@ import {
 } from "src/middleware/auth/auth.middleware";
 import { JwtAuthService } from "src/services/jwt/jwt.service";
 import { MtzService } from "src/services/mtz/mtz.service";
+import {
+  JwtStrategyService,
+  RefreshJwtStrategyService,
+} from "src/services/strategy/strategy.service";
 
 @Module({
   controllers: [AuthController],
@@ -25,6 +29,8 @@ import { MtzService } from "src/services/mtz/mtz.service";
     ArgonService,
     JwtAuthService,
     MtzService,
+    JwtStrategyService,
+    RefreshJwtStrategyService,
   ],
 })
 export class AuthModule implements NestModule {

@@ -1,9 +1,9 @@
-import { User } from "generated/prisma";
+import { UserFullDetailsProps } from "src/type";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
+      user?: UserFullDetailsProps;
       id?: string;
     }
   }
