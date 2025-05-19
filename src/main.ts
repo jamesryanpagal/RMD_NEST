@@ -1,14 +1,16 @@
-import { config, GlobalValidationPipes } from './config';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { config, GlobalValidationPipes } from "./config";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
 import {
   ExceptionService,
   ResponseService,
-} from './services/interceptor/interceptor.service';
+} from "./services/interceptor/interceptor.service";
+import * as cookieParser from "cookie-parser";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors([config.dev_cors]);
+  app.use(cookieParser());
+  app.enableCors({ origin: config.client, credentials: true });
   app.setGlobalPrefix(config.global_prefix);
   app.useGlobalPipes(GlobalValidationPipes);
   app.useGlobalInterceptors(new ResponseService());

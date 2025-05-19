@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Lot" ADD COLUMN     "sqm" DOUBLE PRECISION;

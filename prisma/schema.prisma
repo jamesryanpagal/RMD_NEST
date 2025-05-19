@@ -56,9 +56,18 @@ enum PAYMENT_SCHEDULE {
   ANNUAL
 }
 
+enum PAYMENT_TYPE {
+  CASH
+  INSTALLMENT
+}
+
+enum PLATFORM {
+  WEB
+  MOBILE
+}
+
 model User {
-  id         Int     @default(autoincrement())
-  userId     String  @id @default(cuid())
+  id         String  @id @default(cuid())
   firstName  String
   middleName String?
   lastName   String
@@ -78,8 +87,9 @@ model User {
 
   role ROLE
 
-  admin     Admin?
-  secretary Secretary?
+  admin       Admin?
+  secretary   Secretary?
+  authSession AuthSession[]
 
   status STATUS @default(ACTIVE)
 
@@ -88,14 +98,31 @@ model User {
   dateDeleted DateTime?
 }
 
+model AuthSession {
+  id         String  @id @default(cuid())
+  userId     String
+  token_hash String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiration DateTime?
+
+  created_by  String?
+  modified_by String?
+  deleted_by  String?
+
+  created_date  DateTime  @default(now())
+  modified_date DateTime  @updatedAt
+  deleted_date  DateTime?
+}
+
 model Admin {
-  id           Int     @default(autoincrement())
-  adminId      String  @id @default(cuid())
+  id           String  @id @default(cuid())
   userId       String  @unique
   isSuperAdmin Boolean @default(false)
   accessLevel  Int[]
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -103,12 +130,11 @@ model Admin {
 }
 
 model Secretary {
-  id          Int    @default(autoincrement())
-  secretaryId String @id @default(cuid())
+  id          String @id @default(cuid())
   userId      String @unique
   accessLevel Int[]
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -116,8 +142,7 @@ model Secretary {
 }
 
 model Client {
-  id            Int     @default(autoincrement())
-  clientId      String  @id @default(cuid())
+  id            String  @id @default(cuid())
   firstName     String
   middleName    String?
   lastName      String
@@ -134,19 +159,33 @@ model Client {
   region      String
   zip         String?
 
-  block         String
-  lot           Int[]
-  sqm           Float
-  sqmPrice      Float
-  downPayment   Float
-  terms         Int
-  miscellaneous MISCELLANEOUS
-
-  agent      String
-  commission COMMISSION
-
   project UserProject[]
   payment Payment[]
+
+  status STATUS @default(ACTIVE)
+
+  dateCreated DateTime   @default(now())
+  dateUpdated DateTime   @updatedAt
+  dateDeleted DateTime?
+  Contract    Contract[]
+}
+
+model Project {
+  id          String  @id @default(cuid())
+  projectName String
+  description String?
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  client UserProject[]
+  phase  Phase[]
 
   status STATUS @default(ACTIVE)
 
@@ -155,15 +194,22 @@ model Client {
   dateDeleted DateTime?
 }
 
-model Project {
-  id          Int    @default(autoincrement())
-  projectId   String @id @default(cuid())
-  clientId    String
-  projectName String
+model Contract {
+  id       String @id @default(cuid())
+  clientId String
+  lotId    String
 
-  payment Payment[]
-  client  UserProject[]
-  phase   Phase[]
+  sqmPrice      Float
+  downPayment   Float
+  terms         Int
+  miscellaneous MISCELLANEOUS
+  agent         String
+  commission    COMMISSION
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lot    Lot    @relation(fields: [lotId], references: [id], onDelete: Cascade)
+
+  paymentType PAYMENT_TYPE
 
   status STATUS @default(ACTIVE)
 
@@ -173,14 +219,13 @@ model Project {
 }
 
 model Phase {
-  id        Int    @default(autoincrement())
-  projectId String @unique
-  phaseId   String @id @default(cuid())
+  id        String @id @default(cuid())
+  projectId String
 
   title  String
   status PHASE_STATUS @default(ACTIVE)
 
-  project Project @relation(fields: [projectId], references: [projectId])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   block   Block[]
 
   dateCreated DateTime  @default(now())
@@ -189,14 +234,13 @@ model Phase {
 }
 
 model Block {
-  id      Int    @default(autoincrement())
-  blockId String @id @default(cuid())
-  phaseId String @unique
+  id      String @id @default(cuid())
+  phaseId String
   title   String
 
   status STATUS @default(ACTIVE)
 
-  phase Phase @relation(fields: [phaseId], references: [phaseId])
+  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
   lot   Lot[]
 
   dateCreated DateTime  @default(now())
@@ -205,14 +249,15 @@ model Block {
 }
 
 model Lot {
-  id      Int    @default(autoincrement())
-  lotId   String @id @default(cuid())
-  blockId String @unique
+  id      String @id @default(cuid())
+  blockId String
   title   String
+  sqm     Float?
 
   status STATUS @default(ACTIVE)
 
-  block Block @relation(fields: [blockId], references: [blockId])
+  block    Block      @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  contract Contract[]
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -231,8 +276,7 @@ model Payment {
   referenceNumber String
   paymentSchedule PAYMENT_SCHEDULE
 
-  project Project @relation(fields: [projectId], references: [projectId])
-  client  Client  @relation(fields: [clientId], references: [clientId])
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   status STATUS @default(ACTIVE)
 
@@ -244,10 +288,10 @@ model Payment {
 // JUNCTION TABLE
 model UserProject {
   clientId String @unique
-  client   Client @relation(fields: [clientId], references: [clientId])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   projectId String  @unique
-  project   Project @relation(fields: [projectId], references: [projectId])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@id([clientId, projectId])
 }
