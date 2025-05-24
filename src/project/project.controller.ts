@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { ProjectService } from "./project.service";
 import {
@@ -18,7 +19,10 @@ import {
   UpdatePhaseDto,
   UpdateProjectDto,
 } from "./dto";
+import { AuthGuard } from "@nestjs/passport";
+import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("projects")
 export class ProjectController {
   constructor(private projectService: ProjectService) {}

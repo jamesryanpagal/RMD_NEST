@@ -159,15 +159,15 @@ model Client {
   region      String
   zip         String?
 
-  project UserProject[]
-  payment Payment[]
+  project  UserProject[]
+  payment  Payment[]
+  contract Contract[]
 
   status STATUS @default(ACTIVE)
 
-  dateCreated DateTime   @default(now())
-  dateUpdated DateTime   @updatedAt
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
-  Contract    Contract[]
 }
 
 model Project {
@@ -206,8 +206,8 @@ model Contract {
   agent         String
   commission    COMMISSION
 
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  lot    Lot    @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lot    Lot?    @relation(fields: [lotId], references: [id], onDelete: Cascade)
 
   paymentType PAYMENT_TYPE
 

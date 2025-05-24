@@ -6,10 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { ClientService } from "./client.service";
 import { CreateUpdateClientDto } from "./dto";
+import { AuthGuard } from "@nestjs/passport";
+import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("clients")
 export class ClientController {
   constructor(private clientService: ClientService) {}
