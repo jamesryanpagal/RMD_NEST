@@ -167,7 +167,7 @@ export class ProjectService {
           status: { not: "DELETED" },
         },
         orderBy: {
-          dateCreated: "desc",
+          projectName: "asc",
         },
         omit: {
           dateCreated: true,

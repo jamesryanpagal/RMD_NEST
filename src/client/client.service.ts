@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { CreateClientServiceDto, CreateUpdateClientDto } from "./dto";
+import { CreateClientServiceDto } from "./dto";
 
 @Injectable()
 export class ClientService {
@@ -12,6 +12,9 @@ export class ClientService {
       return await this.prismaService.client.findMany({
         where: {
           status: { not: "DELETED" },
+        },
+        orderBy: {
+          firstName: "asc",
         },
         omit: {
           status: true,
