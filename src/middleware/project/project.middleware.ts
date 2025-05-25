@@ -113,7 +113,7 @@ export class DuplicateLotMiddleware implements NestMiddleware {
             blockId: id,
           },
           {
-            title,
+            title: title.toString(),
           },
         ],
       },

@@ -121,8 +121,9 @@ export class UpdateProjectDto {
 
 export class LotDto {
   @IsNotEmpty()
-  @IsString()
-  title: string;
+  @IsNumber()
+  @Transform(({ value }) => value || null)
+  title: number;
 
   @IsNotEmpty()
   @IsNumber()

@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "generated/prisma";
+import { PrismaService } from "src/services/prisma/prisma.service";
 import {
   BlockDto,
   CreateProjectDto,
@@ -8,8 +10,6 @@ import {
   UpdateLotDto,
   UpdatePhaseDto,
 } from "./dto";
-import { PrismaService } from "src/services/prisma/prisma.service";
-import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class ProjectService {
@@ -165,6 +165,9 @@ export class ProjectService {
       return await this.prismaService.project.findMany({
         where: {
           status: { not: "DELETED" },
+        },
+        orderBy: {
+          dateCreated: "desc",
         },
         omit: {
           dateCreated: true,
@@ -394,11 +397,12 @@ export class ProjectService {
   }
 
   async addLot(id: string, dto: LotDto) {
+    console.log(id, dto);
     const { title, sqm } = dto || {};
     try {
       await this.prismaService.lot.create({
         data: {
-          title,
+          title: title.toString(),
           sqm,
           block: {
             connect: {
@@ -410,6 +414,7 @@ export class ProjectService {
 
       return "Lot added successfully";
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
@@ -565,7 +570,7 @@ export class ProjectService {
           id,
         },
         data: {
-          title,
+          title: title.toString(),
           sqm,
         },
       });
