@@ -2,10 +2,14 @@ import { Injectable } from "@nestjs/common";
 import { CreateUpdateContractDto } from "./dto";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { Prisma } from "generated/prisma";
+import { MtzService } from "src/services/mtz/mtz.service";
 
 @Injectable()
 export class ContractService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private mtzSservice: MtzService,
+  ) {}
 
   async createContract(
     clientId: string,
@@ -20,10 +24,11 @@ export class ContractService {
       sqmPrice,
       terms,
       paymentType,
+      total,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
-        await prisma.contract.create({
+        const contractResponse = await prisma.contract.create({
           data: {
             sqmPrice,
             downPayment,
@@ -32,6 +37,8 @@ export class ContractService {
             agent,
             commission,
             paymentType,
+            balance: total,
+            total,
             lot: {
               connect: {
                 id: lotId,
@@ -44,6 +51,23 @@ export class ContractService {
             },
           },
         });
+
+        if (paymentType === "INSTALLMENT") {
+          const nextPaymentDate = this.mtzSservice
+            .mtz()
+            .add(1, "month")
+            .toDate();
+          const recurringPaymentDay = nextPaymentDate.getDate();
+          await prisma.contract.update({
+            where: {
+              id: contractResponse.id,
+            },
+            data: {
+              recurringPaymentDay,
+              nextPaymentDate,
+            },
+          });
+        }
       });
 
       return "Contract Created";

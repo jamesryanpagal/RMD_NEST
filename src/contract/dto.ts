@@ -1,5 +1,11 @@
 import { Transform } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { $Enums } from "generated/prisma";
 
 export class CreateUpdateContractDto {
@@ -30,4 +36,9 @@ export class CreateUpdateContractDto {
   @IsNotEmpty()
   @IsEnum($Enums.PAYMENT_TYPE)
   paymentType: $Enums.PAYMENT_TYPE;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Transform(({ value }) => (value ? Number(value) : null))
+  total: number;
 }

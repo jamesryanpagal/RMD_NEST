@@ -6,6 +6,7 @@ import { PrismaService } from "./services/prisma/prisma.service";
 import { ProjectModule } from "./project/project.module";
 import { ClientModule } from "./client/client.module";
 import { ContractModule } from './contract/contract.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ContractModule } from './contract/contract.module';
     JwtGlobalConfig,
     ClientModule,
     ContractModule,
+    PaymentModule,
   ],
   providers: [PrismaService],
 })

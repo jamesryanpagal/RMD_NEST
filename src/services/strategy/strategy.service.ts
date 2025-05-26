@@ -129,7 +129,7 @@ export class RefreshJwtStrategyService extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, { id, platform }: any) {
+  async validate(req: Request, { id }: any) {
     try {
       const refreshToken = req.cookies?.["refresh-token"];
 
@@ -152,7 +152,7 @@ export class RefreshJwtStrategyService extends PassportStrategy(
         return;
       }
 
-      const userAuthSession = user.authSession.find(as => as.id === id);
+      const userAuthSession = user.authSession.find(as => as.userId === id);
 
       if (!userAuthSession) {
         this.exceptionService.throw("Auth session not found", "UNAUTHORIZED");

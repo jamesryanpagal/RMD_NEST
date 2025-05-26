@@ -50,12 +50,6 @@ enum MODE_OF_PAYMENT {
   CHEQUE
 }
 
-enum PAYMENT_SCHEDULE {
-  MONTHLY
-  QUARTERLY
-  ANNUAL
-}
-
 enum PAYMENT_TYPE {
   CASH
   INSTALLMENT
@@ -160,7 +154,6 @@ model Client {
   zip         String?
 
   project  UserProject[]
-  payment  Payment[]
   contract Contract[]
 
   status STATUS @default(ACTIVE)
@@ -199,17 +192,21 @@ model Contract {
   clientId String
   lotId    String
 
-  sqmPrice      Float
-  downPayment   Float
-  terms         Int
-  miscellaneous MISCELLANEOUS
-  agent         String
-  commission    COMMISSION
+  sqmPrice            Float
+  downPayment         Float
+  terms               Int
+  miscellaneous       MISCELLANEOUS
+  agent               String
+  commission          COMMISSION
+  balance             Float
+  total               Float
+  paymentType         PAYMENT_TYPE
+  recurringPaymentDay Int?
+  nextPaymentDate     DateTime?
 
-  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  lot    Lot?    @relation(fields: [lotId], references: [id], onDelete: Cascade)
-
-  paymentType PAYMENT_TYPE
+  client  Client?   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  lot     Lot?      @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  payment Payment[]
 
   status STATUS @default(ACTIVE)
 
@@ -265,18 +262,15 @@ model Lot {
 }
 
 model Payment {
-  id        Int    @default(autoincrement())
-  receiptId String @id @default(cuid())
-  clientId  String @unique
-  projectId String
+  id         String @id @default(cuid())
+  contractId String
 
   modeOfPayment   MODE_OF_PAYMENT
-  paymentDate     DateTime
+  paymentDate     String
   amount          Float
-  referenceNumber String
-  paymentSchedule PAYMENT_SCHEDULE
+  referenceNumber String?
 
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   status STATUS @default(ACTIVE)
 
