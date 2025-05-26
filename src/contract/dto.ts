@@ -2,7 +2,7 @@ import { Transform } from "class-transformer";
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { $Enums } from "generated/prisma";
 
-export class CreateContractDto {
+export class CreateUpdateContractDto {
   @IsNotEmpty()
   @Transform(({ value }) => (value ? Number(value) : null))
   sqmPrice: number;

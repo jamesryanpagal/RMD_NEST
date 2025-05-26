@@ -39,9 +39,9 @@ export class AuthService {
 
       const token_hash = await this.argonService.hash(refreshToken);
 
-      const checkAuthSession = await this.prismaService.authSession.findUnique({
+      const checkAuthSession = await this.prismaService.authSession.findFirst({
         where: {
-          id,
+          userId: id,
         },
       });
 
@@ -61,9 +61,22 @@ export class AuthService {
           },
         });
       } else {
+        const userAuthSession = await this.prismaService.authSession.findFirst({
+          where: {
+            userId: id,
+          },
+        });
+
+        if (!userAuthSession) {
+          this.exceptionService.throw(
+            "User auth session not found",
+            "UNAUTHORIZED",
+          );
+          return;
+        }
         await this.prismaService.authSession.update({
           where: {
-            id,
+            id: userAuthSession.id,
           },
           data: {
             token_hash,
