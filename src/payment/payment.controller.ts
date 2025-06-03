@@ -28,7 +28,7 @@ export class PaymentController {
     @Param("contractId") contractId: string,
     @Body() dto: CreateUpdatePaymentDto,
   ) {
-    return this.paymentService.createPayment(contractId, dto);
+    return this.paymentService.createContractPayment(contractId, dto);
   }
 
   @Patch("update/:id")

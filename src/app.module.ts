@@ -5,8 +5,10 @@ import { JwtGlobalConfig } from "./config";
 import { PrismaService } from "./services/prisma/prisma.service";
 import { ProjectModule } from "./project/project.module";
 import { ClientModule } from "./client/client.module";
-import { ContractModule } from './contract/contract.module';
-import { PaymentModule } from './payment/payment.module';
+import { ContractModule } from "./contract/contract.module";
+import { PaymentModule } from "./payment/payment.module";
+import { ReservationModule } from './reservation/reservation.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { PaymentModule } from './payment/payment.module';
     ClientModule,
     ContractModule,
     PaymentModule,
+    ReservationModule,
+    AgentModule,
   ],
   providers: [PrismaService],
 })

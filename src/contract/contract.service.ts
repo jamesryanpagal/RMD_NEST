@@ -1,44 +1,55 @@
 import { Injectable } from "@nestjs/common";
 import { CreateUpdateContractDto } from "./dto";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { Prisma } from "generated/prisma";
 import { MtzService } from "src/services/mtz/mtz.service";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
 
 @Injectable()
 export class ContractService {
   constructor(
     private prismaService: PrismaService,
-    private mtzSservice: MtzService,
+    private mtzService: MtzService,
+    private exceptionService: ExceptionService,
   ) {}
 
   async createContract(
     clientId: string,
     lotId: string,
+    agentId: string,
     dto: CreateUpdateContractDto,
   ) {
     const {
-      agent,
-      commission,
+      downPaymentType,
       downPayment,
+      downPaymentTerms,
       miscellaneous,
+      miscellaneousTotal,
+      agentCommission,
+      agentCommissionTotal,
+      tcp,
       sqmPrice,
       terms,
       paymentType,
-      total,
+      totalLotPrice,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
         const contractResponse = await prisma.contract.create({
           data: {
             sqmPrice,
-            downPayment,
-            terms,
             miscellaneous,
-            agent,
-            commission,
+            miscellaneousTotal,
+            agent: {
+              connect: {
+                id: agentId,
+              },
+            },
+            agentCommission,
+            agentCommissionTotal,
             paymentType,
-            balance: total,
-            total,
+            balance: tcp,
+            totalLotPrice,
+            tcp,
             lot: {
               connect: {
                 id: lotId,
@@ -53,20 +64,99 @@ export class ContractService {
         });
 
         if (paymentType === "INSTALLMENT") {
-          const nextPaymentDate = this.mtzSservice
-            .mtz()
-            .add(1, "month")
-            .toDate();
-          const recurringPaymentDay = nextPaymentDate.getDate();
-          await prisma.contract.update({
-            where: {
-              id: contractResponse.id,
-            },
-            data: {
-              recurringPaymentDay,
-              nextPaymentDate,
-            },
-          });
+          if (downPayment && downPaymentTerms && terms) {
+            const reservationFee = await prisma.reservation.findFirst({
+              where: {
+                AND: [
+                  {
+                    clientId,
+                  },
+                  {
+                    lotId,
+                  },
+                  {
+                    status: "ACTIVE",
+                  },
+                ],
+              },
+              include: {
+                payment: true,
+              },
+            });
+
+            if (!reservationFee) {
+              this.exceptionService.throw(
+                "Cannot create contract for this client. please check if it has reservation for the given lot",
+                "BAD_REQUEST",
+              );
+              return;
+            }
+
+            const {
+              id: reservationId,
+              validity,
+              payment: reservationPayment,
+            } = reservationFee || {};
+
+            const reservationFeeValidityExpired = this.mtzService
+              .mtz(validity)
+              .isBefore(this.mtzService.mtz());
+
+            if (reservationFeeValidityExpired) {
+              this.exceptionService.throw(
+                "Reservation fee validity expired",
+                "BAD_REQUEST",
+              );
+              return;
+            }
+
+            await prisma.reservation.update({
+              where: {
+                id: reservationId,
+              },
+              data: {
+                status: "DONE",
+              },
+            });
+
+            const totalDownPayment = tcp * (downPayment / 100);
+            const totalDownPaymentAfterReservation =
+              totalDownPayment - (reservationPayment?.amount || 0);
+
+            await prisma.contract.update({
+              where: {
+                id: contractResponse.id,
+              },
+              data: {
+                balance: tcp - totalDownPaymentAfterReservation,
+                totalDownPayment: totalDownPaymentAfterReservation,
+                totalDownPaymentBalance: totalDownPaymentAfterReservation,
+                downPayment,
+                downPaymentType,
+                downPaymentTerms,
+                terms,
+                ...(downPaymentType === "PARTIAL_DOWN_PAYMENT"
+                  ? {
+                      totalMonthlyDown: Number(
+                        (
+                          totalDownPaymentAfterReservation / downPaymentTerms
+                        ).toFixed(2),
+                      ),
+                    }
+                  : {}),
+                totalMonthly: Number((tcp / terms).toFixed(2)),
+              },
+            });
+
+            await prisma.lot.update({
+              where: {
+                id: lotId,
+              },
+              data: {
+                status: "ON_GOING",
+              },
+            });
+          }
         }
       });
 
@@ -112,37 +202,50 @@ export class ContractService {
     }
   }
 
-  async updateContract(id: string, dto: Prisma.ContractUpdateInput) {
-    const {
-      agent,
-      commission,
-      downPayment,
-      miscellaneous,
-      sqmPrice,
-      terms,
-      paymentType,
-    } = dto || {};
-    try {
-      await this.prismaService.contract.update({
-        where: {
-          id,
-        },
-        data: {
-          sqmPrice,
-          downPayment,
-          terms,
-          miscellaneous,
-          agent,
-          commission,
-          paymentType,
-        },
-      });
+  // async updateContract(id: string, dto: CreateUpdateContractDto) {
+  //   const {
+  //     agentId,
+  //     downPayment,
+  //     miscellaneous,
+  //     miscellaneousTotal,
+  //     agentCommission,
+  //     agentCommissionTotal,
+  //     tcp,
+  //     sqmPrice,
+  //     terms,
+  //     paymentType,
+  //     totalLotPrice,
+  //   } = dto || {};
+  //   try {
+  //     await this.prismaService.contract.update({
+  //       where: {
+  //         id,
+  //       },
+  //       data: {
+  //         sqmPrice,
+  //         downPayment,
+  //         terms,
+  //         miscellaneous,
+  //         miscellaneousTotal,
+  //         agent: {
+  //           connect: {
+  //             id: agentId,
+  //           },
+  //         },
+  //         agentCommission,
+  //         agentCommissionTotal,
+  //         paymentType,
+  //         balance: tcp,
+  //         totalLotPrice,
+  //         tcp,
+  //       },
+  //     });
 
-      return "Contract Updated";
-    } catch (error) {
-      throw error;
-    }
-  }
+  //     return "Contract Updated";
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   async deleteContract(id: string) {
     try {
@@ -175,7 +278,6 @@ export class ContractService {
           ],
         },
         omit: {
-          status: true,
           dateCreated: true,
           dateUpdated: true,
           dateDeleted: true,
@@ -190,6 +292,14 @@ export class ContractService {
             },
           },
           client: {
+            omit: {
+              status: true,
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+          payment: {
             omit: {
               status: true,
               dateCreated: true,

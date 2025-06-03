@@ -24,6 +24,22 @@ enum STATUS {
   DELETED
 }
 
+enum CONTRACT_STATUS {
+  ON_GOING
+  FORFEITED
+  DONE
+  DELETED
+}
+
+enum LOT_STATUS {
+  OPEN
+  PENDING
+  ON_GOING
+  CLOSED
+  SOLD
+  DELETED
+}
+
 enum PHASE_STATUS {
   ACTIVE
   INACTIVE
@@ -40,6 +56,7 @@ enum COMMISSION {
   FIVE
   SEVEN
   TEN
+  TWELVE
   FIFTEEN
 }
 
@@ -55,9 +72,43 @@ enum PAYMENT_TYPE {
   INSTALLMENT
 }
 
+enum TRANSACTION_TYPE {
+  HOLDING_FEE
+  RESERVATION_FEE
+  PARTIAL_DOWN_PAYMENT
+  FULL_DOWN_PAYMENT
+  MONTHLY_PAYMENT
+  TCP_FULL_PAYMENT
+  DOWN_PAYMENT
+  SURVEY_FEE
+}
+
+enum DOWN_PAYMENT_TYPE {
+  FULL_DOWN_PAYMENT
+  PARTIAL_DOWN_PAYMENT
+}
+
+enum RESERVATION_STATUS {
+  ACTIVE
+  FORFEITED
+  DONE
+  DELETED
+}
+
+enum DOWN_PAYMENT_STATUS {
+  ON_GOING
+  FORFEITED
+  DONE
+}
+
 enum PLATFORM {
   WEB
   MOBILE
+}
+
+enum PAYMENT_TARGET {
+  MONTHLY_CONTRACT
+  MONTHLY_CONTRACT_DOWN_PAYMENT
 }
 
 model User {
@@ -97,7 +148,7 @@ model AuthSession {
   userId     String
   token_hash String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   expiration DateTime?
 
@@ -116,7 +167,7 @@ model Admin {
   isSuperAdmin Boolean @default(false)
   accessLevel  Int[]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -128,7 +179,7 @@ model Secretary {
   userId      String @unique
   accessLevel Int[]
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -155,6 +206,8 @@ model Client {
 
   project  UserProject[]
   contract Contract[]
+
+  reservation Reservation[]
 
   status STATUS @default(ACTIVE)
 
@@ -192,23 +245,33 @@ model Contract {
   clientId String
   lotId    String
 
-  sqmPrice            Float
-  downPayment         Float
-  terms               Int
-  miscellaneous       MISCELLANEOUS
-  agent               String
-  commission          COMMISSION
-  balance             Float
-  total               Float
-  paymentType         PAYMENT_TYPE
-  recurringPaymentDay Int?
-  nextPaymentDate     DateTime?
+  sqmPrice                Float
+  downPaymentType         DOWN_PAYMENT_TYPE?
+  downPaymentStatus       DOWN_PAYMENT_STATUS @default(ON_GOING)
+  totalMonthlyDown        Float?
+  totalMonthly            Float?
+  downPayment             Int?
+  totalDownPayment        Float?
+  totalDownPaymentBalance Float?
+  downPaymentTerms        Int?
+  terms                   Int?
+  miscellaneous           MISCELLANEOUS
+  miscellaneousTotal      Float
+  agentCommission         COMMISSION
+  agentCommissionTotal    Float
+  balance                 Float
+  totalLotPrice           Float
+  tcp                     Float
+  paymentType             PAYMENT_TYPE
+  recurringPaymentDay     Int?
+  nextPaymentDate         DateTime?
 
-  client  Client?   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  lot     Lot?      @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  client  Client?   @relation(fields: [clientId], references: [id])
+  lot     Lot?      @relation(fields: [lotId], references: [id])
   payment Payment[]
+  agent   Agent?
 
-  status STATUS @default(ACTIVE)
+  status CONTRACT_STATUS @default(ON_GOING)
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -222,7 +285,7 @@ model Phase {
   title  String
   status PHASE_STATUS @default(ACTIVE)
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id])
   block   Block[]
 
   dateCreated DateTime  @default(now())
@@ -237,7 +300,7 @@ model Block {
 
   status STATUS @default(ACTIVE)
 
-  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  phase Phase @relation(fields: [phaseId], references: [id])
   lot   Lot[]
 
   dateCreated DateTime  @default(now())
@@ -251,10 +314,11 @@ model Lot {
   title   String
   sqm     Float?
 
-  status STATUS @default(ACTIVE)
+  status LOT_STATUS @default(OPEN)
 
-  block    Block      @relation(fields: [blockId], references: [id], onDelete: Cascade)
-  contract Contract[]
+  block       Block         @relation(fields: [blockId], references: [id])
+  contract    Contract[]
+  reservation Reservation[]
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -262,15 +326,51 @@ model Lot {
 }
 
 model Payment {
-  id         String @id @default(cuid())
-  contractId String
+  id            String  @id @default(cuid())
+  contractId    String?
+  reservationId String? @unique
 
+  transactionType TRANSACTION_TYPE
   modeOfPayment   MODE_OF_PAYMENT
   paymentDate     String
   amount          Float
   referenceNumber String?
 
-  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contract    Contract?    @relation(fields: [contractId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model Reservation {
+  id       String @id @default(cuid())
+  lotId    String
+  clientId String @unique
+
+  validity DateTime
+
+  lot     Lot      @relation(fields: [lotId], references: [id])
+  client  Client   @relation(fields: [clientId], references: [id])
+  payment Payment?
+
+  status RESERVATION_STATUS @default(ACTIVE)
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model Agent {
+  id         String  @id @default(cuid())
+  contractId String? @unique
+  name       String
+  birthDate  String?
+
+  contract Contract? @relation(fields: [contractId], references: [id])
 
   status STATUS @default(ACTIVE)
 
@@ -282,10 +382,10 @@ model Payment {
 // JUNCTION TABLE
 model UserProject {
   clientId String @unique
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client   Client @relation(fields: [clientId], references: [id])
 
   projectId String  @unique
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id])
 
   @@id([clientId, projectId])
 }

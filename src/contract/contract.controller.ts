@@ -23,22 +23,23 @@ export class ContractController {
     return this.contractService.getContracts();
   }
 
-  @Post("create/:clientId/:lotId")
+  @Post("create/:clientId/:lotId/:agentId")
   onCreateContract(
     @Param("clientId") clientId: string,
     @Param("lotId") lotId: string,
+    @Param("agentId") agentId: string,
     @Body() dto: CreateUpdateContractDto,
   ) {
-    return this.contractService.createContract(clientId, lotId, dto);
+    return this.contractService.createContract(clientId, lotId, agentId, dto);
   }
 
-  @Patch("update/:id")
-  onUpdateContract(
-    @Param("id") id: string,
-    @Body() dto: CreateUpdateContractDto,
-  ) {
-    return this.contractService.updateContract(id, dto);
-  }
+  // @Patch("update/:id")
+  // onUpdateContract(
+  //   @Param("id") id: string,
+  //   @Body() dto: CreateUpdateContractDto,
+  // ) {
+  //   return this.contractService.updateContract(id, dto);
+  // }
 
   @Delete("delete/:id")
   onDeleteContract(@Param("id") id: string) {

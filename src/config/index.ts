@@ -18,6 +18,7 @@ export const config = {
   refresh_jwt_secret: loadEnv("REFRESH_JWT_SECRET"),
   refresh_jwt_expiration: loadEnv("REFRESH_JWT_EXPIRATION"),
   transaction_timeout: Number(loadEnv("TRANSACTION_TIMEOUT") || "100000"),
+  resend_api_key: loadEnv("RESEND_API_KEY"),
 };
 
 export const JwtGlobalConfig = JwtModule.register({
