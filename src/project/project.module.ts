@@ -14,9 +14,10 @@ import {
   DuplicateLotMiddleware,
   DuplicateProjectMiddleware,
 } from "src/middleware/project/project.middleware";
+import { MtzService } from "src/services/mtz/mtz.service";
 
 @Module({
-  providers: [ProjectService, ExceptionService, PrismaService],
+  providers: [ProjectService, ExceptionService, PrismaService, MtzService],
   controllers: [ProjectController],
 })
 export class ProjectModule implements NestModule {

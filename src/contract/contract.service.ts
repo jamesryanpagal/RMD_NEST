@@ -47,7 +47,7 @@ export class ContractService {
             agentCommission,
             agentCommissionTotal,
             paymentType,
-            balance: tcp,
+            balance: 0,
             totalLotPrice,
             tcp,
             lot: {
@@ -63,79 +63,81 @@ export class ContractService {
           },
         });
 
+        const reservationFee = await prisma.reservation.findFirst({
+          where: {
+            AND: [
+              {
+                clientId,
+              },
+              {
+                lotId,
+              },
+              {
+                status: "ACTIVE",
+              },
+            ],
+          },
+          include: {
+            payment: true,
+          },
+        });
+
+        if (!reservationFee) {
+          this.exceptionService.throw(
+            "Cannot create contract for this client. please check if it has reservation for the given lot",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const {
+          id: reservationId,
+          validity,
+          payment: reservationPayment,
+        } = reservationFee || {};
+
+        const reservationFeeValidityExpired = this.mtzService
+          .mtz(validity)
+          .isBefore(this.mtzService.mtz());
+
+        if (reservationFeeValidityExpired) {
+          this.exceptionService.throw(
+            "Reservation fee validity expired",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        await prisma.reservation.update({
+          where: {
+            id: reservationId,
+          },
+          data: {
+            status: "DONE",
+          },
+        });
+
         if (paymentType === "INSTALLMENT") {
-          if (downPayment && downPaymentTerms && terms) {
-            const reservationFee = await prisma.reservation.findFirst({
-              where: {
-                AND: [
-                  {
-                    clientId,
-                  },
-                  {
-                    lotId,
-                  },
-                  {
-                    status: "ACTIVE",
-                  },
-                ],
-              },
-              include: {
-                payment: true,
-              },
-            });
-
-            if (!reservationFee) {
-              this.exceptionService.throw(
-                "Cannot create contract for this client. please check if it has reservation for the given lot",
-                "BAD_REQUEST",
-              );
-              return;
-            }
-
-            const {
-              id: reservationId,
-              validity,
-              payment: reservationPayment,
-            } = reservationFee || {};
-
-            const reservationFeeValidityExpired = this.mtzService
-              .mtz(validity)
-              .isBefore(this.mtzService.mtz());
-
-            if (reservationFeeValidityExpired) {
-              this.exceptionService.throw(
-                "Reservation fee validity expired",
-                "BAD_REQUEST",
-              );
-              return;
-            }
-
-            await prisma.reservation.update({
-              where: {
-                id: reservationId,
-              },
-              data: {
-                status: "DONE",
-              },
-            });
-
+          if (downPayment && terms) {
             const totalDownPayment = tcp * (downPayment / 100);
             const totalDownPaymentAfterReservation =
               totalDownPayment - (reservationPayment?.amount || 0);
+            const balance = tcp - totalDownPayment;
 
             await prisma.contract.update({
               where: {
                 id: contractResponse.id,
               },
               data: {
-                balance: tcp - totalDownPaymentAfterReservation,
-                totalDownPayment: totalDownPaymentAfterReservation,
+                balance,
+                totalDownPayment,
                 totalDownPaymentBalance: totalDownPaymentAfterReservation,
                 downPayment,
                 downPaymentType,
                 downPaymentTerms,
                 terms,
-                ...(downPaymentType === "PARTIAL_DOWN_PAYMENT"
+                ...(downPaymentType === "PARTIAL_DOWN_PAYMENT" &&
+                downPaymentTerms
                   ? {
                       totalMonthlyDown: Number(
                         (
@@ -144,20 +146,30 @@ export class ContractService {
                       ),
                     }
                   : {}),
-                totalMonthly: Number((tcp / terms).toFixed(2)),
-              },
-            });
-
-            await prisma.lot.update({
-              where: {
-                id: lotId,
-              },
-              data: {
-                status: "ON_GOING",
+                downPaymentStatus: "ON_GOING",
+                totalMonthly: Number((balance / terms).toFixed(2)),
               },
             });
           }
+        } else {
+          await prisma.contract.update({
+            where: {
+              id: contractResponse.id,
+            },
+            data: {
+              balance: tcp - (reservationPayment?.amount || 0),
+            },
+          });
         }
+
+        await prisma.lot.update({
+          where: {
+            id: lotId,
+          },
+          data: {
+            status: "ON_GOING",
+          },
+        });
       });
 
       return "Contract Created";

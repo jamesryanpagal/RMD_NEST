@@ -34,6 +34,9 @@ export class ReservationService {
                 lotId,
               },
               {
+                clientId,
+              },
+              {
                 status: { in: ["ACTIVE", "DONE"] },
               },
             ],
@@ -94,6 +97,15 @@ export class ReservationService {
                 id: reservationResponse.id,
               },
             },
+          },
+        });
+
+        await prisma.lot.update({
+          where: {
+            id: lotId,
+          },
+          data: {
+            status: "PENDING",
           },
         });
       });
@@ -347,8 +359,6 @@ export class ReservationService {
           this.exceptionService.throw("Reservation not found", "NOT_FOUND");
           return;
         }
-
-        console.log({ modeOfPayment });
 
         await prisma.payment.update({
           where: {

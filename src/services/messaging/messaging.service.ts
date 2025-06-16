@@ -25,8 +25,6 @@ export class MessagingService {
         );
         return;
       }
-
-      console.log("Email sent successfully:", data);
     } catch (error) {
       throw error;
     }

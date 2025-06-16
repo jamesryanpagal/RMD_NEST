@@ -59,7 +59,6 @@ export class PaymentService {
           totalMonthlyDown,
           totalDownPaymentBalance,
           totalMonthly,
-          tcp,
           status,
           balance,
           nextPaymentDate,
@@ -82,7 +81,7 @@ export class PaymentService {
 
             if (transactionType !== "PARTIAL_DOWN_PAYMENT") {
               this.exceptionService.throw(
-                "Payment must be for PARTIAL on this transaction",
+                "Payment must be for PARTIAL_DOWN_PAYMENT on this transaction",
                 "BAD_REQUEST",
               );
               return;
@@ -140,7 +139,6 @@ export class PaymentService {
           } else if (
             downPaymentType === "FULL_DOWN_PAYMENT" &&
             downPaymentStatus === "ON_GOING" &&
-            totalMonthlyDown &&
             totalDownPaymentBalance
           ) {
             if (amount < totalDownPaymentBalance) {
@@ -150,6 +148,24 @@ export class PaymentService {
               );
               return;
             }
+
+            if (transactionType !== "FULL_DOWN_PAYMENT") {
+              this.exceptionService.throw(
+                "Payment must be for FULL_DOWN_PAYMENT on this transaction",
+                "BAD_REQUEST",
+              );
+              return;
+            }
+
+            const baseDate = nextPaymentDate
+              ? this.mtzService.mtz(nextPaymentDate)
+              : this.mtzService.mtz();
+
+            const installmentNextPaymentDate = baseDate
+              .add(1, "month")
+              .toDate();
+
+            const recurringPaymentDay = installmentNextPaymentDate.getDate();
 
             await prisma.payment.create({
               data: {
@@ -171,6 +187,8 @@ export class PaymentService {
                 id: contractId,
               },
               data: {
+                recurringPaymentDay,
+                nextPaymentDate: installmentNextPaymentDate,
                 totalDownPaymentBalance: 0,
                 downPaymentStatus: "DONE",
               },
@@ -188,8 +206,17 @@ export class PaymentService {
               return;
             }
 
-            const isBalanceZero = balance <= 0;
-            const totalBalanceAfterAmount = balance - amount;
+            if (transactionType !== "MONTHLY_PAYMENT") {
+              this.exceptionService.throw(
+                "Payment must be for MONTHLY_PAYMENT on this transaction",
+                "BAD_REQUEST",
+              );
+              return;
+            }
+
+            const computedBalance = balance - amount;
+            const totalBalanceAfterAmount =
+              computedBalance <= 0 ? 0 : balance - amount;
 
             await prisma.payment.create({
               data: {
@@ -211,25 +238,42 @@ export class PaymentService {
                 id: contractId,
               },
               data: {
-                ...(isBalanceZero
-                  ? {
-                      balance: 0,
-                      status: "DONE",
-                    }
-                  : {
-                      balance: totalBalanceAfterAmount,
-                    }),
+                balance: totalBalanceAfterAmount,
+                ...(!totalBalanceAfterAmount && { status: "DONE" }),
               },
             });
+
+            if (!totalBalanceAfterAmount) {
+              await prisma.lot.update({
+                where: {
+                  id: contractResponse.lotId,
+                },
+                data: {
+                  status: "SOLD",
+                },
+              });
+            }
+          } else {
+            this.exceptionService.throw(
+              "There's nothing to pay for this contract",
+              "BAD_REQUEST",
+            );
           }
 
           return;
         }
 
         if (paymentType === "CASH") {
-          if (amount < tcp) {
+          if (transactionType !== "TCP_FULL_PAYMENT") {
             this.exceptionService.throw(
-              `Amount must be greater than or equal to ${tcp}`,
+              "Transaction type must be TCP_FULL_PAYMENT",
+              "BAD_REQUEST",
+            );
+            return;
+          }
+          if (amount < balance) {
+            this.exceptionService.throw(
+              `Amount must be greater than or equal to ${balance}`,
               "BAD_REQUEST",
             );
             return;
@@ -259,12 +303,20 @@ export class PaymentService {
               status: "DONE",
             },
           });
+
+          await prisma.lot.update({
+            where: {
+              id: contractResponse.lotId,
+            },
+            data: {
+              status: "SOLD",
+            },
+          });
         }
       });
 
       return "Payment created successfully";
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "generated/prisma";
+import { Prisma, PrismaClient } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import {
   BlockDto,
@@ -10,10 +10,17 @@ import {
   UpdateLotDto,
   UpdatePhaseDto,
 } from "./dto";
+import { MtzService } from "src/services/mtz/mtz.service";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { DefaultArgs } from "generated/prisma/runtime/library";
 
 @Injectable()
 export class ProjectService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private mtzService: MtzService,
+    private exceptionService: ExceptionService,
+  ) {}
 
   async createProject(dto: CreateProjectDto) {
     const {
@@ -99,7 +106,6 @@ export class ProjectService {
 
       return "Project created successfully";
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -215,7 +221,6 @@ export class ProjectService {
                       dateCreated: true,
                       dateUpdated: true,
                       dateDeleted: true,
-                      status: true,
                     },
                   },
                 },
@@ -397,7 +402,6 @@ export class ProjectService {
   }
 
   async addLot(id: string, dto: LotDto) {
-    console.log(id, dto);
     const { title, sqm } = dto || {};
     try {
       await this.prismaService.lot.create({
@@ -414,7 +418,6 @@ export class ProjectService {
 
       return "Lot added successfully";
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
@@ -582,12 +585,90 @@ export class ProjectService {
   }
 
   async getLot(id: string) {
+    let response: any | null = null;
     try {
-      return await this.prismaService.lot.findUnique({
-        where: {
-          id,
+      await this.prismaService.$transaction(async prisma => {
+        await this.checkLotAvailability(id, prisma);
+        const lotResponse = await prisma.lot.findUnique({
+          where: {
+            id,
+          },
+          include: {
+            reservation: true,
+            contract: {
+              include: {
+                payment: true,
+              },
+            },
+          },
+        });
+        response = lotResponse;
+      });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async checkLotAvailability(
+    id: string,
+    prisma?: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      "$on" | "$connect" | "$disconnect" | "$use" | "$transaction" | "$extends"
+    >,
+  ) {
+    try {
+      const lotResponse = await (prisma || this.prismaService).lot.findUnique({
+        where: { id },
+        include: {
+          reservation: {
+            where: {
+              status: { in: ["ACTIVE", "DONE"] },
+            },
+          },
+          contract: {
+            where: {
+              status: { in: ["ON_GOING", "DONE"] },
+            },
+          },
         },
       });
+
+      if (!lotResponse) {
+        this.exceptionService.throw("Lot not found", "NOT_FOUND");
+        return;
+      }
+
+      const { status: lotStatus, reservation } = lotResponse || {};
+
+      const {
+        id: reservationId,
+        status: reservationStatus,
+        validity,
+      } = reservation?.[0] || {};
+
+      const validityExpired = this.mtzService
+        .mtz(validity)
+        .isBefore(this.mtzService.mtz());
+
+      if (validityExpired && reservationStatus === "ACTIVE") {
+        await (prisma || this.prismaService).reservation.update({
+          where: { id: reservationId },
+          data: {
+            status: "FORFEITED",
+          },
+        });
+
+        await (prisma || this.prismaService).lot.update({
+          where: { id },
+          data: {
+            status: "OPEN",
+          },
+        });
+      }
+
+      return lotStatus;
     } catch (error) {
       throw error;
     }

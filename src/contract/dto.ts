@@ -1,11 +1,5 @@
 import { Transform } from "class-transformer";
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 import { $Enums } from "generated/prisma";
 
 export class CreateUpdateContractDto {
@@ -38,19 +32,19 @@ export class CreateUpdateContractDto {
   @Transform(({ value }) => (value ? Number(value) : null))
   tcp: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsEnum($Enums.DOWN_PAYMENT_TYPE)
-  downPaymentType: $Enums.DOWN_PAYMENT_TYPE;
+  downPaymentType?: $Enums.DOWN_PAYMENT_TYPE;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => (value ? Number(value) : null))
   downPayment?: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Transform(({ value }) => (value ? Number(value) : null))
   downPaymentTerms?: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsOptional()
   @Transform(({ value }) => (value ? Number(value) : null))
   terms?: number;

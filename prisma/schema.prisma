@@ -247,7 +247,7 @@ model Contract {
 
   sqmPrice                Float
   downPaymentType         DOWN_PAYMENT_TYPE?
-  downPaymentStatus       DOWN_PAYMENT_STATUS @default(ON_GOING)
+  downPaymentStatus       DOWN_PAYMENT_STATUS?
   totalMonthlyDown        Float?
   totalMonthly            Float?
   downPayment             Int?
@@ -349,7 +349,7 @@ model Payment {
 model Reservation {
   id       String @id @default(cuid())
   lotId    String
-  clientId String @unique
+  clientId String
 
   validity DateTime
 
