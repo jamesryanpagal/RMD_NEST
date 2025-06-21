@@ -52,9 +52,13 @@ export class ProjectController {
     return this.projectService.addPhase(id, dto);
   }
 
-  @Patch("update/phase/:id")
-  onUpdatePhase(@Param("id") id: string, @Body() dto: UpdatePhaseDto) {
-    return this.projectService.updatePhase(id, dto);
+  @Patch("update/phase/:projectId/:id")
+  onUpdatePhase(
+    @Param("projectId") projectId: string,
+    @Param("id") id: string,
+    @Body() dto: UpdatePhaseDto,
+  ) {
+    return this.projectService.updatePhase(projectId, id, dto);
   }
 
   @Get("get/phase/:id")

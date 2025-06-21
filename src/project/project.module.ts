@@ -27,10 +27,16 @@ export class ProjectModule implements NestModule {
       method: RequestMethod.POST,
     });
 
-    consumer.apply(DuplciatePhaseMiddleware).forRoutes({
-      path: "projects/add/phase/:id",
-      method: RequestMethod.POST,
-    });
+    consumer.apply(DuplciatePhaseMiddleware).forRoutes(
+      {
+        path: "projects/add/phase/:id",
+        method: RequestMethod.POST,
+      },
+      {
+        path: "projects/update/phase/:id",
+        method: RequestMethod.PATCH,
+      },
+    );
 
     consumer.apply(DuplicateBlockMiddleware).forRoutes({
       path: "projects/add/block/:id",

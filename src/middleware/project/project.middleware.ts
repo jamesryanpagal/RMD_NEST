@@ -38,14 +38,21 @@ export class DuplciatePhaseMiddleware implements NestMiddleware {
 
   async use(req: Request, _res: Response, next: NextFunction) {
     const { title } = req.body as PhaseDto;
-    const { id } = req.params as any;
+    const { projectId, id } = req.params as any;
+
+    const isPostMethod = req.method === "POST";
 
     const checkExistingPhase = await this.prismaService.phase.findFirst({
       where: {
         AND: [
           {
-            projectId: id,
+            projectId: isPostMethod ? id : projectId,
           },
+          !isPostMethod
+            ? {
+                id: { not: id },
+              }
+            : {},
           {
             title,
           },

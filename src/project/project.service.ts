@@ -473,16 +473,31 @@ export class ProjectService {
     }
   }
 
-  async updatePhase(id: string, dto: UpdatePhaseDto) {
+  async updatePhase(projectId: string, id: string, dto: UpdatePhaseDto) {
     const { title } = dto || {};
     try {
-      await this.prismaService.phase.update({
-        where: {
-          id,
-        },
-        data: {
-          title,
-        },
+      await this.prismaService.$transaction(async prisma => {
+        const phaseResponse = await prisma.phase.findFirst({
+          where: {
+            AND: [
+              {
+                projectId,
+              },
+              {
+                id,
+              },
+            ],
+          },
+        });
+
+        await prisma.phase.update({
+          where: {
+            id: phaseResponse?.id,
+          },
+          data: {
+            title,
+          },
+        });
       });
 
       return "Phase updated successfully";
