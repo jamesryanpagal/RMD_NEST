@@ -27,9 +27,11 @@ export class MtzService {
     format?: keyof typeof this.dateFormat,
   ) {
     if (!format) {
-      return moment.utc(inp).tz(moment.tz.guess());
+      return moment.utc(inp).tz(this.dateFormat.timezone);
     }
-    return moment.utc(inp, this.dateFormat[format]).tz(moment.tz.guess());
+    return moment
+      .utc(inp, this.dateFormat[format])
+      .tz(this.dateFormat.timezone);
   }
 
   generateDateMilliseconds(days: number) {

@@ -173,7 +173,7 @@ export class ProjectService {
           status: { not: "DELETED" },
         },
         orderBy: {
-          projectName: "asc",
+          order: "asc",
         },
         omit: {
           dateCreated: true,
@@ -184,12 +184,13 @@ export class ProjectService {
         include: {
           phase: {
             orderBy: {
-              title: "asc",
+              order: "asc",
             },
             where: {
               status: { not: "DELETED" },
             },
             omit: {
+              order: true,
               dateCreated: true,
               dateUpdated: true,
               dateDeleted: true,
@@ -198,12 +199,13 @@ export class ProjectService {
             include: {
               block: {
                 orderBy: {
-                  title: "asc",
+                  order: "asc",
                 },
                 where: {
                   status: { not: "DELETED" },
                 },
                 omit: {
+                  order: true,
                   dateCreated: true,
                   dateUpdated: true,
                   dateDeleted: true,
@@ -212,12 +214,13 @@ export class ProjectService {
                 include: {
                   lot: {
                     orderBy: {
-                      title: "asc",
+                      order: "asc",
                     },
                     where: {
                       status: { not: "DELETED" },
                     },
                     omit: {
+                      order: true,
                       dateCreated: true,
                       dateUpdated: true,
                       dateDeleted: true,

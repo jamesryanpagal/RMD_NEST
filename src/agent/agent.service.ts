@@ -7,11 +7,13 @@ export class AgentService {
   constructor(private prismaService: PrismaService) {}
 
   async createAgent(dto: Prisma.AgentCreateInput) {
-    const { name, birthDate } = dto || {};
+    const { firstName, middleName, lastName, birthDate } = dto || {};
     try {
       await this.prismaService.agent.create({
         data: {
-          name,
+          firstName,
+          middleName,
+          lastName,
           birthDate,
         },
       });
@@ -23,14 +25,16 @@ export class AgentService {
   }
 
   async updateAgent(id: string, dto: Prisma.AgentUpdateInput) {
-    const { name, birthDate } = dto || {};
+    const { firstName, middleName, lastName, birthDate } = dto || {};
     try {
       await this.prismaService.agent.update({
         where: {
           id,
         },
         data: {
-          name,
+          firstName,
+          middleName,
+          lastName,
           birthDate,
         },
       });

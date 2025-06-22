@@ -8,6 +8,16 @@ import {
 } from "class-validator";
 import { $Enums } from "generated/prisma";
 
+export type PaymentBreakdownType = {
+  dueDate: string;
+  amount: number;
+  remainingBalance: number;
+  transactionType: $Enums.TRANSACTION_TYPE;
+  paidAmount: number;
+  panaltyAmount?: number;
+  paid: boolean;
+};
+
 export class CreateUpdatePaymentDto {
   @IsNotEmpty()
   @IsEnum($Enums.TRANSACTION_TYPE)

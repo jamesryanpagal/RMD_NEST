@@ -218,6 +218,7 @@ model Client {
 
 model Project {
   id          String  @id @default(cuid())
+  order       Int     @default(autoincrement())
   projectName String
   description String?
 
@@ -265,6 +266,10 @@ model Contract {
   paymentType             PAYMENT_TYPE
   recurringPaymentDay     Int?
   nextPaymentDate         DateTime?
+  paymentStartedDate      DateTime?
+  paymentLastDate         DateTime?
+
+  excessPayment Float @default(0)
 
   client  Client?   @relation(fields: [clientId], references: [id])
   lot     Lot?      @relation(fields: [lotId], references: [id])
@@ -280,6 +285,7 @@ model Contract {
 
 model Phase {
   id        String @id @default(cuid())
+  order     Int    @default(autoincrement())
   projectId String
 
   title  String
@@ -295,6 +301,7 @@ model Phase {
 
 model Block {
   id      String @id @default(cuid())
+  order   Int    @default(autoincrement())
   phaseId String
   title   String
 
@@ -310,6 +317,7 @@ model Block {
 
 model Lot {
   id      String @id @default(cuid())
+  order   Int    @default(autoincrement())
   blockId String
   title   String
   sqm     Float?
@@ -332,6 +340,7 @@ model Payment {
 
   transactionType TRANSACTION_TYPE
   modeOfPayment   MODE_OF_PAYMENT
+  targetDueDate   DateTime?
   paymentDate     String
   amount          Float
   referenceNumber String?
@@ -367,7 +376,9 @@ model Reservation {
 model Agent {
   id         String  @id @default(cuid())
   contractId String? @unique
-  name       String
+  firstName  String
+  middleName String?
+  lastName   String
   birthDate  String?
 
   contract Contract? @relation(fields: [contractId], references: [id])

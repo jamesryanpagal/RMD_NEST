@@ -124,12 +124,21 @@ export class ContractService {
               totalDownPayment - (reservationPayment?.amount || 0);
             const balance = tcp - totalDownPayment;
 
+            const baseDate = this.mtzService.mtz(undefined, "dateTimeUTCZ");
+            const nextPaymentDate = baseDate.toDate();
+            const lastPaymentDate = baseDate.add(terms, "month").toDate();
+            const recurringPaymentDay = nextPaymentDate.getDate();
+
             await prisma.contract.update({
               where: {
                 id: contractResponse.id,
               },
               data: {
                 balance,
+                nextPaymentDate,
+                recurringPaymentDay,
+                paymentStartedDate: nextPaymentDate,
+                paymentLastDate: lastPaymentDate,
                 totalDownPayment,
                 totalDownPaymentBalance: totalDownPaymentAfterReservation,
                 downPayment,
@@ -178,14 +187,20 @@ export class ContractService {
     }
   }
 
-  async getContracts() {
+  async getContract(id: string) {
     try {
-      return await this.prismaService.contract.findMany({
+      const contractResponse = await this.prismaService.contract.findFirst({
         where: {
-          status: { not: "DELETED" },
+          AND: [
+            {
+              id,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
         },
         omit: {
-          status: true,
           dateCreated: true,
           dateUpdated: true,
           dateDeleted: true,
@@ -207,8 +222,130 @@ export class ContractService {
               dateDeleted: true,
             },
           },
+          payment: {
+            omit: {
+              status: true,
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
         },
       });
+
+      const reservation = await this.prismaService.reservation.findFirst({
+        where: {
+          AND: [
+            {
+              clientId: contractResponse?.clientId,
+            },
+            {
+              status: { in: ["ACTIVE", "DONE"] },
+            },
+          ],
+        },
+        include: {
+          payment: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+        },
+      });
+
+      return {
+        ...contractResponse,
+        payment: reservation
+          ? [reservation.payment, ...(contractResponse?.payment || [])]
+          : contractResponse?.payment || [],
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getContracts() {
+    try {
+      const contractsResponse = await this.prismaService.contract.findMany({
+        where: {
+          status: { not: "DELETED" },
+        },
+        omit: {
+          dateCreated: true,
+          dateUpdated: true,
+          dateDeleted: true,
+        },
+        include: {
+          lot: {
+            omit: {
+              status: true,
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+          payment: {
+            include: {
+              reservation: {
+                omit: {
+                  dateCreated: true,
+                  dateUpdated: true,
+                  dateDeleted: true,
+                },
+              },
+            },
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+          client: {
+            omit: {
+              status: true,
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+        },
+      });
+
+      const formattedContractsResponse = await Promise.all(
+        contractsResponse.map(async ({ clientId, payment, ...rest }) => {
+          const reservation = await this.prismaService.reservation.findFirst({
+            where: {
+              AND: [
+                {
+                  clientId,
+                },
+                {
+                  status: { in: ["ACTIVE", "DONE"] },
+                },
+              ],
+            },
+            include: {
+              payment: {
+                omit: {
+                  dateCreated: true,
+                  dateUpdated: true,
+                  dateDeleted: true,
+                },
+              },
+            },
+          });
+
+          return {
+            clientId,
+            ...rest,
+            payment: reservation ? [reservation.payment, ...payment] : payment,
+          };
+        }),
+      );
+
+      return formattedContractsResponse;
     } catch (error) {
       throw error;
     }
@@ -271,56 +408,6 @@ export class ContractService {
       });
 
       return "Contract Deleted";
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getContract(id: string) {
-    try {
-      return await this.prismaService.contract.findFirst({
-        where: {
-          AND: [
-            {
-              id,
-            },
-            {
-              status: { not: "DELETED" },
-            },
-          ],
-        },
-        omit: {
-          dateCreated: true,
-          dateUpdated: true,
-          dateDeleted: true,
-        },
-        include: {
-          lot: {
-            omit: {
-              status: true,
-              dateCreated: true,
-              dateUpdated: true,
-              dateDeleted: true,
-            },
-          },
-          client: {
-            omit: {
-              status: true,
-              dateCreated: true,
-              dateUpdated: true,
-              dateDeleted: true,
-            },
-          },
-          payment: {
-            omit: {
-              status: true,
-              dateCreated: true,
-              dateUpdated: true,
-              dateDeleted: true,
-            },
-          },
-        },
-      });
     } catch (error) {
       throw error;
     }

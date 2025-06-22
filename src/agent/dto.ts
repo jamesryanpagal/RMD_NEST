@@ -4,7 +4,15 @@ import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 export class AgentDto {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  firstName: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value || null)
+  middleName?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  lastName: string;
 
   @IsOptional()
   @Transform(({ value }) => value || null)

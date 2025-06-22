@@ -44,6 +44,11 @@ export class PaymentController {
     return this.paymentService.deletePayment(id);
   }
 
+  @Get("breakdown/:contractId")
+  onGetPaymentBreakdown(@Param("contractId") contractId: string) {
+    return this.paymentService.getPaymentBreakdown(contractId);
+  }
+
   @Get(":id")
   onGetPayment(@Param("id") id: string) {
     return this.paymentService.getPayment(id);

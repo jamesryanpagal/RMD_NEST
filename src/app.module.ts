@@ -9,6 +9,7 @@ import { ContractModule } from "./contract/contract.module";
 import { PaymentModule } from "./payment/payment.module";
 import { ReservationModule } from './reservation/reservation.module';
 import { AgentModule } from './agent/agent.module';
+import { FormatterService } from './services/formatter/formatter.service';
 
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { AgentModule } from './agent/agent.module';
     ReservationModule,
     AgentModule,
   ],
-  providers: [PrismaService],
+  providers: [PrismaService, FormatterService],
 })
 export class AppModule {}
