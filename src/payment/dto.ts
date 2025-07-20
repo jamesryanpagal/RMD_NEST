@@ -14,9 +14,16 @@ export type PaymentBreakdownType = {
   remainingBalance: number;
   transactionType: $Enums.TRANSACTION_TYPE;
   paidAmount: number;
-  panaltyAmount?: number;
+  penaltyAmount?: number;
+  penalized?: boolean;
   paid: boolean;
 };
+
+export class PaymentHistoryQueryDto {
+  @IsOptional()
+  @IsString()
+  contractId?: string;
+}
 
 export class CreateUpdatePaymentDto {
   @IsNotEmpty()

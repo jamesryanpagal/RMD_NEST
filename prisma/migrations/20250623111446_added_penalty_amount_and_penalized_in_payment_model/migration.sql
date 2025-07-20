@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Payment" ADD COLUMN     "penalized" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "penaltyAmount" DOUBLE PRECISION NOT NULL DEFAULT 0;

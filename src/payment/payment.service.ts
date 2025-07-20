@@ -1,9 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { CreateUpdatePaymentDto, PaymentBreakdownType } from "./dto";
+import {
+  CreateUpdatePaymentDto,
+  PaymentBreakdownType,
+  PaymentHistoryQueryDto,
+} from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
+import { Prisma } from "generated/prisma";
+
+const PAYMENT_PENALTY_AMOUNT = 200;
 
 @Injectable()
 export class PaymentService {
@@ -68,6 +75,7 @@ export class PaymentService {
           paymentLastDate,
           recurringPaymentDay,
           excessPayment,
+          penaltyAmount,
         } = contractResponse || {};
 
         if (paymentType === "INSTALLMENT") {
@@ -77,22 +85,15 @@ export class PaymentService {
             totalMonthlyDown &&
             totalDownPaymentBalance
           ) {
-            if (amount < totalMonthlyDown) {
+            const totalPayment = totalMonthlyDown + penaltyAmount;
+
+            if (amount < totalPayment) {
               this.exceptionService.throw(
-                `Amount must be greater than or equal to ${totalMonthlyDown}`,
+                `Amount must be greater than or equal to ${totalPayment}`,
                 "BAD_REQUEST",
               );
               return;
             }
-
-            const totalExcessPayment = Number(
-              (amount - totalMonthlyDown).toFixed(2),
-            );
-
-            const computedExcessPayment =
-              amount > totalMonthlyDown
-                ? excessPayment + totalExcessPayment
-                : 0;
 
             if (transactionType !== "PARTIAL_DOWN_PAYMENT") {
               this.exceptionService.throw(
@@ -100,6 +101,16 @@ export class PaymentService {
                 "BAD_REQUEST",
               );
               return;
+            }
+
+            const hasExcessPayment = amount > totalPayment;
+
+            let totalExcessPayment = 0;
+            let computedExcessPayment = 0;
+
+            if (hasExcessPayment) {
+              totalExcessPayment = Number((amount - totalPayment).toFixed(2));
+              computedExcessPayment = excessPayment + totalExcessPayment;
             }
 
             const baseDate =
@@ -125,6 +136,10 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
+                ...(!!penaltyAmount && {
+                  penalized: true,
+                  penaltyAmount,
+                }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
@@ -142,13 +157,15 @@ export class PaymentService {
               data: {
                 nextPaymentDate: installmentNextPaymentDate,
                 excessPayment: computedExcessPayment,
-                ...(!paymentStartedDate
-                  ? {
-                      paymentStartedDate: this.mtzService
-                        .mtz(undefined, "dateTimeUTCZ")
-                        .toISOString(),
-                    }
-                  : {}),
+                penaltyAmount: 0,
+                penaltyCount: 0,
+                // ...(!paymentStartedDate
+                //   ? {
+                //       paymentStartedDate: this.mtzService
+                //         .mtz(undefined, "dateTimeUTCZ")
+                //         .toISOString(),
+                //     }
+                //   : {}),
                 ...(isDownPaymentBalanceZero
                   ? {
                       totalDownPaymentBalance: 0,
@@ -181,14 +198,17 @@ export class PaymentService {
               return;
             }
 
-            const totalExcessPayment = Number(
-              (amount - totalDownPaymentBalance).toFixed(2),
-            );
+            const hasExcessPayment = amount > totalDownPaymentBalance;
 
-            const computedExcessPayment =
-              amount > totalDownPaymentBalance
-                ? excessPayment + totalExcessPayment
-                : 0;
+            let totalExcessPayment = 0;
+            let computedExcessPayment = 0;
+
+            if (hasExcessPayment) {
+              totalExcessPayment = Number(
+                (amount - totalDownPaymentBalance).toFixed(2),
+              );
+              computedExcessPayment = excessPayment + totalExcessPayment;
+            }
 
             const baseDate =
               nextPaymentDate && recurringPaymentDay
@@ -258,28 +278,27 @@ export class PaymentService {
             const isLastPaymentDate =
               parsedNextPaymentDate === parsedLastPaymentDate;
 
-            if (isLastPaymentDate && amount < totalMonthly - excessPayment) {
+            const computedAmount = isLastPaymentDate
+              ? totalMonthly + penaltyAmount - excessPayment
+              : totalMonthly + penaltyAmount;
+
+            if (amount < computedAmount) {
               this.exceptionService.throw(
-                `Amount must be greater than or equal to ${totalMonthly - excessPayment}`,
+                `Amount must be greater than or equal to ${computedAmount}`,
                 "BAD_REQUEST",
               );
               return;
             }
 
-            if (amount < totalMonthly) {
-              this.exceptionService.throw(
-                `Amount must be greater than or equal to ${totalMonthly}`,
-                "BAD_REQUEST",
-              );
-              return;
+            const hasExcessPayment = amount > computedAmount;
+
+            let totalExcessPayment = 0;
+            let computedExcessPayment = 0;
+
+            if (hasExcessPayment) {
+              totalExcessPayment = Number((amount - computedAmount).toFixed(2));
+              computedExcessPayment = excessPayment + totalExcessPayment;
             }
-
-            const totalExcessPayment = Number(
-              (amount - totalMonthly).toFixed(2),
-            );
-
-            const computedExcessPayment =
-              amount > totalMonthly ? excessPayment + totalExcessPayment : 0;
 
             const baseDate =
               nextPaymentDate && recurringPaymentDay
@@ -302,6 +321,10 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
+                ...(!!penaltyAmount && {
+                  penalized: true,
+                  penaltyAmount,
+                }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
@@ -319,16 +342,11 @@ export class PaymentService {
               data: {
                 balance: totalBalanceAfterAmount,
                 nextPaymentDate: installmentNextPaymentDate,
+                penaltyAmount: 0,
+                penaltyCount: 0,
                 ...(!totalBalanceAfterAmount
                   ? { status: "DONE" }
                   : { excessPayment: computedExcessPayment }),
-                ...(!paymentStartedDate
-                  ? {
-                      paymentStartedDate: this.mtzService
-                        .mtz(undefined, "dateTimeUTCZ")
-                        .toISOString(),
-                    }
-                  : {}),
               },
             });
 
@@ -390,13 +408,6 @@ export class PaymentService {
             data: {
               balance: 0,
               status: "DONE",
-              ...(!paymentStartedDate
-                ? {
-                    paymentStartedDate: this.mtzService
-                      .mtz(undefined, "dateTimeUTCZ")
-                      .toISOString(),
-                  }
-                : {}),
             },
           });
 
@@ -467,6 +478,52 @@ export class PaymentService {
               status: { not: "DELETED" },
             },
           ],
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async applyPenaltyPayment(
+    contractId: string,
+    penaltyAmount: number,
+    penaltyCount: number,
+    transaction: Prisma.TransactionClient,
+  ) {
+    const transactionService = transaction || this.prismaService;
+    try {
+      const contractResponse = await transactionService.contract.findFirst({
+        where: {
+          AND: [
+            {
+              id: contractId,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+      });
+
+      if (!contractResponse) {
+        this.exceptionService.throw("Contract not found", "NOT_FOUND");
+        return;
+      }
+
+      if (
+        contractResponse.penaltyAmount === penaltyAmount &&
+        contractResponse.penaltyCount === penaltyCount
+      )
+        return;
+
+      await transactionService.contract.update({
+        where: {
+          id: contractId,
+        },
+        data: {
+          penaltyAmount,
+          penaltyCount,
         },
       });
     } catch (error) {
@@ -691,6 +748,71 @@ export class PaymentService {
               });
             }
 
+            let unpaidDate: string | null = null;
+
+            const formattedPaymentBreakdown = await Promise.all(
+              totalPaymentBreakdown.map(
+                async ({ remainingBalance, dueDate, paid, ...rest }) => {
+                  const penaltyObj: Pick<
+                    PaymentBreakdownType,
+                    "penalized" | "penaltyAmount"
+                  > = {
+                    penalized: false,
+                    penaltyAmount: 0,
+                  };
+
+                  if (!unpaidDate && !paid) {
+                    unpaidDate = dueDate;
+                  }
+
+                  if (!!unpaidDate) {
+                    const formattedUnpaidDate = this.mtzService.mtz(
+                      unpaidDate,
+                      "dateAbbrev",
+                    );
+                    const currentDate = this.mtzService.mtz();
+                    const paymentDateDiffToDueDate = currentDate.diff(
+                      formattedUnpaidDate,
+                      "days",
+                    );
+
+                    const penaltyDiffCount =
+                      paymentDateDiffToDueDate > 0
+                        ? Math.trunc(paymentDateDiffToDueDate / 7)
+                        : 0;
+
+                    const paymentPenaltyAmount =
+                      PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
+
+                    if (!!penaltyDiffCount) {
+                      // ? try doing updating the penalties column here instead of doing it in payment
+                      penaltyObj.penalized = true;
+                      penaltyObj.penaltyAmount = paymentPenaltyAmount;
+                      await this.applyPenaltyPayment(
+                        contractId,
+                        paymentPenaltyAmount,
+                        penaltyDiffCount,
+                        prisma,
+                      );
+                    }
+                  }
+
+                  return {
+                    ...rest,
+                    dueDate,
+                    paid,
+                    ...(unpaidDate &&
+                      unpaidDate === dueDate &&
+                      Object.values(penaltyObj).every(val => !!val) &&
+                      penaltyObj),
+                    remainingBalance: this.formatterService.onParseToPhp(
+                      this.formatterService.onTruncateNumber(remainingBalance),
+                    ),
+                  };
+                },
+              ),
+            );
+
             response = {
               client,
               project: projectResponse,
@@ -704,19 +826,101 @@ export class PaymentService {
               totalDownPayment,
               tcp,
               excessPayment,
-              paymentBreakdown: totalPaymentBreakdown.map(
-                ({ remainingBalance, ...rest }) => ({
-                  ...rest,
-                  remainingBalance: this.formatterService.onParseToPhp(
-                    this.formatterService.onTruncateNumber(remainingBalance),
-                  ),
-                }),
-              ),
+              paymentBreakdown: formattedPaymentBreakdown,
             };
           }
         } else {
           response = {};
         }
+      });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getPaymentHistory(contractId: string) {
+    try {
+      let response: any[] = [];
+
+      await this.prismaService.$transaction(async prisma => {
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id: contractId,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw("Contract not found", "NOT_FOUND");
+          return;
+        }
+
+        const { lotId, clientId } = contractResponse;
+
+        const reservation = await prisma.reservation.findFirst({
+          where: {
+            AND: [
+              {
+                clientId,
+              },
+              {
+                lotId,
+              },
+              {
+                status: { in: ["ACTIVE", "DONE"] },
+              },
+            ],
+          },
+        });
+
+        // if (!!reservation) {
+        //   const paymentReservation = await prisma.payment.findFirst({
+        //     where: {
+        //       AND: [
+        //         {
+        //           reservationId: reservation.id
+        //         }
+        //       ]
+        //     },
+        //     omit: {
+        //       dateCreated: true,
+        //       dateUpdated: true,
+        //       dateDeleted: true,
+        //     }
+        //   })
+
+        //   if (!!paymentReservation) {
+        //     response.push(paymentReservation);
+        //   }
+        // }
+
+        const payments = await prisma.payment.findMany({
+          where: {
+            OR: [
+              {
+                contractId,
+              },
+              {
+                reservationId: reservation?.id,
+              },
+            ],
+          },
+          omit: {
+            dateCreated: true,
+            dateUpdated: true,
+            dateDeleted: true,
+          },
+        });
+
+        response = payments;
       });
 
       return response;

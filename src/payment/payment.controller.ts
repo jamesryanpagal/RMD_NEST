@@ -6,12 +6,16 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import { PaymentService } from "./payment.service";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
-import { CreateUpdatePaymentDto } from "./dto";
+import { CreateUpdatePaymentDto, PaymentHistoryQueryDto } from "./dto";
+import { Request } from "express";
+import { UserFullDetailsProps } from "src/type";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("payments")
@@ -47,6 +51,11 @@ export class PaymentController {
   @Get("breakdown/:contractId")
   onGetPaymentBreakdown(@Param("contractId") contractId: string) {
     return this.paymentService.getPaymentBreakdown(contractId);
+  }
+
+  @Get("history/:contractId")
+  onGetPaymentHistory(@Param("contractId") contractId: string) {
+    return this.paymentService.getPaymentHistory(contractId);
   }
 
   @Get(":id")

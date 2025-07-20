@@ -268,6 +268,8 @@ model Contract {
   nextPaymentDate         DateTime?
   paymentStartedDate      DateTime?
   paymentLastDate         DateTime?
+  penaltyAmount           Float                @default(0)
+  penaltyCount            Int                  @default(0)
 
   excessPayment Float @default(0)
 
@@ -347,6 +349,9 @@ model Payment {
 
   contract    Contract?    @relation(fields: [contractId], references: [id])
   reservation Reservation? @relation(fields: [reservationId], references: [id])
+
+  penalized     Boolean @default(false)
+  penaltyAmount Float   @default(0)
 
   status STATUS @default(ACTIVE)
 
