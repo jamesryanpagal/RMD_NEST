@@ -125,7 +125,7 @@ export class PaymentService {
               .toDate();
 
             const totalDownPaymentBalanceAfterAmount =
-              totalDownPaymentBalance - amount - totalExcessPayment;
+              totalDownPaymentBalance - totalMonthlyDown;
 
             const isDownPaymentBalanceZero =
               totalDownPaymentBalanceAfterAmount <= 0;
@@ -159,13 +159,6 @@ export class PaymentService {
                 excessPayment: computedExcessPayment,
                 penaltyAmount: 0,
                 penaltyCount: 0,
-                // ...(!paymentStartedDate
-                //   ? {
-                //       paymentStartedDate: this.mtzService
-                //         .mtz(undefined, "dateTimeUTCZ")
-                //         .toISOString(),
-                //     }
-                //   : {}),
                 ...(isDownPaymentBalanceZero
                   ? {
                       totalDownPaymentBalance: 0,
@@ -311,7 +304,7 @@ export class PaymentService {
               .add(1, "month")
               .toDate();
 
-            const computedBalance = balance - amount - totalExcessPayment;
+            const computedBalance = balance - computedAmount;
             const totalBalanceAfterAmount =
               computedBalance <= 0 ? 0 : computedBalance;
 
@@ -725,6 +718,9 @@ export class PaymentService {
               const { dueDate: previousDueDate, remainingBalance } =
                 totalPaymentBreakdown[i] || {};
 
+              const isLastPaymentDate =
+                i === downPaymentBreakdown.length - 1 + terms - 1;
+
               const dueDate = this.mtzService
                 .mtz(previousDueDate, "dateAbbrev")
                 .add(1, "month")
@@ -740,7 +736,7 @@ export class PaymentService {
 
               totalPaymentBreakdown.push({
                 dueDate,
-                amount: totalMonthly,
+                amount: totalMonthly - (isLastPaymentDate ? excessPayment : 0),
                 paidAmount: paymentInDate?.amount || 0,
                 remainingBalance: remainingBalance - totalMonthly,
                 transactionType: "MONTHLY_PAYMENT",
@@ -785,7 +781,6 @@ export class PaymentService {
                       PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
 
                     if (!!penaltyDiffCount) {
-                      // ? try doing updating the penalties column here instead of doing it in payment
                       penaltyObj.penalized = true;
                       penaltyObj.penaltyAmount = paymentPenaltyAmount;
                       await this.applyPenaltyPayment(
@@ -881,27 +876,6 @@ export class PaymentService {
           },
         });
 
-        // if (!!reservation) {
-        //   const paymentReservation = await prisma.payment.findFirst({
-        //     where: {
-        //       AND: [
-        //         {
-        //           reservationId: reservation.id
-        //         }
-        //       ]
-        //     },
-        //     omit: {
-        //       dateCreated: true,
-        //       dateUpdated: true,
-        //       dateDeleted: true,
-        //     }
-        //   })
-
-        //   if (!!paymentReservation) {
-        //     response.push(paymentReservation);
-        //   }
-        // }
-
         const payments = await prisma.payment.findMany({
           where: {
             OR: [
@@ -924,6 +898,18 @@ export class PaymentService {
       });
 
       return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getPaymentReservationHistory(reservationId: string) {
+    try {
+      return await this.prismaService.payment.findFirst({
+        where: {
+          reservationId,
+        },
+      });
     } catch (error) {
       throw error;
     }

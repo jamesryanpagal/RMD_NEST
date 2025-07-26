@@ -34,9 +34,6 @@ export class ReservationService {
                 lotId,
               },
               {
-                clientId,
-              },
-              {
                 status: { in: ["ACTIVE", "DONE"] },
               },
             ],

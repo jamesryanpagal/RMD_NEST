@@ -58,6 +58,11 @@ export class PaymentController {
     return this.paymentService.getPaymentHistory(contractId);
   }
 
+  @Get("reservation/:reservationId")
+  onGetPaymentReservation(@Param("reservationId") reservationId: string) {
+    return this.paymentService.getPaymentReservationHistory(reservationId);
+  }
+
   @Get(":id")
   onGetPayment(@Param("id") id: string) {
     return this.paymentService.getPayment(id);
