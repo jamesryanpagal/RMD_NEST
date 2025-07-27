@@ -124,9 +124,13 @@ export class ContractService {
               totalDownPayment - (reservationPayment?.amount || 0);
             const balance = tcp - totalDownPayment;
 
+            const computedTerms = terms + (downPaymentTerms || 0);
+
             const baseDate = this.mtzService.mtz(undefined, "dateTimeUTCZ");
             const nextPaymentDate = baseDate.toDate();
-            const lastPaymentDate = baseDate.add(terms, "month").toDate();
+            const lastPaymentDate = baseDate
+              .add(computedTerms, "month")
+              .toDate();
             const recurringPaymentDay = nextPaymentDate.getDate();
 
             await prisma.contract.update({

@@ -1,10 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import {
-  CreateUpdatePaymentDto,
-  PaymentBreakdownType,
-  PaymentHistoryQueryDto,
-} from "./dto";
+import { CreateUpdatePaymentDto, PaymentBreakdownType } from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
@@ -106,11 +102,11 @@ export class PaymentService {
             const hasExcessPayment = amount > totalPayment;
 
             let totalExcessPayment = 0;
-            let computedExcessPayment = 0;
+            let computedExcessPayment = excessPayment;
 
             if (hasExcessPayment) {
               totalExcessPayment = Number((amount - totalPayment).toFixed(2));
-              computedExcessPayment = excessPayment + totalExcessPayment;
+              computedExcessPayment += totalExcessPayment;
             }
 
             const baseDate =
@@ -128,7 +124,7 @@ export class PaymentService {
               totalDownPaymentBalance - totalMonthlyDown;
 
             const isDownPaymentBalanceZero =
-              totalDownPaymentBalanceAfterAmount <= 0;
+              Math.trunc(totalDownPaymentBalanceAfterAmount) <= 0;
 
             await prisma.payment.create({
               data: {
@@ -194,13 +190,13 @@ export class PaymentService {
             const hasExcessPayment = amount > totalDownPaymentBalance;
 
             let totalExcessPayment = 0;
-            let computedExcessPayment = 0;
+            let computedExcessPayment = excessPayment;
 
             if (hasExcessPayment) {
               totalExcessPayment = Number(
                 (amount - totalDownPaymentBalance).toFixed(2),
               );
-              computedExcessPayment = excessPayment + totalExcessPayment;
+              computedExcessPayment += totalExcessPayment;
             }
 
             const baseDate =
@@ -263,6 +259,7 @@ export class PaymentService {
 
             const parsedNextPaymentDate = this.mtzService
               .mtz(nextPaymentDate, "dateTimeUTCZ")
+              .add(1, "month")
               .format(this.mtzService.dateFormat.defaultformat);
             const parsedLastPaymentDate = this.mtzService
               .mtz(paymentLastDate, "dateTimeUTCZ")
@@ -286,11 +283,11 @@ export class PaymentService {
             const hasExcessPayment = amount > computedAmount;
 
             let totalExcessPayment = 0;
-            let computedExcessPayment = 0;
+            let computedExcessPayment = excessPayment;
 
             if (hasExcessPayment) {
               totalExcessPayment = Number((amount - computedAmount).toFixed(2));
-              computedExcessPayment = excessPayment + totalExcessPayment;
+              computedExcessPayment += totalExcessPayment;
             }
 
             const baseDate =
@@ -306,7 +303,7 @@ export class PaymentService {
 
             const computedBalance = balance - computedAmount;
             const totalBalanceAfterAmount =
-              computedBalance <= 0 ? 0 : computedBalance;
+              computedBalance <= 0 || isLastPaymentDate ? 0 : computedBalance;
 
             await prisma.payment.create({
               data: {
@@ -808,6 +805,18 @@ export class PaymentService {
               ),
             );
 
+            let rfValidityStartDate: string | null = null;
+            let rfValidityEndDate: string | null = null;
+
+            if (!!reservationFee) {
+              rfValidityStartDate = this.mtzService
+                .mtz(reservationFee.dateCreated, "dateTimeUTCZ")
+                .format(this.mtzService.dateFormat.defaultformat);
+              rfValidityEndDate = this.mtzService
+                .mtz(reservationFee.validity, "dateTimeUTCZ")
+                .format(this.mtzService.dateFormat.defaultformat);
+            }
+
             response = {
               client,
               project: projectResponse,
@@ -821,6 +830,8 @@ export class PaymentService {
               totalDownPayment,
               tcp,
               excessPayment,
+              rfValidityStartDate,
+              rfValidityEndDate,
               paymentBreakdown: formattedPaymentBreakdown,
             };
           }

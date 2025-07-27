@@ -13,9 +13,7 @@ import {
 import { PaymentService } from "./payment.service";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
-import { CreateUpdatePaymentDto, PaymentHistoryQueryDto } from "./dto";
-import { Request } from "express";
-import { UserFullDetailsProps } from "src/type";
+import { CreateUpdatePaymentDto } from "./dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("payments")
