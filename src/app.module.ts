@@ -10,6 +10,7 @@ import { PaymentModule } from "./payment/payment.module";
 import { ReservationModule } from './reservation/reservation.module';
 import { AgentModule } from './agent/agent.module';
 import { FormatterService } from './services/formatter/formatter.service';
+import { AgentCommissionModule } from './agent-commission/agent-commission.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { FormatterService } from './services/formatter/formatter.service';
     PaymentModule,
     ReservationModule,
     AgentModule,
+    AgentCommissionModule,
   ],
   providers: [PrismaService, FormatterService],
 })

@@ -261,7 +261,6 @@ export class PaymentService {
 
             const parsedNextPaymentDate = this.mtzService
               .mtz(nextPaymentDate, "dateTimeUTCZ")
-              // .add(1, "month")
               .format(this.mtzService.dateFormat.defaultformat);
             const parsedLastPaymentDate = this.mtzService
               .mtz(paymentLastDate, "dateTimeUTCZ")
@@ -882,6 +881,232 @@ export class PaymentService {
       });
 
       return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAgentCommissionBreakdown(agentCommissionId: string) {
+    try {
+      let response: PaymentBreakdownType[] = [];
+      await this.prismaService.$transaction(async prisma => {
+        const agentCommissionResponse = await prisma.agentCommission.findFirst({
+          where: {
+            AND: [
+              {
+                id: agentCommissionId,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+          include: {
+            agent: {
+              include: {
+                contract: true,
+              },
+            },
+            payment: true,
+          },
+        });
+
+        const {
+          terms,
+          releaseStartDate,
+          recurringReleaseDate,
+          monthlyReleaseAmount,
+          agent,
+          payment,
+        } = agentCommissionResponse || {};
+
+        const { contract } = agent || {};
+
+        if (
+          !terms ||
+          !recurringReleaseDate ||
+          !releaseStartDate ||
+          !contract ||
+          !monthlyReleaseAmount
+        ) {
+          this.exceptionService.throw(
+            "Agent commission must have a [terms, recurringReleaseDate, releaseStartDate, contract, monthlyReleaseAmount] for showing release breakdown",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const { agentCommissionTotal } = contract;
+
+        const releaseBreakdown: PaymentBreakdownType[] = [];
+
+        const onGetPaidInDate = (dueDate: string) => {
+          return payment?.find(({ targetDueDate }) => {
+            const parsedTargetDueDate = this.mtzService
+              .mtz(targetDueDate, "dateTimeUTCZ")
+              .format(this.mtzService.dateFormat.dateAbbrev);
+            return parsedTargetDueDate === dueDate;
+          });
+        };
+
+        const dueDate = this.mtzService.mtz(releaseStartDate, "dateTimeUTCZ");
+
+        const startingDueDate = dueDate
+          .clone()
+          .add(1, "month")
+          .set("date", recurringReleaseDate)
+          .format(this.mtzService.dateFormat.dateAbbrev);
+
+        releaseBreakdown.push({
+          dueDate: startingDueDate,
+          transactionType: "AGENT_COMMISSION_RELEASE",
+          amount: monthlyReleaseAmount,
+          paidAmount: onGetPaidInDate(startingDueDate)?.amount || 0,
+          paid: !!onGetPaidInDate(startingDueDate),
+          remainingBalance: agentCommissionTotal - monthlyReleaseAmount,
+        });
+
+        for (let i = 0; i < terms - 1; i++) {
+          const { dueDate: previousDueDate, remainingBalance } =
+            releaseBreakdown[i] || {};
+          const dueDate = this.mtzService
+            .mtz(previousDueDate, "dateAbbrev")
+            .add(1, "month")
+            .set("date", recurringReleaseDate)
+            .format(this.mtzService.dateFormat.dateAbbrev);
+
+          releaseBreakdown.push({
+            dueDate,
+            transactionType: "AGENT_COMMISSION_RELEASE",
+            amount: monthlyReleaseAmount,
+            paidAmount: onGetPaidInDate(dueDate)?.amount || 0,
+            paid: !!onGetPaidInDate(dueDate),
+            remainingBalance: remainingBalance - monthlyReleaseAmount,
+          });
+        }
+
+        response = releaseBreakdown;
+      });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async releaseAgentCommission(
+    agentCommissionId: string,
+    dto: CreateUpdatePaymentDto,
+  ) {
+    try {
+      const {
+        amount,
+        modeOfPayment,
+        paymentDate,
+        transactionType,
+        referenceNumber,
+      } = dto || {};
+
+      await this.prismaService.$transaction(async prisma => {
+        if (transactionType !== "AGENT_COMMISSION_RELEASE") {
+          this.exceptionService.throw(
+            "Transaction type must be AGENT_COMMISSION_RELEASE",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const agentCommissionResponse = await prisma.agentCommission.findFirst({
+          where: {
+            AND: [
+              {
+                id: agentCommissionId,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!agentCommissionResponse) {
+          this.exceptionService.throw(
+            "Agent commission not found",
+            "NOT_FOUND",
+          );
+          return;
+        }
+
+        const {
+          balance,
+          nextReleaseDate,
+          recurringReleaseDate,
+          monthlyReleaseAmount,
+          status,
+        } = agentCommissionResponse;
+
+        if (status === "DONE") {
+          this.exceptionService.throw(
+            "There are no pending releases for this agent",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        if (amount < (monthlyReleaseAmount || 0)) {
+          this.exceptionService.throw(
+            `Amount must be greater than or equal to ${monthlyReleaseAmount}`,
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const computedBalance = balance - (monthlyReleaseAmount || 0);
+        const parsedNextReleaseDate = this.mtzService.mtz(
+          nextReleaseDate,
+          "dateTimeUTCZ",
+        );
+
+        const releaseNextDate = !!recurringReleaseDate
+          ? parsedNextReleaseDate
+              .clone()
+              .add(1, "month")
+              .set("date", recurringReleaseDate)
+              .format(this.mtzService.dateFormat.dateTimeUTCZ)
+          : null;
+
+        const isZeroBalance = Math.trunc(computedBalance) <= 0;
+
+        await prisma.payment.create({
+          data: {
+            agentCommission: {
+              connect: {
+                id: agentCommissionId,
+              },
+            },
+            targetDueDate: nextReleaseDate,
+            amount,
+            modeOfPayment,
+            paymentDate,
+            referenceNumber,
+            transactionType: "AGENT_COMMISSION_RELEASE",
+          },
+        });
+
+        await prisma.agentCommission.update({
+          where: {
+            id: agentCommissionId,
+          },
+          data: {
+            ...(!isZeroBalance
+              ? { balance: computedBalance }
+              : { balance: 0, status: "DONE" }),
+            nextReleaseDate: releaseNextDate,
+          },
+        });
+      });
+
+      return "Agent commission released successfully";
     } catch (error) {
       throw error;
     }

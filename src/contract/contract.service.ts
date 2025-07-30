@@ -210,6 +210,21 @@ export class ContractService {
             status: "ON_GOING",
           },
         });
+
+        await prisma.agentCommission.create({
+          data: {
+            agent: {
+              connect: {
+                id: agentId,
+              },
+            },
+            releaseStartDate: baseDate
+              .clone()
+              .format(this.mtzService.dateFormat.dateTimeUTCZ),
+            recurringReleaseDate: baseDate.clone().toDate().getDate(),
+            balance: agentCommissionTotal,
+          },
+        });
       });
 
       return "Contract Created";

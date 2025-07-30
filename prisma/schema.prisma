@@ -24,6 +24,13 @@ enum STATUS {
   DELETED
 }
 
+enum AGENT_COMMISSION_STATUS {
+  PENDING
+  DELETED
+  ON_GOING
+  DONE
+}
+
 enum CONTRACT_STATUS {
   ON_GOING
   FORFEITED
@@ -81,6 +88,7 @@ enum TRANSACTION_TYPE {
   TCP_FULL_PAYMENT
   DOWN_PAYMENT
   SURVEY_FEE
+  AGENT_COMMISSION_RELEASE
 }
 
 enum DOWN_PAYMENT_TYPE {
@@ -337,9 +345,10 @@ model Lot {
 }
 
 model Payment {
-  id            String  @id @default(cuid())
-  contractId    String?
-  reservationId String? @unique
+  id                String  @id @default(cuid())
+  contractId        String?
+  reservationId     String? @unique
+  agentCommissionId String?
 
   transactionType TRANSACTION_TYPE
   modeOfPayment   MODE_OF_PAYMENT
@@ -348,8 +357,9 @@ model Payment {
   amount          Float
   referenceNumber String?
 
-  contract    Contract?    @relation(fields: [contractId], references: [id])
-  reservation Reservation? @relation(fields: [reservationId], references: [id])
+  contract        Contract?        @relation(fields: [contractId], references: [id])
+  reservation     Reservation?     @relation(fields: [reservationId], references: [id])
+  agentCommission AgentCommission? @relation(fields: [agentCommissionId], references: [id])
 
   penalized     Boolean @default(false)
   penaltyAmount Float   @default(0)
@@ -387,9 +397,33 @@ model Agent {
   lastName   String
   birthDate  String?
 
-  contract Contract? @relation(fields: [contractId], references: [id])
+  contract        Contract?         @relation(fields: [contractId], references: [id])
+  agentCommission AgentCommission[]
 
   status STATUS @default(ACTIVE)
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model AgentCommission {
+  id                   String @id @default(cuid())
+  agentId              String
+  terms                Int?
+  recurringReleaseDate Int?
+
+  releaseStartDate     String?
+  releaseEndDate       String?
+  nextReleaseDate      String?
+  monthlyReleaseAmount Float?
+
+  balance Float @default(0)
+
+  agent   Agent     @relation(fields: [agentId], references: [id])
+  payment Payment[]
+
+  status AGENT_COMMISSION_STATUS @default(PENDING)
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt

@@ -33,6 +33,14 @@ export class PaymentController {
     return this.paymentService.createContractPayment(contractId, dto);
   }
 
+  @Post("release/agent/commission/:agentCommissionId")
+  onReleaseAgentCommission(
+    @Param("agentCommissionId") agentCommissionId: string,
+    @Body() dto: CreateUpdatePaymentDto,
+  ) {
+    return this.paymentService.releaseAgentCommission(agentCommissionId, dto);
+  }
+
   @Patch("update/:id")
   onUpdatePayment(
     @Param("id") id: string,
@@ -44,6 +52,13 @@ export class PaymentController {
   @Delete("delete/:id")
   onDeletePayment(@Param("id") id: string) {
     return this.paymentService.deletePayment(id);
+  }
+
+  @Get("agent/commissions/breakdown/:agentCommissionId")
+  onGetAgentCommissionBreakdown(
+    @Param("agentCommissionId") agentCommissionId: string,
+  ) {
+    return this.paymentService.getAgentCommissionBreakdown(agentCommissionId);
   }
 
   @Get("breakdown/:contractId")
