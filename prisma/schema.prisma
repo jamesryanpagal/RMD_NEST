@@ -264,10 +264,11 @@ model Contract {
   totalLotPrice           Float
   tcp                     Float
   paymentType             PAYMENT_TYPE
+  totalCashPayment        Float?
   recurringPaymentDay     Int?
-  nextPaymentDate         DateTime?
-  paymentStartedDate      DateTime?
-  paymentLastDate         DateTime?
+  nextPaymentDate         String?
+  paymentStartedDate      String?
+  paymentLastDate         String?
   penaltyAmount           Float                @default(0)
   penaltyCount            Int                  @default(0)
 
@@ -342,7 +343,7 @@ model Payment {
 
   transactionType TRANSACTION_TYPE
   modeOfPayment   MODE_OF_PAYMENT
-  targetDueDate   DateTime?
+  targetDueDate   String?
   paymentDate     String
   amount          Float
   referenceNumber String?

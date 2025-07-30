@@ -19,7 +19,7 @@ export class MtzService {
     time12hDisplay: "h:mm a",
     datetimesec: "YYYY-MM-DD hh:mm A",
     monthDayYear: "MM/DD/YYYY",
-    dateTimeUTCZ: "MM/DD/YYYY h:mm:ss A [UTC]Z",
+    dateTimeUTCZ: "YYYY-MM-DD hh:mm:ss A [UTC]Z",
   };
 
   mtz(

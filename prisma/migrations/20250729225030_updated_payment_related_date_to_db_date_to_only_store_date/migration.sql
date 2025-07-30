@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Contract" ALTER COLUMN "nextPaymentDate" SET DATA TYPE DATE,
+ALTER COLUMN "paymentStartedDate" SET DATA TYPE DATE,
+ALTER COLUMN "paymentLastDate" SET DATA TYPE DATE;

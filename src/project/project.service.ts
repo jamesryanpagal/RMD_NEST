@@ -296,7 +296,6 @@ export class ProjectService {
                       dateCreated: true,
                       dateUpdated: true,
                       dateDeleted: true,
-                      status: true,
                     },
                   },
                 },

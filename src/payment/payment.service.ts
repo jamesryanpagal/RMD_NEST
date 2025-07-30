@@ -112,13 +112,14 @@ export class PaymentService {
             const baseDate =
               nextPaymentDate && recurringPaymentDay
                 ? this.mtzService
-                    .mtz(nextPaymentDate)
+                    .mtz(nextPaymentDate, "dateTimeUTCZ")
+                    .add(1, "month")
                     .set("date", recurringPaymentDay)
                 : this.mtzService.mtz();
 
-            const installmentNextPaymentDate = baseDate
-              .add(1, "month")
-              .toDate();
+            const installmentNextPaymentDate = baseDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
 
             const totalDownPaymentBalanceAfterAmount =
               totalDownPaymentBalance - totalMonthlyDown;
@@ -203,12 +204,13 @@ export class PaymentService {
               nextPaymentDate && recurringPaymentDay
                 ? this.mtzService
                     .mtz(nextPaymentDate)
+                    .add(1, "month")
                     .set("date", recurringPaymentDay)
                 : this.mtzService.mtz();
 
-            const installmentNextPaymentDate = baseDate
-              .add(1, "month")
-              .toDate();
+            const installmentNextPaymentDate = baseDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
 
             await prisma.payment.create({
               data: {
@@ -259,7 +261,7 @@ export class PaymentService {
 
             const parsedNextPaymentDate = this.mtzService
               .mtz(nextPaymentDate, "dateTimeUTCZ")
-              .add(1, "month")
+              // .add(1, "month")
               .format(this.mtzService.dateFormat.defaultformat);
             const parsedLastPaymentDate = this.mtzService
               .mtz(paymentLastDate, "dateTimeUTCZ")
@@ -293,13 +295,14 @@ export class PaymentService {
             const baseDate =
               nextPaymentDate && recurringPaymentDay
                 ? this.mtzService
-                    .mtz(nextPaymentDate)
+                    .mtz(nextPaymentDate, "dateTimeUTCZ")
+                    .add(1, "month")
                     .set("date", recurringPaymentDay)
                 : this.mtzService.mtz();
 
-            const installmentNextPaymentDate = baseDate
-              .add(1, "month")
-              .toDate();
+            const installmentNextPaymentDate = baseDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
 
             const computedBalance = balance - computedAmount;
             const totalBalanceAfterAmount =
@@ -383,6 +386,7 @@ export class PaymentService {
               amount,
               referenceNumber,
               transactionType,
+              targetDueDate: paymentStartedDate,
               contract: {
                 connect: {
                   id: contractId,
@@ -534,9 +538,6 @@ export class PaymentService {
               {
                 status: { not: "DELETED" },
               },
-              {
-                paymentType: "INSTALLMENT",
-              },
             ],
           },
           include: {
@@ -609,6 +610,8 @@ export class PaymentService {
           miscellaneous,
           miscellaneousTotal,
           excessPayment,
+          totalCashPayment,
+          recurringPaymentDay,
         } = contractResponse || {};
 
         const projectResponse = lot?.block.phase.project || {};
@@ -635,14 +638,27 @@ export class PaymentService {
           },
         });
 
+        let rfValidityStartDate: string | null = null;
+        let rfValidityEndDate: string | null = null;
+
+        if (!!reservationFee) {
+          rfValidityStartDate = this.mtzService
+            .mtz(reservationFee.dateCreated, "dateTimeUTCZ")
+            .format(this.mtzService.dateFormat.defaultformat);
+          rfValidityEndDate = this.mtzService
+            .mtz(reservationFee.validity, "dateTimeUTCZ")
+            .format(this.mtzService.dateFormat.defaultformat);
+        }
+
         if (paymentType === "INSTALLMENT") {
           if (
-            downPaymentType === "PARTIAL_DOWN_PAYMENT" &&
-            downPaymentTerms &&
+            (downPaymentType === "PARTIAL_DOWN_PAYMENT" ||
+              downPaymentType === "FULL_DOWN_PAYMENT") &&
             terms &&
             totalMonthlyDown &&
             totalMonthly &&
-            paymentStartedDate
+            paymentStartedDate &&
+            recurringPaymentDay
           ) {
             const parsedPaymentStartedDate = this.mtzService
               .mtz(paymentStartedDate, "dateTimeUTCZ")
@@ -651,11 +667,10 @@ export class PaymentService {
             const downPaymentBreakdown: PaymentBreakdownType[] = [];
 
             if (!!reservationFee && !!reservationFee.payment) {
-              const { dateCreated, payment: reservationPayment } =
-                reservationFee;
+              const { validity, payment: reservationPayment } = reservationFee;
 
               const reservationPaymentDate = this.mtzService
-                .mtz(dateCreated, "dateTimeUTCZ")
+                .mtz(validity, "dateTimeUTCZ")
                 .format(this.mtzService.dateFormat.dateAbbrev);
 
               downPaymentBreakdown.push({
@@ -668,22 +683,50 @@ export class PaymentService {
               });
             }
 
-            for (let i = 0; i < downPaymentTerms; i++) {
-              const {
-                dueDate: previousDueDate,
-                transactionType,
-                remainingBalance,
-              } = downPaymentBreakdown[i];
+            if (
+              downPaymentType === "PARTIAL_DOWN_PAYMENT" &&
+              !!downPaymentTerms
+            ) {
+              for (let i = 0; i < downPaymentTerms; i++) {
+                const {
+                  dueDate: previousDueDate,
+                  transactionType,
+                  remainingBalance,
+                } = downPaymentBreakdown[i];
 
-              const dueDate =
-                transactionType === "RESERVATION_FEE"
-                  ? this.mtzService
-                      .mtz(parsedPaymentStartedDate, "dateAbbrev")
-                      .format(this.mtzService.dateFormat.dateAbbrev)
-                  : this.mtzService
-                      .mtz(previousDueDate, "dateAbbrev")
-                      .add(1, "month")
-                      .format(this.mtzService.dateFormat.dateAbbrev);
+                const dueDate =
+                  transactionType === "RESERVATION_FEE"
+                    ? this.mtzService
+                        .mtz(parsedPaymentStartedDate, "dateAbbrev")
+                        .format(this.mtzService.dateFormat.dateAbbrev)
+                    : this.mtzService
+                        .mtz(previousDueDate, "dateAbbrev")
+                        .add(1, "month")
+                        .format(this.mtzService.dateFormat.dateAbbrev);
+
+                const paymentInDate = payment.find(paymentObj => {
+                  const formattedPaymentDate = this.mtzService
+                    .mtz(paymentObj.targetDueDate, "dateTimeUTCZ")
+                    .format(this.mtzService.dateFormat.dateAbbrev);
+
+                  return formattedPaymentDate === dueDate;
+                });
+
+                downPaymentBreakdown.push({
+                  dueDate,
+                  amount: totalMonthlyDown,
+                  paidAmount: paymentInDate?.amount || 0,
+                  remainingBalance: remainingBalance - totalMonthlyDown,
+                  transactionType: "PARTIAL_DOWN_PAYMENT",
+                  paid: !!paymentInDate,
+                });
+              }
+            } else {
+              const { remainingBalance } = downPaymentBreakdown[0] || {};
+
+              const dueDate = this.mtzService
+                .mtz(parsedPaymentStartedDate, "dateAbbrev")
+                .format(this.mtzService.dateFormat.dateAbbrev);
 
               const paymentInDate = payment.find(paymentObj => {
                 const formattedPaymentDate = this.mtzService
@@ -698,7 +741,7 @@ export class PaymentService {
                 amount: totalMonthlyDown,
                 paidAmount: paymentInDate?.amount || 0,
                 remainingBalance: remainingBalance - totalMonthlyDown,
-                transactionType: "PARTIAL_DOWN_PAYMENT",
+                transactionType: "FULL_DOWN_PAYMENT",
                 paid: !!paymentInDate,
               });
             }
@@ -721,6 +764,7 @@ export class PaymentService {
               const dueDate = this.mtzService
                 .mtz(previousDueDate, "dateAbbrev")
                 .add(1, "month")
+                .set("date", recurringPaymentDay)
                 .format(this.mtzService.dateFormat.dateAbbrev);
 
               const paymentInDate = payment.find(paymentObj => {
@@ -741,83 +785,15 @@ export class PaymentService {
               });
             }
 
-            let unpaidDate: string | null = null;
-
-            const formattedPaymentBreakdown = await Promise.all(
-              totalPaymentBreakdown.map(
-                async ({ remainingBalance, dueDate, paid, ...rest }) => {
-                  const penaltyObj: Pick<
-                    PaymentBreakdownType,
-                    "penalized" | "penaltyAmount"
-                  > = {
-                    penalized: false,
-                    penaltyAmount: 0,
-                  };
-
-                  if (!unpaidDate && !paid) {
-                    unpaidDate = dueDate;
-                  }
-
-                  if (!!unpaidDate) {
-                    const formattedUnpaidDate = this.mtzService.mtz(
-                      unpaidDate,
-                      "dateAbbrev",
-                    );
-                    const currentDate = this.mtzService.mtz();
-                    const paymentDateDiffToDueDate = currentDate.diff(
-                      formattedUnpaidDate,
-                      "days",
-                    );
-
-                    const penaltyDiffCount =
-                      paymentDateDiffToDueDate > 0
-                        ? Math.trunc(paymentDateDiffToDueDate / 7)
-                        : 0;
-
-                    const paymentPenaltyAmount =
-                      PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
-
-                    if (!!penaltyDiffCount) {
-                      penaltyObj.penalized = true;
-                      penaltyObj.penaltyAmount = paymentPenaltyAmount;
-                      await this.applyPenaltyPayment(
-                        contractId,
-                        paymentPenaltyAmount,
-                        penaltyDiffCount,
-                        prisma,
-                      );
-                    }
-                  }
-
-                  return {
-                    ...rest,
-                    dueDate,
-                    paid,
-                    ...(unpaidDate &&
-                      unpaidDate === dueDate &&
-                      Object.values(penaltyObj).every(val => !!val) &&
-                      penaltyObj),
-                    remainingBalance: this.formatterService.onParseToPhp(
-                      this.formatterService.onTruncateNumber(remainingBalance),
-                    ),
-                  };
-                },
-              ),
-            );
-
-            let rfValidityStartDate: string | null = null;
-            let rfValidityEndDate: string | null = null;
-
-            if (!!reservationFee) {
-              rfValidityStartDate = this.mtzService
-                .mtz(reservationFee.dateCreated, "dateTimeUTCZ")
-                .format(this.mtzService.dateFormat.defaultformat);
-              rfValidityEndDate = this.mtzService
-                .mtz(reservationFee.validity, "dateTimeUTCZ")
-                .format(this.mtzService.dateFormat.defaultformat);
-            }
+            const formattedPaymentBreakdown =
+              await this.onFormatPaymentBreakdown(
+                totalPaymentBreakdown,
+                contractId,
+                prisma,
+              );
 
             response = {
+              paymentType,
               client,
               project: projectResponse,
               phase: phaseResponse,
@@ -836,7 +812,72 @@ export class PaymentService {
             };
           }
         } else {
-          response = {};
+          const totalPaymentBreakdown: PaymentBreakdownType[] = [];
+
+          if (!!reservationFee && !!reservationFee.payment) {
+            const { validity, payment: reservationPayment } = reservationFee;
+
+            const reservationPaymentDate = this.mtzService
+              .mtz(validity, "dateTimeUTCZ")
+              .format(this.mtzService.dateFormat.dateAbbrev);
+
+            totalPaymentBreakdown.push({
+              dueDate: reservationPaymentDate,
+              amount: reservationPayment.amount,
+              paidAmount: reservationPayment.amount,
+              remainingBalance: tcp - reservationPayment.amount,
+              transactionType: reservationPayment.transactionType,
+              paid: true,
+            });
+          }
+
+          const { remainingBalance } = totalPaymentBreakdown[0] || {};
+
+          const dueDate = this.mtzService
+            .mtz(paymentStartedDate, "dateTimeUTCZ")
+            .format(this.mtzService.dateFormat.dateAbbrev);
+
+          const paymentInDate = payment.find(paymentObj => {
+            const formattedPaymentDate = this.mtzService
+              .mtz(paymentObj.targetDueDate, "dateTimeUTCZ")
+              .format(this.mtzService.dateFormat.dateAbbrev);
+
+            return formattedPaymentDate === dueDate;
+          });
+
+          totalPaymentBreakdown.push({
+            dueDate,
+            amount: totalCashPayment || 0,
+            paidAmount: paymentInDate?.amount || 0,
+            remainingBalance: remainingBalance - (totalCashPayment || 0),
+            transactionType: "TCP_FULL_PAYMENT",
+            paid: !!paymentInDate,
+          });
+
+          const formattedPaymentBreakdown = await this.onFormatPaymentBreakdown(
+            totalPaymentBreakdown,
+            contractId,
+            prisma,
+          );
+
+          response = {
+            paymentType,
+            client,
+            project: projectResponse,
+            phase: phaseResponse,
+            block: blockResponse,
+            lot: lotResponse,
+            sqm: lot?.sqm,
+            sqmPrice,
+            miscellaneous,
+            miscellaneousTotal,
+            totalDownPayment,
+            tcp,
+            excessPayment,
+            rfValidityStartDate,
+            rfValidityEndDate,
+            paymentBreakdown: formattedPaymentBreakdown,
+          };
         }
       });
 
@@ -924,5 +965,72 @@ export class PaymentService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async onFormatPaymentBreakdown(
+    data: PaymentBreakdownType[],
+    contractId: string,
+    prisma: Prisma.TransactionClient,
+  ) {
+    let unpaidDate: string | null = null;
+    return await Promise.all(
+      data.map(async ({ remainingBalance, dueDate, paid, ...rest }) => {
+        const penaltyObj: Pick<
+          PaymentBreakdownType,
+          "penalized" | "penaltyAmount"
+        > = {
+          penalized: false,
+          penaltyAmount: 0,
+        };
+
+        if (!unpaidDate && !paid) {
+          unpaidDate = dueDate;
+        }
+
+        if (!!unpaidDate) {
+          const formattedUnpaidDate = this.mtzService.mtz(
+            unpaidDate,
+            "dateAbbrev",
+          );
+          const currentDate = this.mtzService.mtz();
+          const paymentDateDiffToDueDate = currentDate.diff(
+            formattedUnpaidDate,
+            "days",
+          );
+
+          const penaltyDiffCount =
+            paymentDateDiffToDueDate > 0
+              ? Math.trunc(paymentDateDiffToDueDate / 7)
+              : 0;
+
+          const paymentPenaltyAmount =
+            PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
+
+          if (!!penaltyDiffCount) {
+            penaltyObj.penalized = true;
+            penaltyObj.penaltyAmount = paymentPenaltyAmount;
+            await this.applyPenaltyPayment(
+              contractId,
+              paymentPenaltyAmount,
+              penaltyDiffCount,
+              prisma,
+            );
+          }
+        }
+
+        return {
+          ...rest,
+          dueDate,
+          paid,
+          ...(unpaidDate &&
+            unpaidDate === dueDate &&
+            Object.values(penaltyObj).every(val => !!val) &&
+            penaltyObj),
+          remainingBalance: this.formatterService.onParseToPhp(
+            this.formatterService.onTruncateNumber(remainingBalance),
+          ),
+        };
+      }),
+    );
   }
 }

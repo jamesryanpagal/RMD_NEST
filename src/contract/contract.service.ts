@@ -117,6 +117,8 @@ export class ContractService {
           },
         });
 
+        const baseDate = this.mtzService.mtz(undefined, "dateTimeUTCZ");
+
         if (paymentType === "INSTALLMENT") {
           if (downPayment && terms) {
             const totalDownPayment = tcp * (downPayment / 100);
@@ -124,14 +126,26 @@ export class ContractService {
               totalDownPayment - (reservationPayment?.amount || 0);
             const balance = tcp - totalDownPayment;
 
-            const computedTerms = terms + (downPaymentTerms || 0);
+            const computedTerms =
+              terms +
+              (downPaymentType === "FULL_DOWN_PAYMENT"
+                ? 1
+                : downPaymentTerms || 0);
 
-            const baseDate = this.mtzService.mtz(undefined, "dateTimeUTCZ");
-            const nextPaymentDate = baseDate.toDate();
-            const lastPaymentDate = baseDate
-              .add(computedTerms, "month")
-              .toDate();
-            const recurringPaymentDay = nextPaymentDate.getDate();
+            const nextPaymentDate = baseDate.clone();
+            const lastPaymentDate = baseDate.clone();
+            const recurringPaymentDay = baseDate.toDate().getDate();
+
+            for (let index = 1; index < computedTerms; index++) {
+              lastPaymentDate.add(1, "month").set("date", recurringPaymentDay);
+            }
+
+            const formattedNextPaymentDate = nextPaymentDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
+            const formattedLastPaymentDate = lastPaymentDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
 
             await prisma.contract.update({
               where: {
@@ -139,10 +153,10 @@ export class ContractService {
               },
               data: {
                 balance,
-                nextPaymentDate,
+                nextPaymentDate: formattedNextPaymentDate,
                 recurringPaymentDay,
-                paymentStartedDate: nextPaymentDate,
-                paymentLastDate: lastPaymentDate,
+                paymentStartedDate: formattedNextPaymentDate,
+                paymentLastDate: formattedLastPaymentDate,
                 totalDownPayment,
                 totalDownPaymentBalance: totalDownPaymentAfterReservation,
                 downPayment,
@@ -158,19 +172,32 @@ export class ContractService {
                         ).toFixed(2),
                       ),
                     }
-                  : {}),
+                  : downPaymentType === "FULL_DOWN_PAYMENT"
+                    ? {
+                        totalMonthlyDown: Number(
+                          totalDownPaymentAfterReservation.toFixed(2),
+                        ),
+                      }
+                    : {}),
                 downPaymentStatus: "ON_GOING",
                 totalMonthly: Number((balance / terms).toFixed(2)),
               },
             });
           }
         } else {
+          const cashComputedBalance = tcp - (reservationPayment?.amount || 0);
+          const formattedBaseDate = baseDate
+            .clone()
+            .format(this.mtzService.dateFormat.dateTimeUTCZ);
           await prisma.contract.update({
             where: {
               id: contractResponse.id,
             },
             data: {
-              balance: tcp - (reservationPayment?.amount || 0),
+              paymentStartedDate: formattedBaseDate,
+              paymentLastDate: formattedBaseDate,
+              balance: cashComputedBalance,
+              totalCashPayment: cashComputedBalance,
             },
           });
         }
