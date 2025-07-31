@@ -5,6 +5,8 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
+import { UploadService } from "src/services/upload/upload.service";
+import { FileService } from "src/file/file.service";
 
 @Module({
   controllers: [PaymentController],
@@ -14,6 +16,8 @@ import { FormatterService } from "src/services/formatter/formatter.service";
     ExceptionService,
     MtzService,
     FormatterService,
+    UploadService,
+    FileService,
   ],
 })
 export class PaymentModule {}

@@ -5,6 +5,8 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
 import { Prisma } from "generated/prisma";
+import { UploadService } from "src/services/upload/upload.service";
+import { FileService } from "src/file/file.service";
 
 const PAYMENT_PENALTY_AMOUNT = 200;
 
@@ -15,6 +17,8 @@ export class PaymentService {
     private exceptionService: ExceptionService,
     private mtzService: MtzService,
     private formatterService: FormatterService,
+    private uploadService: UploadService,
+    private fileService: FileService,
   ) {}
 
   async getPayments() {
@@ -540,7 +544,22 @@ export class PaymentService {
             ],
           },
           include: {
-            payment: true,
+            payment: {
+              include: {
+                files: {
+                  where: {
+                    status: { not: "DELETED" },
+                  },
+                  omit: {
+                    dateCreated: true,
+                    dateDeleted: true,
+                    dateUpdated: true,
+                    status: true,
+                    paymentId: true,
+                  },
+                },
+              },
+            },
             client: {
               omit: {
                 dateCreated: true,
@@ -633,7 +652,22 @@ export class PaymentService {
             ],
           },
           include: {
-            payment: true,
+            payment: {
+              include: {
+                files: {
+                  where: {
+                    status: { not: "DELETED" },
+                  },
+                  omit: {
+                    dateCreated: true,
+                    dateDeleted: true,
+                    dateUpdated: true,
+                    status: true,
+                    paymentId: true,
+                  },
+                },
+              },
+            },
           },
         });
 
@@ -679,6 +713,9 @@ export class PaymentService {
                 remainingBalance: tcp - reservationPayment.amount,
                 transactionType: reservationPayment.transactionType,
                 paid: true,
+                files: this.fileService.onFormatPaymentFilesResponse(
+                  reservationPayment.files,
+                ),
               });
             }
 
@@ -718,6 +755,9 @@ export class PaymentService {
                   remainingBalance: remainingBalance - totalMonthlyDown,
                   transactionType: "PARTIAL_DOWN_PAYMENT",
                   paid: !!paymentInDate,
+                  files: this.fileService.onFormatPaymentFilesResponse(
+                    paymentInDate?.files,
+                  ),
                 });
               }
             } else {
@@ -742,6 +782,9 @@ export class PaymentService {
                 remainingBalance: remainingBalance - totalMonthlyDown,
                 transactionType: "FULL_DOWN_PAYMENT",
                 paid: !!paymentInDate,
+                files: this.fileService.onFormatPaymentFilesResponse(
+                  paymentInDate?.files,
+                ),
               });
             }
 
@@ -781,6 +824,9 @@ export class PaymentService {
                 remainingBalance: remainingBalance - totalMonthly,
                 transactionType: "MONTHLY_PAYMENT",
                 paid: !!paymentInDate,
+                files: this.fileService.onFormatPaymentFilesResponse(
+                  paymentInDate?.files,
+                ),
               });
             }
 
@@ -827,6 +873,9 @@ export class PaymentService {
               remainingBalance: tcp - reservationPayment.amount,
               transactionType: reservationPayment.transactionType,
               paid: true,
+              files: this.fileService.onFormatPaymentFilesResponse(
+                reservationPayment.files,
+              ),
             });
           }
 
@@ -851,6 +900,9 @@ export class PaymentService {
             remainingBalance: remainingBalance - (totalCashPayment || 0),
             transactionType: "TCP_FULL_PAYMENT",
             paid: !!paymentInDate,
+            files: this.fileService.onFormatPaymentFilesResponse(
+              paymentInDate?.files,
+            ),
           });
 
           const formattedPaymentBreakdown = await this.onFormatPaymentBreakdown(
@@ -907,7 +959,21 @@ export class PaymentService {
                 contract: true,
               },
             },
-            payment: true,
+            payment: {
+              include: {
+                files: {
+                  where: {
+                    status: { not: "DELETED" },
+                  },
+                  omit: {
+                    dateCreated: true,
+                    dateDeleted: true,
+                    dateUpdated: true,
+                    status: true,
+                  },
+                },
+              },
+            },
           },
         });
 
@@ -964,6 +1030,9 @@ export class PaymentService {
           paidAmount: onGetPaidInDate(startingDueDate)?.amount || 0,
           paid: !!onGetPaidInDate(startingDueDate),
           remainingBalance: agentCommissionTotal - monthlyReleaseAmount,
+          files: this.fileService.onFormatPaymentFilesResponse(
+            onGetPaidInDate(startingDueDate)?.files,
+          ),
         });
 
         for (let i = 0; i < terms - 1; i++) {
@@ -982,6 +1051,9 @@ export class PaymentService {
             paidAmount: onGetPaidInDate(dueDate)?.amount || 0,
             paid: !!onGetPaidInDate(dueDate),
             remainingBalance: remainingBalance - monthlyReleaseAmount,
+            files: this.fileService.onFormatPaymentFilesResponse(
+              onGetPaidInDate(dueDate)?.files,
+            ),
           });
         }
 
@@ -1257,5 +1329,43 @@ export class PaymentService {
         };
       }),
     );
+  }
+
+  async uploadPfp(paymentId: string, files: Express.Multer.File[]) {
+    try {
+      let response: string | null = null;
+
+      await this.prismaService.$transaction(async prisma => {
+        if (!files || !files.length) {
+          response = "No file uploaded";
+          return;
+        }
+
+        await Promise.all(
+          files.map(async file => {
+            const { originalname, path } = file;
+            const ext = this.uploadService.extractFileExt(originalname);
+
+            await prisma.file.create({
+              data: {
+                path,
+                name: originalname,
+                ext,
+                payment: {
+                  connect: {
+                    id: paymentId,
+                  },
+                },
+              },
+            });
+          }),
+        );
+
+        response = "File uploaded successfully";
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   }
 }

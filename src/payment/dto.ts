@@ -8,6 +8,14 @@ import {
 } from "class-validator";
 import { $Enums } from "generated/prisma";
 
+export type PaymentFiles = {
+  id: string;
+  path?: string | null;
+  ext?: string | null;
+  name?: string | null;
+  description?: string | null;
+};
+
 export type PaymentBreakdownType = {
   dueDate: string;
   amount: number;
@@ -17,6 +25,7 @@ export type PaymentBreakdownType = {
   penaltyAmount?: number;
   penalized?: boolean;
   paid: boolean;
+  files?: PaymentFiles[];
 };
 
 export class PaymentHistoryQueryDto {

@@ -6,14 +6,15 @@ import {
   Param,
   Patch,
   Post,
-  Query,
-  Req,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { PaymentService } from "./payment.service";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { CreateUpdatePaymentDto } from "./dto";
+import { UploadService } from "src/services/upload/upload.service";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("payments")
@@ -39,6 +40,22 @@ export class PaymentController {
     @Body() dto: CreateUpdatePaymentDto,
   ) {
     return this.paymentService.releaseAgentCommission(agentCommissionId, dto);
+  }
+
+  @Post("upload/pfp/:paymentId")
+  @UseInterceptors(
+    UploadService.validate({
+      key: "pfp",
+      path: "payments",
+      multiple: true,
+      accepts: ["png", "jpeg", "jpg"],
+    }),
+  )
+  onUploadPfp(
+    @Param("paymentId") paymentId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.paymentService.uploadPfp(paymentId, files);
   }
 
   @Patch("update/:id")
