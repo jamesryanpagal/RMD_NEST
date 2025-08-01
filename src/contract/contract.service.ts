@@ -325,6 +325,36 @@ export class ContractService {
         },
         include: {
           lot: {
+            include: {
+              block: {
+                include: {
+                  phase: {
+                    include: {
+                      project: {
+                        omit: {
+                          status: true,
+                          dateCreated: true,
+                          dateUpdated: true,
+                          dateDeleted: true,
+                        },
+                      },
+                    },
+                    omit: {
+                      status: true,
+                      dateCreated: true,
+                      dateUpdated: true,
+                      dateDeleted: true,
+                    },
+                  },
+                },
+                omit: {
+                  status: true,
+                  dateCreated: true,
+                  dateUpdated: true,
+                  dateDeleted: true,
+                },
+              },
+            },
             omit: {
               status: true,
               dateCreated: true,
