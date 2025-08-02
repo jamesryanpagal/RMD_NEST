@@ -938,7 +938,7 @@ export class PaymentService {
     }
   }
 
-  async getAgentCommissionBreakdown(agentCommissionId: string) {
+  async getAgentCommissionBreakdown(id: string) {
     try {
       let response: PaymentBreakdownType[] = [];
       await this.prismaService.$transaction(async prisma => {
@@ -946,7 +946,7 @@ export class PaymentService {
           where: {
             AND: [
               {
-                id: agentCommissionId,
+                id,
               },
               {
                 status: { not: "DELETED" },
@@ -954,11 +954,8 @@ export class PaymentService {
             ],
           },
           include: {
-            agent: {
-              include: {
-                contract: true,
-              },
-            },
+            agent: true,
+            contract: true,
             payment: {
               include: {
                 files: {
@@ -982,11 +979,9 @@ export class PaymentService {
           releaseStartDate,
           recurringReleaseDate,
           monthlyReleaseAmount,
-          agent,
+          contract,
           payment,
         } = agentCommissionResponse || {};
-
-        const { contract } = agent || {};
 
         if (
           !terms ||
@@ -996,13 +991,13 @@ export class PaymentService {
           !monthlyReleaseAmount
         ) {
           this.exceptionService.throw(
-            "Agent commission must have a [terms, recurringReleaseDate, releaseStartDate, contract, monthlyReleaseAmount] for showing release breakdown",
+            "Agent commission must be started first before showing release breakdown",
             "BAD_REQUEST",
           );
           return;
         }
 
-        const { agentCommissionTotal } = contract;
+        const { agentCommissionTotal } = contract || {};
 
         const releaseBreakdown: PaymentBreakdownType[] = [];
 
@@ -1019,7 +1014,6 @@ export class PaymentService {
 
         const startingDueDate = dueDate
           .clone()
-          .add(1, "month")
           .set("date", recurringReleaseDate)
           .format(this.mtzService.dateFormat.dateAbbrev);
 

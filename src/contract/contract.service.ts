@@ -218,10 +218,11 @@ export class ContractService {
                 id: agentId,
               },
             },
-            releaseStartDate: baseDate
-              .clone()
-              .format(this.mtzService.dateFormat.dateTimeUTCZ),
-            recurringReleaseDate: baseDate.clone().toDate().getDate(),
+            contract: {
+              connect: {
+                id: contractResponse.id,
+              },
+            },
             balance: agentCommissionTotal,
           },
         });
@@ -484,6 +485,47 @@ export class ContractService {
       });
 
       return "Contract Deleted";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAgentContracts(agentId: string) {
+    try {
+      return await this.prismaService.contract.findMany({
+        where: {
+          AND: [
+            {
+              agentId,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+        include: {
+          agent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+              status: true,
+            },
+          },
+          commissionOfAgent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+        },
+        omit: {
+          dateCreated: true,
+          dateUpdated: true,
+          dateDeleted: true,
+        },
+      });
     } catch (error) {
       throw error;
     }

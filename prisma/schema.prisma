@@ -254,6 +254,7 @@ model Contract {
   id       String @id @default(cuid())
   clientId String
   lotId    String
+  agentId  String
 
   sqmPrice                Float
   downPaymentType         DOWN_PAYMENT_TYPE?
@@ -283,10 +284,11 @@ model Contract {
 
   excessPayment Float @default(0)
 
-  client  Client?   @relation(fields: [clientId], references: [id])
-  lot     Lot?      @relation(fields: [lotId], references: [id])
-  payment Payment[]
-  agent   Agent?
+  client            Client?          @relation(fields: [clientId], references: [id])
+  lot               Lot?             @relation(fields: [lotId], references: [id])
+  agent             Agent            @relation(fields: [agentId], references: [id])
+  commissionOfAgent AgentCommission?
+  payment           Payment[]
 
   status CONTRACT_STATUS @default(ON_GOING)
 
@@ -394,13 +396,12 @@ model Reservation {
 
 model Agent {
   id         String  @id @default(cuid())
-  contractId String? @unique
   firstName  String
   middleName String?
   lastName   String
   birthDate  String?
 
-  contract        Contract?         @relation(fields: [contractId], references: [id])
+  contract        Contract[]
   agentCommission AgentCommission[]
 
   status STATUS @default(ACTIVE)
@@ -413,6 +414,7 @@ model Agent {
 model AgentCommission {
   id                   String @id @default(cuid())
   agentId              String
+  contractId           String @unique
   terms                Int?
   recurringReleaseDate Int?
 
@@ -423,8 +425,9 @@ model AgentCommission {
 
   balance Float @default(0)
 
-  agent   Agent     @relation(fields: [agentId], references: [id])
-  payment Payment[]
+  agent    Agent     @relation(fields: [agentId], references: [id])
+  contract Contract  @relation(fields: [contractId], references: [id])
+  payment  Payment[]
 
   status AGENT_COMMISSION_STATUS @default(PENDING)
 

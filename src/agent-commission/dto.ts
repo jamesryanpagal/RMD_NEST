@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class StartAgentCommissionDto {
   @IsNumber()
@@ -8,4 +8,8 @@ export class StartAgentCommissionDto {
     return Number(value);
   })
   terms: number;
+
+  @IsNotEmpty()
+  @IsString()
+  releaseStartDate: string;
 }

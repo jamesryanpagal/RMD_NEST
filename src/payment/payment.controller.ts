@@ -71,11 +71,9 @@ export class PaymentController {
     return this.paymentService.deletePayment(id);
   }
 
-  @Get("agent/commissions/breakdown/:agentCommissionId")
-  onGetAgentCommissionBreakdown(
-    @Param("agentCommissionId") agentCommissionId: string,
-  ) {
-    return this.paymentService.getAgentCommissionBreakdown(agentCommissionId);
+  @Get("agent/commissions/breakdown/:id")
+  onGetAgentCommissionBreakdown(@Param("id") id: string) {
+    return this.paymentService.getAgentCommissionBreakdown(id);
   }
 
   @Get("breakdown/:contractId")

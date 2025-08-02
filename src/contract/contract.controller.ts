@@ -33,6 +33,11 @@ export class ContractController {
     return this.contractService.createContract(clientId, lotId, agentId, dto);
   }
 
+  @Get("agent/:agentId")
+  onGetAgentContracts(@Param("agentId") agentId: string) {
+    return this.contractService.getAgentContracts(agentId);
+  }
+
   // @Patch("update/:id")
   // onUpdateContract(
   //   @Param("id") id: string,

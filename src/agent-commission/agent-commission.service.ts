@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { StartAgentCommissionDto } from "./dto";
 import { MtzService } from "src/services/mtz/mtz.service";
+import { Moment } from "moment-timezone";
 
 @Injectable()
 export class AgentCommissionService {
@@ -54,6 +55,7 @@ export class AgentCommissionService {
           agent,
           ...rest
         }) => {
+          const { contract, firstName, lastName } = agent || {};
           const onFormatDate = (
             originalFormat: keyof typeof this.mtzService.dateFormat,
             date: string | null,
@@ -66,11 +68,12 @@ export class AgentCommissionService {
           };
           return {
             ...rest,
-            agentCommission: agent.contract?.agentCommission,
-            agentCommissionTotal: agent.contract?.agentCommission,
+            firstName,
+            lastName,
             releaseEndDate: onFormatDate("dateTimeUTCZ", releaseEndDate),
             releaseStartDate: onFormatDate("dateTimeUTCZ", releaseStartDate),
             nextReleaseDate: onFormatDate("dateTimeUTCZ", nextReleaseDate),
+            contract: contract || [],
           };
         },
       );
@@ -130,6 +133,8 @@ export class AgentCommissionService {
         ...rest
       } = agentCommissionResponse || {};
 
+      const { contract, firstName, lastName } = agent || {};
+
       const onFormatDate = (
         originalFormat: keyof typeof this.mtzService.dateFormat,
         date?: string | null,
@@ -142,11 +147,12 @@ export class AgentCommissionService {
       };
       return {
         ...rest,
-        agentCommission: agent?.contract?.agentCommission,
-        agentCommissionTotal: agent?.contract?.agentCommission,
+        firstName,
+        lastName,
         releaseEndDate: onFormatDate("dateTimeUTCZ", releaseEndDate),
         releaseStartDate: onFormatDate("dateTimeUTCZ", releaseStartDate),
         nextReleaseDate: onFormatDate("dateTimeUTCZ", nextReleaseDate),
+        contract: contract || [],
       };
     } catch (error) {
       throw error;
@@ -154,46 +160,54 @@ export class AgentCommissionService {
   }
 
   async startAgentCommission(id: string, dto: StartAgentCommissionDto) {
-    const { terms } = dto;
+    const { terms, releaseStartDate } = dto;
     try {
       await this.prismaService.$transaction(async prisma => {
         const agentCommissionResponse = await prisma.agentCommission.findFirst({
           where: {
-            AND: [{ id }, { status: { not: "DELETED" } }],
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
           },
           include: {
-            agent: {
-              include: {
-                contract: true,
-              },
-            },
+            agent: true,
+            contract: true,
           },
         });
 
-        const { releaseStartDate, agent } = agentCommissionResponse || {};
-        const { agentCommissionTotal } = agent?.contract || {};
-        let releaseEndDate: string | null = null;
+        const { contract } = agentCommissionResponse || {};
+        const { agentCommissionTotal } = contract || {};
+        let releaseEndDate: Moment | null = null;
 
         const parsedReleaseStartDate = this.mtzService.mtz(
           releaseStartDate,
-          "dateTimeUTCZ",
+          "defaultformat",
         );
-        const parsedReleaseDate = parsedReleaseStartDate
+
+        const parsedReleaseRecurringDate = parsedReleaseStartDate
           .clone()
           .toDate()
           .getDate();
 
         const nextReleaseDate = parsedReleaseStartDate
           .clone()
-          .add(1, "month")
-          .set("date", parsedReleaseDate)
+          .set("date", parsedReleaseRecurringDate)
           .format(this.mtzService.dateFormat.dateTimeUTCZ);
 
         for (let index = 0; index < terms; index++) {
-          releaseEndDate = parsedReleaseStartDate
-            .add(1, "month")
-            .set("date", parsedReleaseDate)
-            .format(this.mtzService.dateFormat.dateTimeUTCZ);
+          if (!releaseEndDate) {
+            releaseEndDate = parsedReleaseStartDate;
+          } else {
+            releaseEndDate = releaseEndDate
+              .clone()
+              .add(1, "month")
+              .set("date", parsedReleaseRecurringDate);
+          }
         }
 
         await prisma.agentCommission.update({
@@ -202,8 +216,14 @@ export class AgentCommissionService {
           },
           data: {
             terms,
-            releaseEndDate,
+            releaseStartDate: parsedReleaseStartDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            ),
+            releaseEndDate: releaseEndDate?.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            ),
             nextReleaseDate,
+            recurringReleaseDate: parsedReleaseRecurringDate,
             monthlyReleaseAmount: Number(
               ((agentCommissionTotal || 0) / terms).toFixed(2),
             ),

@@ -9,8 +9,8 @@ import { PaymentModule } from "./payment/payment.module";
 import { ReservationModule } from "./reservation/reservation.module";
 import { AgentModule } from "./agent/agent.module";
 import { AgentCommissionModule } from "./agent-commission/agent-commission.module";
-import { GeneratorService } from './services/generator/generator.service';
-import { FileModule } from './file/file.module';
+import { FileModule } from "./file/file.module";
+import { CronModule } from "./cron/cron.module";
 
 @Module({
   imports: [
@@ -25,7 +25,8 @@ import { FileModule } from './file/file.module';
     AgentModule,
     AgentCommissionModule,
     FileModule,
+    // CronModule,
   ],
-  providers: [GeneratorService],
+  providers: [],
 })
 export class AppModule {}
