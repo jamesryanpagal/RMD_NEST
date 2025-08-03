@@ -8,7 +8,7 @@ import { Prisma } from "generated/prisma";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
 
-const PAYMENT_PENALTY_AMOUNT = 200;
+export const PAYMENT_PENALTY_AMOUNT = 200;
 
 @Injectable()
 export class PaymentService {
