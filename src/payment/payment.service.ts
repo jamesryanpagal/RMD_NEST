@@ -553,6 +553,14 @@ export class PaymentService {
             ],
           },
           include: {
+            agent: {
+              omit: {
+                dateCreated: true,
+                dateUpdated: true,
+                dateDeleted: true,
+                status: true,
+              },
+            },
             payment: {
               include: {
                 files: {
@@ -639,6 +647,7 @@ export class PaymentService {
           excessPayment,
           totalCashPayment,
           recurringPaymentDay,
+          agent,
         } = contractResponse || {};
 
         const projectResponse = lot?.block.phase.project || {};
@@ -862,6 +871,7 @@ export class PaymentService {
               excessPayment,
               rfValidityStartDate,
               rfValidityEndDate,
+              agent,
               paymentBreakdown: formattedPaymentBreakdown,
             };
           }
@@ -936,6 +946,7 @@ export class PaymentService {
             excessPayment,
             rfValidityStartDate,
             rfValidityEndDate,
+            agent,
             paymentBreakdown: formattedPaymentBreakdown,
           };
         }
