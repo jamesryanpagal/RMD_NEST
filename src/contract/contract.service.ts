@@ -31,6 +31,7 @@ export class ContractService {
       terms,
       paymentType,
       totalLotPrice,
+      paymentStartDate,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -117,7 +118,20 @@ export class ContractService {
           },
         });
 
-        const baseDate = this.mtzService.mtz(undefined, "dateTimeUTCZ");
+        const formattedReservationValidityDate = this.mtzService.mtz(
+          validity,
+          "dateTimeUTCZ",
+        );
+
+        const baseDateValue = !!paymentStartDate
+          ? this.mtzService
+              .mtz(paymentStartDate, "defaultformat")
+              .format(this.mtzService.dateFormat.dateTimeUTCZ)
+          : formattedReservationValidityDate
+              .add(1, "week")
+              .format(this.mtzService.dateFormat.dateTimeUTCZ);
+
+        const baseDate = this.mtzService.mtz(baseDateValue, "dateTimeUTCZ");
 
         if (paymentType === "INSTALLMENT") {
           if (downPayment && terms) {

@@ -207,7 +207,7 @@ export class PaymentService {
             const baseDate =
               nextPaymentDate && recurringPaymentDay
                 ? this.mtzService
-                    .mtz(nextPaymentDate)
+                    .mtz(nextPaymentDate, "dateTimeUTCZ")
                     .add(1, "month")
                     .set("date", recurringPaymentDay)
                 : this.mtzService.mtz();
