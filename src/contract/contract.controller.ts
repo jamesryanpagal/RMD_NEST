@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
@@ -36,6 +35,10 @@ export class ContractController {
   @Get("agent/:agentId")
   onGetAgentContracts(@Param("agentId") agentId: string) {
     return this.contractService.getAgentContracts(agentId);
+  }
+  @Get("agent/commission/:contractId")
+  onGetAgentContract(@Param("contractId") contractId: string) {
+    return this.contractService.getAgentContract(contractId);
   }
 
   // @Patch("update/:id")

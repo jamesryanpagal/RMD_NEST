@@ -1,14 +1,17 @@
+/* eslint-disable no-useless-catch */
 import { Injectable } from "@nestjs/common";
+import { Moment } from "moment-timezone";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { MtzService } from "src/services/mtz/mtz.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { StartAgentCommissionDto } from "./dto";
-import { MtzService } from "src/services/mtz/mtz.service";
-import { Moment } from "moment-timezone";
 
 @Injectable()
 export class AgentCommissionService {
   constructor(
     private prismaService: PrismaService,
     private mtzService: MtzService,
+    private exceptionService: ExceptionService,
   ) {}
 
   async agentCommissions() {
@@ -35,6 +38,31 @@ export class AgentCommissionService {
                     agentCommissionTotal: true,
                     paymentStartedDate: true,
                     paymentLastDate: true,
+                    lot: {
+                      select: {
+                        id: true,
+                        title: true,
+                        sqm: true,
+                        block: {
+                          select: {
+                            id: true,
+                            title: true,
+                            phase: {
+                              select: {
+                                id: true,
+                                title: true,
+                                project: {
+                                  select: {
+                                    id: true,
+                                    projectName: true,
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -66,6 +94,10 @@ export class AgentCommissionService {
                   .mtz(date, originalFormat)
                   .format(this.mtzService.dateFormat.dateAbbrev);
           };
+          const findContract =
+            contract.find(
+              (contract: { id: string }) => contract?.id === rest.contractId,
+            ) || {};
           return {
             ...rest,
             firstName,
@@ -73,7 +105,7 @@ export class AgentCommissionService {
             releaseEndDate: onFormatDate("dateTimeUTCZ", releaseEndDate),
             releaseStartDate: onFormatDate("dateTimeUTCZ", releaseStartDate),
             nextReleaseDate: onFormatDate("dateTimeUTCZ", nextReleaseDate),
-            contract: contract || [],
+            contract: findContract || {},
           };
         },
       );
@@ -87,16 +119,7 @@ export class AgentCommissionService {
       const agentCommissionResponse =
         await this.prismaService.agentCommission.findFirst({
           where: {
-            AND: [
-              {
-                id,
-              },
-              {
-                status: {
-                  not: "DELETED",
-                },
-              },
-            ],
+            AND: [{ id }, { status: { not: "DELETED" } }],
           },
           omit: {
             dateCreated: true,
@@ -105,17 +128,6 @@ export class AgentCommissionService {
           },
           include: {
             agent: {
-              include: {
-                contract: {
-                  select: {
-                    id: true,
-                    agentCommission: true,
-                    agentCommissionTotal: true,
-                    paymentStartedDate: true,
-                    paymentLastDate: true,
-                  },
-                },
-              },
               omit: {
                 dateCreated: true,
                 dateDeleted: true,
@@ -125,15 +137,59 @@ export class AgentCommissionService {
           },
         });
 
+      if (!agentCommissionResponse) {
+        this.exceptionService.throw("Agent commission not found", "NOT_FOUND");
+        return;
+      }
+
       const {
+        contractId,
+        agent,
         releaseEndDate,
         releaseStartDate,
         nextReleaseDate,
-        agent,
         ...rest
-      } = agentCommissionResponse || {};
+      } = agentCommissionResponse;
+      const { firstName, lastName } = agent || {};
 
-      const { contract, firstName, lastName } = agent || {};
+      const contract = await this.prismaService.contract.findFirst({
+        where: {
+          id: contractId,
+          // status: { not: "DELETED" },
+        },
+        select: {
+          id: true,
+          agentCommission: true,
+          agentCommissionTotal: true,
+          paymentStartedDate: true,
+          paymentLastDate: true,
+          lot: {
+            select: {
+              id: true,
+              title: true,
+              sqm: true,
+              block: {
+                select: {
+                  id: true,
+                  title: true,
+                  phase: {
+                    select: {
+                      id: true,
+                      title: true,
+                      project: {
+                        select: {
+                          id: true,
+                          projectName: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
 
       const onFormatDate = (
         originalFormat: keyof typeof this.mtzService.dateFormat,
@@ -145,14 +201,16 @@ export class AgentCommissionService {
               .mtz(date, originalFormat)
               .format(this.mtzService.dateFormat.dateAbbrev);
       };
+
       return {
         ...rest,
+        contractId,
         firstName,
         lastName,
         releaseEndDate: onFormatDate("dateTimeUTCZ", releaseEndDate),
         releaseStartDate: onFormatDate("dateTimeUTCZ", releaseStartDate),
         nextReleaseDate: onFormatDate("dateTimeUTCZ", nextReleaseDate),
-        contract: contract || [],
+        contract: contract || {},
       };
     } catch (error) {
       throw error;
