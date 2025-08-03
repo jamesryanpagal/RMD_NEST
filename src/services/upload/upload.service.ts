@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ExceptionService } from "../interceptor/interceptor.service";
 import { access, unlink } from "fs/promises";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
@@ -36,10 +36,12 @@ export const UploadConfig = {
 export class UploadService {
   constructor(private exceptionService: ExceptionService) {}
 
+  private readonly logger = new Logger(UploadService.name, { timestamp: true });
+
   async rollback(path?: string | null) {
     try {
       if (!path) {
-        console.warn("No file path provided for rollback");
+        this.logger.warn("No file path provided for rollback");
         return;
       }
 
@@ -47,10 +49,29 @@ export class UploadService {
         await access(path, constants.F_OK);
         await unlink(path);
       } catch (accessError) {
-        console.warn(
+        this.logger.warn(
           `File path of ${path} does not exist in current "upload" directory. Ignoring rollback`,
         );
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async rollBackFiles(files: Express.Multer.File[]) {
+    try {
+      if (!files || !files.length) {
+        this.logger.warn("Files are empty, nothing to rollback");
+        return;
+      }
+
+      await Promise.all(
+        files.map(async file => {
+          await this.rollback(file.path);
+        }),
+      );
+
+      return "Files rolled back successfully";
     } catch (error) {
       throw error;
     }

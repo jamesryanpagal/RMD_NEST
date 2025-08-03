@@ -33,7 +33,11 @@ export class PaymentService {
     }
   }
 
-  async createContractPayment(contractId: string, dto: CreateUpdatePaymentDto) {
+  async createContractPayment(
+    contractId: string,
+    files: Express.Multer.File[],
+    dto: CreateUpdatePaymentDto,
+  ) {
     const {
       modeOfPayment,
       paymentDate,
@@ -131,7 +135,7 @@ export class PaymentService {
             const isDownPaymentBalanceZero =
               Math.trunc(totalDownPaymentBalanceAfterAmount) <= 0;
 
-            await prisma.payment.create({
+            const paymentResponse = await prisma.payment.create({
               data: {
                 modeOfPayment,
                 paymentDate,
@@ -150,6 +154,10 @@ export class PaymentService {
                 },
               },
             });
+
+            const { id: paymentResponseId } = paymentResponse || {};
+
+            await this.uploadPfp(paymentResponseId, files, prisma);
 
             await prisma.contract.update({
               where: {
@@ -216,7 +224,7 @@ export class PaymentService {
               this.mtzService.dateFormat.dateTimeUTCZ,
             );
 
-            await prisma.payment.create({
+            const paymentResponse = await prisma.payment.create({
               data: {
                 modeOfPayment,
                 paymentDate,
@@ -231,6 +239,10 @@ export class PaymentService {
                 },
               },
             });
+
+            const { id: paymentResponseId } = paymentResponse || {};
+
+            await this.uploadPfp(paymentResponseId, files, prisma);
 
             await prisma.contract.update({
               where: {
@@ -311,7 +323,7 @@ export class PaymentService {
             const totalBalanceAfterAmount =
               computedBalance <= 0 || isLastPaymentDate ? 0 : computedBalance;
 
-            await prisma.payment.create({
+            const paymentResponse = await prisma.payment.create({
               data: {
                 modeOfPayment,
                 paymentDate,
@@ -330,6 +342,10 @@ export class PaymentService {
                 },
               },
             });
+
+            const { id: paymentResponseId } = paymentResponse || {};
+
+            await this.uploadPfp(paymentResponseId, files, prisma);
 
             await prisma.contract.update({
               where: {
@@ -391,7 +407,7 @@ export class PaymentService {
             return;
           }
 
-          await prisma.payment.create({
+          const paymentResponse = await prisma.payment.create({
             data: {
               modeOfPayment,
               paymentDate,
@@ -406,6 +422,10 @@ export class PaymentService {
               },
             },
           });
+
+          const { id: paymentResponseId } = paymentResponse || {};
+
+          await this.uploadPfp(paymentResponseId, files, prisma);
 
           await prisma.contract.update({
             where: {
@@ -430,6 +450,7 @@ export class PaymentService {
 
       return "Payment created successfully";
     } catch (error) {
+      await this.uploadService.rollBackFiles(files);
       throw error;
     }
   }
@@ -1406,38 +1427,54 @@ export class PaymentService {
     );
   }
 
-  async uploadPfp(paymentId: string, files: Express.Multer.File[]) {
+  async onCreatePaymentFiles(
+    paymentId: string,
+    files: Express.Multer.File[],
+    prisma: Prisma.TransactionClient,
+  ) {
     try {
-      let response: string | null = null;
+      await Promise.all(
+        files.map(async file => {
+          const { originalname, path } = file;
+          const ext = this.uploadService.extractFileExt(originalname);
 
-      await this.prismaService.$transaction(async prisma => {
-        if (!files || !files.length) {
-          response = "No file uploaded";
-          return;
-        }
-
-        await Promise.all(
-          files.map(async file => {
-            const { originalname, path } = file;
-            const ext = this.uploadService.extractFileExt(originalname);
-
-            await prisma.file.create({
-              data: {
-                path,
-                name: originalname,
-                ext,
-                payment: {
-                  connect: {
-                    id: paymentId,
-                  },
+          await prisma.file.create({
+            data: {
+              path,
+              name: originalname,
+              ext,
+              payment: {
+                connect: {
+                  id: paymentId,
                 },
               },
-            });
-          }),
-        );
+            },
+          });
+        }),
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
 
-        response = "File uploaded successfully";
-      });
+  async uploadPfp(
+    paymentId: string,
+    files: Express.Multer.File[],
+    transactionClient?: Prisma.TransactionClient,
+  ) {
+    try {
+      let response: string = "Files uploaded successfully";
+
+      if (!files || !files.length) {
+        response = "No files to upload";
+      } else if (!!transactionClient) {
+        await this.onCreatePaymentFiles(paymentId, files, transactionClient);
+      } else {
+        await this.prismaService.$transaction(async prisma => {
+          await this.onCreatePaymentFiles(paymentId, files, prisma);
+        });
+      }
+
       return response;
     } catch (error) {
       throw error;

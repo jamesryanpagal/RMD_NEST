@@ -27,11 +27,20 @@ export class PaymentController {
   }
 
   @Post("create/:contractId")
+  @UseInterceptors(
+    UploadService.validate({
+      key: "pfp",
+      path: "payments",
+      multiple: true,
+      accepts: ["png", "jpeg", "jpg"],
+    }),
+  )
   onCreatePayment(
     @Param("contractId") contractId: string,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreateUpdatePaymentDto,
   ) {
-    return this.paymentService.createContractPayment(contractId, dto);
+    return this.paymentService.createContractPayment(contractId, files, dto);
   }
 
   @Post("release/agent/commission/:agentCommissionId")
