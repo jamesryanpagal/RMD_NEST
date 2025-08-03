@@ -1,8 +1,9 @@
+/* eslint-disable no-useless-catch */
 import { Injectable } from "@nestjs/common";
-import { CreateUpdateContractDto } from "./dto";
-import { PrismaService } from "src/services/prisma/prisma.service";
-import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { MtzService } from "src/services/mtz/mtz.service";
+import { PrismaService } from "src/services/prisma/prisma.service";
+import { CreateUpdateContractDto } from "./dto";
 
 @Injectable()
 export class ContractService {
@@ -504,6 +505,97 @@ export class ContractService {
           ],
         },
         include: {
+          lot: {
+            select: {
+              id: true,
+              title: true,
+              sqm: true,
+              block: {
+                select: {
+                  id: true,
+                  title: true,
+                  phase: {
+                    select: {
+                      id: true,
+                      title: true,
+                      project: {
+                        select: {
+                          id: true,
+                          projectName: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          agent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+              status: true,
+            },
+          },
+          commissionOfAgent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+            },
+          },
+        },
+        omit: {
+          dateCreated: true,
+          dateUpdated: true,
+          dateDeleted: true,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAgentContract(contractId: string) {
+    try {
+      return await this.prismaService.contract.findFirst({
+        where: {
+          AND: [
+            {
+              id: contractId,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+        include: {
+          lot: {
+            select: {
+              id: true,
+              title: true,
+              sqm: true,
+              block: {
+                select: {
+                  id: true,
+                  title: true,
+                  phase: {
+                    select: {
+                      id: true,
+                      title: true,
+                      project: {
+                        select: {
+                          id: true,
+                          projectName: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           agent: {
             omit: {
               dateCreated: true,
