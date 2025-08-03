@@ -374,6 +374,15 @@ export class PaymentService {
             );
             return;
           }
+
+          if (status === "DONE") {
+            this.exceptionService.throw(
+              "There's nothing to pay for this contract",
+              "BAD_REQUEST",
+            );
+            return;
+          }
+
           if (amount < balance) {
             this.exceptionService.throw(
               `Amount must be greater than or equal to ${balance}`,

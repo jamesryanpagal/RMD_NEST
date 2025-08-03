@@ -65,3 +65,9 @@ export class CreateUpdateContractDto {
   @Transform(({ value }) => value || null)
   paymentStartDate?: string;
 }
+
+export class UpdatePaymentStartDateDto {
+  @IsNotEmpty()
+  @IsString()
+  paymentStartDate: string;
+}

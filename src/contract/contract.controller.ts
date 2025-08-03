@@ -4,13 +4,14 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { ContractService } from "./contract.service";
-import { CreateUpdateContractDto } from "./dto";
+import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
 @Controller("contracts")
@@ -39,6 +40,14 @@ export class ContractController {
   @Get("agent/commission/:contractId")
   onGetAgentContract(@Param("contractId") contractId: string) {
     return this.contractService.getAgentContract(contractId);
+  }
+
+  @Patch("update/payment/start/date/:id")
+  onUpdateContractPaymentStartDate(
+    @Param("id") id: string,
+    @Body() dto: UpdatePaymentStartDateDto,
+  ) {
+    return this.contractService.updateContractPaymentStartDate(id, dto);
   }
 
   // @Patch("update/:id")

@@ -39,10 +39,6 @@ export class JwtAuthService {
       ...(type === "set" && {
         maxAge: this.mtzService.generateDateMilliseconds(7),
       }),
-      expires:
-        type === "clear"
-          ? this.mtzService.mtz(0).toDate()
-          : this.mtzService.mtz().add(7, "days").toDate(),
     };
 
     if (type === "set" && !!token) {

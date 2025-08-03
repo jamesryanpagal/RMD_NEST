@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { CreateUpdateContractDto } from "./dto";
+import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
 
 @Injectable()
 export class ContractService {
@@ -148,12 +148,12 @@ export class ContractService {
                 : downPaymentTerms || 0);
 
             const nextPaymentDate = baseDate.clone();
-            const lastPaymentDate = baseDate.clone();
             const recurringPaymentDay = baseDate.toDate().getDate();
-
-            for (let index = 1; index < computedTerms; index++) {
-              lastPaymentDate.add(1, "month").set("date", recurringPaymentDay);
-            }
+            const lastPaymentDate = this.mtzService.onCalculateLastDate(
+              baseDate.clone(),
+              computedTerms,
+              recurringPaymentDay,
+            );
 
             const formattedNextPaymentDate = nextPaymentDate.format(
               this.mtzService.dateFormat.dateTimeUTCZ,
@@ -632,6 +632,108 @@ export class ContractService {
           dateDeleted: true,
         },
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateContractPaymentStartDate(
+    id: string,
+    dto: UpdatePaymentStartDateDto,
+  ) {
+    const { paymentStartDate } = dto || {};
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+          include: {
+            payment: true,
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw("Contract not found", "NOT_FOUND");
+          return;
+        }
+
+        const {
+          payment,
+          paymentType,
+          terms,
+          downPaymentTerms,
+          downPaymentType,
+        } = contractResponse || {};
+
+        if (!!payment && !!payment.length) {
+          this.exceptionService.throw(
+            "Cannot update payment start date, as payments already started",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const parsedPaymentStartDate = this.mtzService.mtz(
+          paymentStartDate,
+          "defaultformat",
+        );
+
+        const formattedPaymentStartDate = parsedPaymentStartDate.format(
+          this.mtzService.dateFormat.dateTimeUTCZ,
+        );
+
+        if (paymentType === "INSTALLMENT" && terms) {
+          const computedTerms =
+            terms +
+            (downPaymentType === "FULL_DOWN_PAYMENT"
+              ? 1
+              : downPaymentTerms || 0);
+
+          const recurringPaymentDay = parsedPaymentStartDate.toDate().getDate();
+
+          const lastPaymentDate = this.mtzService.onCalculateLastDate(
+            parsedPaymentStartDate.clone(),
+            computedTerms,
+            recurringPaymentDay,
+          );
+
+          const formattedLastPaymentDate = lastPaymentDate.format(
+            this.mtzService.dateFormat.dateTimeUTCZ,
+          );
+
+          await prisma.contract.update({
+            where: {
+              id,
+            },
+            data: {
+              paymentStartedDate: formattedPaymentStartDate,
+              nextPaymentDate: formattedPaymentStartDate,
+              recurringPaymentDay,
+              paymentLastDate: formattedLastPaymentDate,
+            },
+          });
+        } else {
+          await prisma.contract.update({
+            where: {
+              id,
+            },
+            data: {
+              paymentStartedDate: formattedPaymentStartDate,
+              paymentLastDate: formattedPaymentStartDate,
+            },
+          });
+        }
+      });
+
+      return "Contract Payment Start Date Updated";
     } catch (error) {
       throw error;
     }
