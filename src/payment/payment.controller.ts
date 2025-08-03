@@ -76,6 +76,13 @@ export class PaymentController {
     return this.paymentService.getAgentCommissionBreakdown(id);
   }
 
+  @Get("commission/payment/history/:agentCommissionId")
+  onGetCommissionPaymentHistory(
+    @Param("agentCommissionId") agentCommissionId: string,
+  ) {
+    return this.paymentService.getCommissionPaymentHistory(agentCommissionId);
+  }
+
   @Get("breakdown/:contractId")
   onGetPaymentBreakdown(@Param("contractId") contractId: string) {
     return this.paymentService.getPaymentBreakdown(contractId);

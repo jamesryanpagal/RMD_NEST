@@ -1241,19 +1241,40 @@ export class PaymentService {
 
         const payments = await prisma.payment.findMany({
           where: {
-            OR: [
+            AND: [
               {
-                contractId,
+                OR: [
+                  {
+                    contractId,
+                  },
+                  {
+                    reservationId: reservation?.id,
+                  },
+                ],
               },
               {
-                reservationId: reservation?.id,
+                status: { not: "DELETED" },
               },
             ],
+          },
+          include: {
+            files: {
+              where: {
+                status: { not: "DELETED" },
+              },
+              omit: {
+                dateCreated: true,
+                dateDeleted: true,
+                dateUpdated: true,
+                status: true,
+              },
+            },
           },
           omit: {
             dateCreated: true,
             dateUpdated: true,
             dateDeleted: true,
+            status: true,
           },
         });
 
@@ -1261,6 +1282,46 @@ export class PaymentService {
       });
 
       return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getCommissionPaymentHistory(agentCommissionId: string) {
+    try {
+      return await this.prismaService.payment.findMany({
+        where: {
+          AND: [
+            {
+              transactionType: "AGENT_COMMISSION_RELEASE",
+            },
+            {
+              agentCommissionId,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+        omit: {
+          dateCreated: true,
+          dateUpdated: true,
+          dateDeleted: true,
+          status: true,
+        },
+        include: {
+          files: {
+            where: {
+              status: { not: "DELETED" },
+            },
+            omit: {
+              dateCreated: true,
+              dateDeleted: true,
+              dateUpdated: true,
+            },
+          },
+        },
+      });
     } catch (error) {
       throw error;
     }
