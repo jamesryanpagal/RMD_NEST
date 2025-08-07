@@ -129,7 +129,7 @@ export class FileService {
       return {
         ...rest,
         path: !!path
-          ? `${config.domain}${UploadConfig.prefix}${path.split("/").slice(1).join("/")}`
+          ? `${config.file_prefix}${UploadConfig.prefix}${path.split("/").slice(1).join("/")}`
           : null,
       };
     });

@@ -5,9 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../generated/prisma"
-  previewFeatures = ["views"]
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -368,6 +367,8 @@ model Payment {
 
   penalized     Boolean @default(false)
   penaltyAmount Float   @default(0)
+
+  receiptNo String?
 
   status STATUS @default(ACTIVE)
 

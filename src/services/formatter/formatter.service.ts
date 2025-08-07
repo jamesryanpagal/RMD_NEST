@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import * as numToWords from "number-to-words";
 
 export const enum LOCALE {
   PH = "en-PH",
@@ -29,5 +30,15 @@ export class FormatterService {
   onTruncateNumber(val: number, decimals: number = 2) {
     const factor = Math.pow(10, decimals);
     return Math.trunc(val * factor) / factor;
+  }
+
+  onNumberToWords(val: number | string) {
+    if (!val) {
+      return "Zero";
+    }
+
+    const response = numToWords.toWords(val);
+
+    return response.charAt(0).toUpperCase() + response.slice(1);
   }
 }

@@ -11,6 +11,7 @@ import { AgentModule } from "./agent/agent.module";
 import { AgentCommissionModule } from "./agent-commission/agent-commission.module";
 import { FileModule } from "./file/file.module";
 import { CronModule } from "./cron/cron.module";
+import { EmailModule } from "./email/email.module";
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { CronModule } from "./cron/cron.module";
     AgentModule,
     AgentCommissionModule,
     FileModule,
-    CronModule,
+    EmailModule,
+    // CronModule,
   ],
   providers: [],
 })

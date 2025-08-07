@@ -628,15 +628,10 @@ export class ProjectService {
     }
   }
 
-  async checkLotAvailability(
-    id: string,
-    prisma?: Omit<
-      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
-      "$on" | "$connect" | "$disconnect" | "$use" | "$transaction" | "$extends"
-    >,
-  ) {
+  async checkLotAvailability(id: string, prisma?: Prisma.TransactionClient) {
     try {
-      const lotResponse = await (prisma || this.prismaService).lot.findUnique({
+      const prismaTransaction = prisma || this.prismaService;
+      const lotResponse = await prismaTransaction.lot.findUnique({
         where: { id },
         include: {
           reservation: {
@@ -670,14 +665,14 @@ export class ProjectService {
         .isBefore(this.mtzService.mtz());
 
       if (validityExpired && reservationStatus === "ACTIVE") {
-        await (prisma || this.prismaService).reservation.update({
+        await prismaTransaction.reservation.update({
           where: { id: reservationId },
           data: {
             status: "FORFEITED",
           },
         });
 
-        await (prisma || this.prismaService).lot.update({
+        await prismaTransaction.lot.update({
           where: { id },
           data: {
             status: "OPEN",
