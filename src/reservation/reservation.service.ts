@@ -3,6 +3,8 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import { ReservationDto } from "./dto";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { PaymentService } from "src/payment/payment.service";
+import { UploadService } from "src/services/upload/upload.service";
 
 @Injectable()
 export class ReservationService {
@@ -10,12 +12,15 @@ export class ReservationService {
     private prismaService: PrismaService,
     private mtzService: MtzService,
     private exceptionService: ExceptionService,
+    private paymentService: PaymentService,
+    private uploadService: UploadService,
   ) {}
 
   async createReservation(
     lotId: string,
     clientId: string,
     dto: ReservationDto,
+    files: Express.Multer.File[],
   ) {
     try {
       const {
@@ -63,6 +68,8 @@ export class ReservationService {
           },
         });
 
+        await this.paymentService.uploadPfp(paymentResponse.id, files, prisma);
+
         const reservationResponse = await prisma.reservation.create({
           data: {
             payment: {
@@ -109,6 +116,7 @@ export class ReservationService {
 
       return "Reservation created successfully";
     } catch (error) {
+      this.uploadService.rollBackFiles(files);
       throw error;
     }
   }

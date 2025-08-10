@@ -15,6 +15,14 @@ type EnvBaseConfigKey = {
   client: string;
   email_from: string;
   file_prefix: string;
+  database_port: string;
+  database_user: string;
+  database_password: string;
+  database_db: string;
+  pg_admin_email: string;
+  pg_admin_password: string;
+  pg_admin_host_port: string;
+  pg_admin_container_port: string;
 };
 
 type StandAlongConfigKey = {
@@ -56,6 +64,20 @@ const envBaseConfig: Record<ENVIRONMENT, EnvBaseConfigKey> = {
     port: loadEnvbaseConfig("PORT", ENVIRONMENT.DEV),
     file_prefix: loadEnvbaseConfig("FILE_PREFIX", ENVIRONMENT.DEV),
     email_from: loadEnvbaseConfig("EMAIL_FROM", ENVIRONMENT.DEV),
+    database_port: loadEnvbaseConfig("DATABASE_PORT", ENVIRONMENT.DEV),
+    database_user: loadEnvbaseConfig("DATABASE_USER", ENVIRONMENT.DEV),
+    database_password: loadEnvbaseConfig("DATABASE_PASSWORD", ENVIRONMENT.DEV),
+    database_db: loadEnvbaseConfig("DATABASE_DB", ENVIRONMENT.DEV),
+    pg_admin_email: loadEnvbaseConfig("PG_ADMIN_EMAIL", ENVIRONMENT.DEV),
+    pg_admin_password: loadEnvbaseConfig("PG_ADMIN_PASSWORD", ENVIRONMENT.DEV),
+    pg_admin_host_port: loadEnvbaseConfig(
+      "PG_ADMIN_HOST_PORT",
+      ENVIRONMENT.DEV,
+    ),
+    pg_admin_container_port: loadEnvbaseConfig(
+      "PG_ADMIN_CONTAINER_PORT",
+      ENVIRONMENT.DEV,
+    ),
   },
   [ENVIRONMENT.PROD]: {
     client: loadEnvbaseConfig("CLIENT", ENVIRONMENT.PROD),
@@ -63,6 +85,20 @@ const envBaseConfig: Record<ENVIRONMENT, EnvBaseConfigKey> = {
     port: loadEnvbaseConfig("PORT", ENVIRONMENT.PROD),
     file_prefix: loadEnvbaseConfig("FILE_PREFIX", ENVIRONMENT.PROD),
     email_from: loadEnvbaseConfig("EMAIL_FROM", ENVIRONMENT.PROD),
+    database_port: loadEnvbaseConfig("DATABASE_PORT", ENVIRONMENT.PROD),
+    database_user: loadEnvbaseConfig("DATABASE_USER", ENVIRONMENT.PROD),
+    database_password: loadEnvbaseConfig("DATABASE_PASSWORD", ENVIRONMENT.PROD),
+    database_db: loadEnvbaseConfig("DATABASE_DB", ENVIRONMENT.PROD),
+    pg_admin_email: loadEnvbaseConfig("PG_ADMIN_EMAIL", ENVIRONMENT.PROD),
+    pg_admin_password: loadEnvbaseConfig("PG_ADMIN_PASSWORD", ENVIRONMENT.PROD),
+    pg_admin_host_port: loadEnvbaseConfig(
+      "PG_ADMIN_HOST_PORT",
+      ENVIRONMENT.PROD,
+    ),
+    pg_admin_container_port: loadEnvbaseConfig(
+      "PG_ADMIN_CONTAINER_PORT",
+      ENVIRONMENT.PROD,
+    ),
   },
 };
 

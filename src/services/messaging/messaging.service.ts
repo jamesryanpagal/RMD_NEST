@@ -77,7 +77,22 @@ export class MessagingService {
                 .payment-type p {
                   text-align: end
                 }
-                @media only screen and (max-width: 600px) {
+                .footer {
+                	display: flex;
+                	flex-direction: column;
+                	align-items: end;
+                }
+                .footer-row {
+                	display: flex;
+                }
+                .footer-row-key {
+                	width: 50px
+                }
+                .footer-row-value {
+                	width: 150px;
+                	text-align: end
+                }
+                @media only screen and (max-width: 800px) {
                   .details-container {
                     flex-direction: column;
                     gap: 40px;
@@ -155,6 +170,16 @@ export class MessagingService {
                       <div class="payment-type">
                         <p>As Monthly Payment</p>
                       </div>
+                    </div>
+                  </div>
+                  <div class="footer">
+                    <div class="footer-row">
+                      <p class="footer-row-key">No.:</p>
+                      <p class="footer-row-value">RCP-2025123456</p>
+                    </div>
+                    <div class="footer-row">
+                      <p class="footer-row-key">Date:</p>
+                      <p class="footer-row-value">August 07, 2025</p>
                     </div>
                   </div>
                 </div>
