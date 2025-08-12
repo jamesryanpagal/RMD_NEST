@@ -275,9 +275,10 @@ model ClientRequest {
 
   status REQUEST_STATUS @default(PENDING)
 
-  createdBy String?
-  updatedBy String?
-  deletedBy String?
+  approvedBy String?
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt

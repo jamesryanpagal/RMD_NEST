@@ -19,20 +19,21 @@ import { RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
-@Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
 @Controller("requests")
 export class RequestController {
   constructor(private requestService: RequestService) {}
 
+  @Roles($Enums.ROLE.ADMIN)
   @Post("approve/:requestId")
-  onApproveClientUpdate(
+  onApproveRequest(
     @Param("requestId") requestId: string,
     @Body() dto: ApproveRequestDto,
     @Req() req: Request,
   ) {
-    return this.requestService.approveClientUpdate(requestId, dto, req.user);
+    return this.requestService.approveRequest(requestId, dto, req.user);
   }
 
+  @Roles($Enums.ROLE.ADMIN)
   @Post("reject/or/delete/:requestId/")
   onRejectRequest(
     @Param("requestId") requestId: string,

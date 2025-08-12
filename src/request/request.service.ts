@@ -10,6 +10,7 @@ type ModuleResponseProps = {
   targetId: string;
   requestType: $Enums.REQUEST_TYPE;
   status: $Enums.REQUEST_STATUS;
+  approvedBy?: string;
   createdBy?: string;
   updatedBy?: string;
   deletedBy?: string;
@@ -55,7 +56,7 @@ export class RequestService {
     [$Enums.REQUEST_REJECT_DELETE.REJECT]: "rejected",
   };
 
-  async approveClientUpdate(
+  async approveRequest(
     requestId: string,
     dto: ApproveRequestDto,
     user?: UserFullDetailsProps,
@@ -93,6 +94,7 @@ export class RequestService {
           dateCreated,
           dateUpdated,
           dateDeleted,
+          approvedBy,
           createdBy,
           updatedBy,
           deletedBy,
@@ -130,7 +132,7 @@ export class RequestService {
           },
           data: {
             status: "APPROVED",
-            updatedBy: user?.id,
+            approvedBy: user?.id,
           },
         });
       });
