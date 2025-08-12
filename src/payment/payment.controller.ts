@@ -43,6 +43,7 @@ export class PaymentController {
     return this.paymentService.createContractPayment(contractId, files, dto);
   }
 
+  // ? add file uploads
   @Post("release/agent/commission/:agentCommissionId")
   onReleaseAgentCommission(
     @Param("agentCommissionId") agentCommissionId: string,

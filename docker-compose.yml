@@ -26,6 +26,7 @@ services:
       - db-dev
     volumes:
       - ./src:/app/src
+      - ./uploads:/app/uploads
     networks:
       - rmd_nest_network
     profiles:
@@ -58,6 +59,7 @@ services:
       - db-prod
     volumes:
       - ./src:/app/src
+      - ./uploads:/app/uploads
     networks:
       - rmd_nest_network
     profiles:

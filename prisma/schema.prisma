@@ -20,6 +20,28 @@ enum ROLE {
   SECRETARY
 }
 
+enum REQUEST_MODULE {
+  CLIENT
+}
+
+enum REQUEST_REJECT_DELETE {
+  DELETE
+  REJECT
+}
+
+enum REQUEST_STATUS {
+  PENDING
+  APPROVED
+  REJECTED
+  DELETED
+}
+
+enum REQUEST_TYPE {
+  ADD
+  UPDATE
+  DELETE
+}
+
 enum STATUS {
   ACTIVE
   DELETED
@@ -218,7 +240,44 @@ model Client {
 
   reservation Reservation[]
 
+  clientRequest ClientRequest?
+
   status STATUS @default(ACTIVE)
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model ClientRequest {
+  id       String  @id @default(cuid())
+  targetId String? @unique
+
+  firstName     String
+  middleName    String?
+  lastName      String
+  email         String
+  contactNumber String
+  tinNumber     String
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  requestType REQUEST_TYPE
+
+  client Client? @relation(fields: [targetId], references: [id])
+
+  status REQUEST_STATUS @default(PENDING)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt

@@ -7,7 +7,7 @@ import { extname } from "path";
 import { constants } from "fs";
 
 export type FileTypes = "jpeg" | "jpg" | "png" | "pdf";
-export type FilePaths = "payments" | "reservations";
+export type FilePaths = "payments" | "reservations" | "static";
 
 export type FileValidationProps = {
   key: string;

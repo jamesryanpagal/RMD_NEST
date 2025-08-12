@@ -292,6 +292,14 @@ export class ContractService {
               dateDeleted: true,
             },
           },
+          agent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+              status: true,
+            },
+          },
         },
       });
 
@@ -400,6 +408,14 @@ export class ContractService {
               dateCreated: true,
               dateUpdated: true,
               dateDeleted: true,
+            },
+          },
+          agent: {
+            omit: {
+              dateCreated: true,
+              dateUpdated: true,
+              dateDeleted: true,
+              status: true,
             },
           },
         },

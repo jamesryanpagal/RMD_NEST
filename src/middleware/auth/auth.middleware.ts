@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
-import { CreateAccountAdminDto, LoginDto } from "src/auth/dto";
+import { CreateAccountDto, LoginDto } from "src/auth/dto";
 import { ArgonService } from "src/services/argon/argon.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
@@ -56,7 +56,7 @@ export class SignupMiddleware implements NestMiddleware {
 
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      const { email } = req.body as CreateAccountAdminDto;
+      const { email } = req.body as CreateAccountDto;
       const user = await this.prismaService.user.findFirst({
         where: { AND: [{ email }, { status: "ACTIVE" }] },
       });

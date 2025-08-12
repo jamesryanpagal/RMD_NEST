@@ -11,7 +11,10 @@ import { AuthGuard } from "@nestjs/passport";
 import { Request, Response } from "express";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { AuthService } from "./auth.service";
-import { CreateAccountAdminDto } from "./dto";
+import { CreateAccountDto } from "./dto";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
 
 @Controller("auth")
 export class AuthController {
@@ -34,9 +37,10 @@ export class AuthController {
     return this.authService.regenerateRefreshToken(req, res);
   }
 
-  @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
-  @Post("create/account/admin")
-  onCreateAccountAdmin(@Body() dto: CreateAccountAdminDto) {
+  @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+  @Roles($Enums.ROLE.ADMIN)
+  @Post("create/account")
+  onCreateAccountAdmin(@Body() dto: CreateAccountDto) {
     return this.authService.createAccountAdmin(dto);
   }
 }

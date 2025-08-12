@@ -4,6 +4,7 @@ import {
   Delete,
   Param,
   Patch,
+  Post,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
@@ -15,6 +16,18 @@ import { DeleteFilesDto } from "./dto";
 @Controller("files")
 export class FileController {
   constructor(private fileService: FileService) {}
+
+  @Post("upload/static")
+  @UseInterceptors(
+    UploadService.validate({
+      key: "file",
+      path: "static",
+      accepts: ["jpeg", "jpg", "png"],
+    }),
+  )
+  onUploadStaticFile(@UploadedFile() file: Express.Multer.File) {
+    return this.fileService.uploadStaticFile(file);
+  }
 
   @Patch("payment/update/:id")
   @UseInterceptors(

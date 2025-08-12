@@ -1,11 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { CreateClientServiceDto } from "./dto";
+import { CreateClientServiceDto, CreateUpdateClientDto } from "./dto";
+import { UserFullDetailsProps } from "src/type";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
 
 @Injectable()
 export class ClientService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private exceptionService: ExceptionService,
+  ) {}
 
   async getClients() {
     try {
@@ -71,7 +76,11 @@ export class ClientService {
     }
   }
 
-  async updateClient(id: string, dto: Prisma.ClientUpdateInput) {
+  async updateClient(
+    id: string,
+    dto: CreateUpdateClientDto,
+    user?: UserFullDetailsProps,
+  ) {
     const {
       firstName,
       middleName,
@@ -89,28 +98,64 @@ export class ClientService {
       zip,
     } = dto || {};
     try {
-      await this.prismaService.client.update({
-        where: {
-          id,
-        },
-        data: {
-          firstName,
-          middleName,
-          lastName,
-          email,
-          contactNumber,
-          tinNumber,
-          houseNumber,
-          street,
-          barangay,
-          subdivision,
-          city,
-          province,
-          region,
-          zip,
-        },
-      });
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "BAD_REQUEST");
+          return;
+        }
 
+        const { role } = user;
+
+        if (role === "ADMIN") {
+          await prisma.client.update({
+            where: {
+              id,
+            },
+            data: {
+              firstName,
+              middleName,
+              lastName,
+              email,
+              contactNumber,
+              tinNumber,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+          });
+        } else {
+          await prisma.clientRequest.create({
+            data: {
+              firstName,
+              middleName,
+              lastName,
+              email,
+              contactNumber,
+              tinNumber,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+              requestType: "UPDATE",
+              createdBy: user.id,
+              client: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        }
+      });
       return "Client updated successfully";
     } catch (error) {
       throw error;

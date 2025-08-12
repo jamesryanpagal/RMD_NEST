@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { CreateAccountAdminServiceDto } from "./dto";
+import { CreateAccountDto } from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { ArgonService } from "src/services/argon/argon.service";
@@ -117,7 +117,8 @@ export class AuthService {
     province,
     region,
     zip,
-  }: CreateAccountAdminServiceDto) {
+    role,
+  }: CreateAccountDto) {
     try {
       await this.prismaService.$transaction(async prisma => {
         const hashPassword = await this.argonService.hash(password);
@@ -138,7 +139,9 @@ export class AuthService {
             province,
             region,
             zip,
-            role: "ADMIN",
+            role,
+            ...(role === "ADMIN" && { admin: { create: {} } }),
+            ...(role === "SECRETARY" && { secretary: { create: {} } }),
           },
         });
       });

@@ -40,7 +40,7 @@ export class AuthModule implements NestModule {
       .forRoutes({ path: "auth/login", method: RequestMethod.POST });
 
     consumer.apply(SignupMiddleware).forRoutes({
-      path: "auth/create/account/admin",
+      path: "auth/create/account",
       method: RequestMethod.POST,
     });
   }

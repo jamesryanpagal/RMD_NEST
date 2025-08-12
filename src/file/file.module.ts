@@ -7,6 +7,12 @@ import { UploadService } from "src/services/upload/upload.service";
 
 @Module({
   controllers: [FileController],
-  providers: [FileService, PrismaService, ExceptionService, UploadService],
+  providers: [
+    FileService,
+    PrismaService,
+    ExceptionService,
+    UploadService,
+    ExceptionService,
+  ],
 })
 export class FileModule {}

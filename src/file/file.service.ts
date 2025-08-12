@@ -8,12 +8,14 @@ import {
 import { DeleteFilesDto } from "./dto";
 import { PaymentFiles } from "src/payment/dto";
 import { config } from "src/config";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
 
 @Injectable()
 export class FileService {
   constructor(
     private prismaService: PrismaService,
     private uploadService: UploadService,
+    private exceptionService: ExceptionService,
   ) {}
 
   async paymentUpdateFile(
@@ -133,5 +135,19 @@ export class FileService {
           : null,
       };
     });
+  }
+
+  uploadStaticFile(file: Express.Multer.File) {
+    try {
+      if (!file) {
+        this.exceptionService.throw("File not provided", "BAD_REQUEST");
+        return;
+      }
+
+      return "Static file uploaded successfully";
+    } catch (error) {
+      this.uploadService.rollback(file.path);
+      throw error;
+    }
   }
 }

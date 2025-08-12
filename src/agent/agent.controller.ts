@@ -6,10 +6,18 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
 import { AgentService } from "./agent.service";
 import { AgentDto } from "./dto";
+import { AuthGuard } from "@nestjs/passport";
+import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { $Enums } from "generated/prisma";
+import { Roles } from "src/decorator";
 
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+@Roles($Enums.ROLE.ADMIN)
 @Controller("agents")
 export class AgentController {
   constructor(private agentService: AgentService) {}

@@ -12,6 +12,7 @@ import { AgentCommissionModule } from "./agent-commission/agent-commission.modul
 import { FileModule } from "./file/file.module";
 // import { CronModule } from "./cron/cron.module";
 import { EmailModule } from "./email/email.module";
+import { RequestModule } from './request/request.module';
 
 @Module({
   imports: [
@@ -27,8 +28,8 @@ import { EmailModule } from "./email/email.module";
     AgentCommissionModule,
     FileModule,
     EmailModule,
+    RequestModule,
     // CronModule,
   ],
-  providers: [],
 })
 export class AppModule {}

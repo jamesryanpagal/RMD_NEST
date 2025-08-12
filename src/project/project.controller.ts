@@ -21,8 +21,12 @@ import {
 } from "./dto";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
 
-@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+@Roles($Enums.ROLE.ADMIN)
 @Controller("projects")
 export class ProjectController {
   constructor(private projectService: ProjectService) {}

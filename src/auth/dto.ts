@@ -1,28 +1,10 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional } from "class-validator";
-import { Prisma } from "generated/prisma";
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional } from "class-validator";
+import { $Enums, Prisma } from "generated/prisma";
 
 export type LoginServiceDto = Pick<
   Prisma.UserCreateInput,
   "email" | "password"
->;
-export type CreateAccountAdminServiceDto = Pick<
-  Prisma.UserCreateInput,
-  | "firstName"
-  | "middleName"
-  | "lastName"
-  | "email"
-  | "password"
-  | "phone"
-  | "mobile"
-  | "houseNumber"
-  | "street"
-  | "barangay"
-  | "subdivision"
-  | "city"
-  | "province"
-  | "region"
-  | "zip"
 >;
 
 export class LoginDto {
@@ -34,7 +16,7 @@ export class LoginDto {
   password: string;
 }
 
-export class CreateAccountAdminDto {
+export class CreateAccountDto {
   @IsNotEmpty()
   firstName: string;
 
@@ -86,4 +68,7 @@ export class CreateAccountAdminDto {
   @IsOptional()
   @Transform(({ value }) => value || null)
   zip?: string;
+
+  @IsEnum($Enums.ROLE)
+  role: $Enums.ROLE;
 }

@@ -5,6 +5,7 @@ import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PaymentService } from "src/payment/payment.service";
 import { UploadService } from "src/services/upload/upload.service";
+import { FileService } from "src/file/file.service";
 
 @Injectable()
 export class ReservationService {
@@ -14,6 +15,7 @@ export class ReservationService {
     private exceptionService: ExceptionService,
     private paymentService: PaymentService,
     private uploadService: UploadService,
+    private fileService: FileService,
   ) {}
 
   async createReservation(
@@ -177,6 +179,19 @@ export class ReservationService {
               },
             },
             payment: {
+              include: {
+                files: {
+                  where: {
+                    status: { not: "DELETED" },
+                  },
+                  omit: {
+                    dateCreated: true,
+                    dateUpdated: true,
+                    dateDeleted: true,
+                    status: true,
+                  },
+                },
+              },
               omit: {
                 dateCreated: true,
                 dateUpdated: true,
@@ -188,7 +203,8 @@ export class ReservationService {
 
         const validatedResponse = await Promise.all(
           reservationList.map(async props => {
-            const { id, validity, status } = props || {};
+            const { id, validity, status, payment } = props || {};
+            const { files } = payment || {};
             const validityExpired = this.mtzService
               .mtz(validity)
               .isBefore(this.mtzService.mtz());
@@ -201,10 +217,16 @@ export class ReservationService {
                 },
               });
 
-              return { ...props, status: updatedResponse.status };
+              return { ...props, payment, status: updatedResponse.status };
             }
 
-            return props;
+            return {
+              ...props,
+              payment: {
+                ...payment,
+                files: this.fileService.onFormatPaymentFilesResponse(files),
+              },
+            };
           }),
         );
 
@@ -280,6 +302,19 @@ export class ReservationService {
               },
             },
             payment: {
+              include: {
+                files: {
+                  where: {
+                    status: { not: "DELETED" },
+                  },
+                  omit: {
+                    dateCreated: true,
+                    dateUpdated: true,
+                    dateDeleted: true,
+                    status: true,
+                  },
+                },
+              },
               omit: {
                 dateCreated: true,
                 dateUpdated: true,
@@ -289,7 +324,13 @@ export class ReservationService {
           },
         });
 
-        const { id: responseId, validity, status } = reservationResponse || {};
+        const {
+          id: responseId,
+          validity,
+          status,
+          payment,
+        } = reservationResponse || {};
+        const { files } = payment || {};
 
         const validityExpired = this.mtzService
           .mtz(validity)
@@ -303,11 +344,21 @@ export class ReservationService {
             },
           });
 
-          respose = { ...reservationResponse, status: updatedResponse.status };
+          respose = {
+            ...reservationResponse,
+            payment,
+            status: updatedResponse.status,
+          };
           return;
         }
 
-        respose = reservationResponse;
+        respose = {
+          ...reservationResponse,
+          payment: {
+            ...payment,
+            files: this.fileService.onFormatPaymentFilesResponse(files),
+          },
+        };
       });
 
       return respose;

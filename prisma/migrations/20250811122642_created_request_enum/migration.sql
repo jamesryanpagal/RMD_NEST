@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "public"."REQUEST_MODULE" AS ENUM ('CLIENT');
+
+-- CreateEnum
+CREATE TYPE "public"."REQUEST_REJECT_DELETE" AS ENUM ('DELETE', 'REJECT');
