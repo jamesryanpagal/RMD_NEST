@@ -31,10 +31,18 @@ export class RequestService {
 
   private moduleModel: Record<$Enums.REQUEST_MODULE, string> = {
     [$Enums.REQUEST_MODULE.CLIENT]: "clientRequest",
+    [$Enums.REQUEST_MODULE.RESERVATION]: "reservationRequest",
+    [$Enums.REQUEST_MODULE.CONTRACT]: "contractRequest",
+    [$Enums.REQUEST_MODULE.PAYMENT]: "paymentRequest",
+    [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: "agentCommissionRequest",
   };
 
   private targetModuleModel: Record<$Enums.REQUEST_MODULE, string> = {
     [$Enums.REQUEST_MODULE.CLIENT]: "client",
+    [$Enums.REQUEST_MODULE.RESERVATION]: "payment",
+    [$Enums.REQUEST_MODULE.CONTRACT]: "contract",
+    [$Enums.REQUEST_MODULE.PAYMENT]: "payment",
+    [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: "agentCommission",
   };
 
   private requestTypeModel: Record<$Enums.REQUEST_TYPE, string> = {
@@ -135,6 +143,39 @@ export class RequestService {
             approvedBy: user?.id,
           },
         });
+
+        // ? this query is specific for reservation and payment only
+        if (module === "RESERVATION" && isRequestDelete) {
+          const reservationPaymentResponse = await prisma.payment.findUnique({
+            where: {
+              id: targetId,
+            },
+            include: {
+              reservation: true,
+            },
+          });
+
+          if (
+            !reservationPaymentResponse ||
+            !reservationPaymentResponse.reservation
+          ) {
+            this.exceptionService.throw(
+              "Payment not found for reservation",
+              "NOT_FOUND",
+            );
+            return;
+          }
+
+          await prisma.reservation.update({
+            where: {
+              id: reservationPaymentResponse.reservation.id,
+            },
+            data: {
+              status: "DELETED",
+            },
+          });
+        }
+        // ?
       });
 
       return `Request for module ${module} has been approved.`;

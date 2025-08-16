@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -15,8 +16,13 @@ import { ReservationDto } from "./dto";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { UploadService } from "src/services/upload/upload.service";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
+import { Request } from "express";
 
-@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+@Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
 @Controller("reservations")
 export class ReservationController {
   constructor(private reservationService: ReservationService) {}
@@ -50,13 +56,17 @@ export class ReservationController {
   }
 
   @Patch("update/:id")
-  onUpdateReservation(@Param("id") id: string, @Body() dto: ReservationDto) {
-    return this.reservationService.updateReservation(id, dto);
+  onUpdateReservation(
+    @Param("id") id: string,
+    @Body() dto: ReservationDto,
+    @Req() req: Request,
+  ) {
+    return this.reservationService.updateReservation(id, dto, req.user);
   }
 
   @Delete("delete/:id")
-  onDeleteReservation(@Param("id") id: string) {
-    return this.reservationService.deleteReservation(id);
+  onDeleteReservation(@Param("id") id: string, @Req() req: Request) {
+    return this.reservationService.deleteReservation(id, req.user);
   }
 
   @Get(":id")

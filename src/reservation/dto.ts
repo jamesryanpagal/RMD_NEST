@@ -4,10 +4,6 @@ import { $Enums } from "generated/prisma";
 
 export class ReservationDto {
   @IsNotEmpty()
-  @IsEnum($Enums.TRANSACTION_TYPE)
-  transactionType: $Enums.TRANSACTION_TYPE;
-
-  @IsNotEmpty()
   @IsEnum($Enums.MODE_OF_PAYMENT)
   modeOfPayment: $Enums.MODE_OF_PAYMENT;
 

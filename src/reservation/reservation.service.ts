@@ -6,6 +6,7 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PaymentService } from "src/payment/payment.service";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class ReservationService {
@@ -25,13 +26,7 @@ export class ReservationService {
     files: Express.Multer.File[],
   ) {
     try {
-      const {
-        transactionType,
-        modeOfPayment,
-        paymentDate,
-        amount,
-        referenceNumber,
-      } = dto || {};
+      const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
 
       await this.prismaService.$transaction(async prisma => {
         const checkReservation = await prisma.reservation.findFirst({
@@ -62,7 +57,7 @@ export class ReservationService {
 
         const paymentResponse = await prisma.payment.create({
           data: {
-            transactionType,
+            transactionType: "RESERVATION_FEE",
             modeOfPayment,
             paymentDate,
             amount,
@@ -367,35 +362,17 @@ export class ReservationService {
     }
   }
 
-  async deleteReservation(id: string) {
+  async deleteReservation(id: string, user?: UserFullDetailsProps) {
     try {
-      await this.prismaService.reservation.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "DELETED",
-        },
-      });
+      if (!user) {
+        this.exceptionService.throw("User not found", "BAD_REQUEST");
+        return;
+      }
 
-      return "Reservation deleted successfully";
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateReservation(id: string, dto: ReservationDto) {
-    try {
-      const {
-        transactionType,
-        modeOfPayment,
-        paymentDate,
-        amount,
-        referenceNumber,
-      } = dto || {};
+      const { role } = user || {};
 
       await this.prismaService.$transaction(async prisma => {
-        const reservationRespose = await prisma.reservation.findFirst({
+        const reservationResponse = await prisma.reservation.findFirst({
           where: {
             AND: [
               {
@@ -411,27 +388,128 @@ export class ReservationService {
           },
         });
 
-        if (!reservationRespose) {
+        if (!reservationResponse || !reservationResponse.payment) {
           this.exceptionService.throw("Reservation not found", "NOT_FOUND");
           return;
         }
 
-        await prisma.payment.update({
+        if (role === "SECRETARY") {
+          const { modeOfPayment, paymentDate, amount, referenceNumber } =
+            reservationResponse.payment;
+
+          await prisma.reservationRequest.create({
+            data: {
+              modeOfPayment,
+              paymentDate,
+              amount,
+              referenceNumber,
+              requestType: "DELETE",
+              createdBy: user.id,
+              payment: {
+                connect: {
+                  id: reservationResponse.payment.id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.reservation.update({
+            where: {
+              id,
+            },
+            data: {
+              status: "DELETED",
+            },
+          });
+
+          await prisma.payment.update({
+            where: {
+              id: reservationResponse.payment.id,
+            },
+            data: {
+              status: "DELETED",
+            },
+          });
+        }
+      });
+
+      return "Reservation deleted successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateReservation(
+    id: string,
+    dto: ReservationDto,
+    user?: UserFullDetailsProps,
+  ) {
+    try {
+      const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
+
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "BAD_REQUEST");
+          return;
+        }
+
+        const { role } = user || {};
+
+        const reservationResponse = await prisma.reservation.findFirst({
           where: {
-            id: reservationRespose.payment?.id,
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
           },
-          data: {
-            transactionType,
-            modeOfPayment,
-            paymentDate,
-            amount,
-            referenceNumber,
+          include: {
+            payment: true,
           },
         });
+
+        if (!reservationResponse) {
+          this.exceptionService.throw("Reservation not found", "NOT_FOUND");
+          return;
+        }
+
+        if (role === "SECRETARY") {
+          await prisma.reservationRequest.create({
+            data: {
+              modeOfPayment,
+              paymentDate,
+              amount,
+              referenceNumber,
+              requestType: "UPDATE",
+              createdBy: user.id,
+              payment: {
+                connect: {
+                  id: reservationResponse.payment?.id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.payment.update({
+            where: {
+              id: reservationResponse.payment?.id,
+            },
+            data: {
+              modeOfPayment,
+              paymentDate,
+              amount,
+              referenceNumber,
+            },
+          });
+        }
       });
 
       return "Reservation updated successfully";
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
