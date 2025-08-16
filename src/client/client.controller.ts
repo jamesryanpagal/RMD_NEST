@@ -44,8 +44,8 @@ export class ClientController {
   }
 
   @Delete("delete/:id")
-  onDeleteClient(@Param("id") id: string) {
-    return this.clientService.deleteClient(id);
+  onDeleteClient(@Param("id") id: string, @Req() req: Request) {
+    return this.clientService.deleteClient(id, req.user);
   }
 
   @Get(":id")

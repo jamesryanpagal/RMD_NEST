@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "generated/prisma";
+import { $Enums, Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { CreateClientServiceDto, CreateUpdateClientDto } from "./dto";
 import { UserFullDetailsProps } from "src/type";
@@ -162,15 +162,90 @@ export class ClientService {
     }
   }
 
-  async deleteClient(id: string) {
+  async deleteClient(id: string, user?: UserFullDetailsProps) {
     try {
-      await this.prismaService.client.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "DELETED",
-        },
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "BAD_REQUEST");
+          return;
+        }
+
+        const { role } = user || {};
+
+        if (role === "ADMIN") {
+          await this.prismaService.client.update({
+            where: {
+              id,
+            },
+            data: {
+              status: "DELETED",
+            },
+          });
+        } else {
+          const clientResponse = await this.prismaService.client.findFirst({
+            where: {
+              AND: [
+                {
+                  id,
+                },
+                {
+                  status: "ACTIVE",
+                },
+              ],
+            },
+          });
+
+          if (!clientResponse) {
+            this.exceptionService.throw(
+              "Client not found, data might be already deleted.",
+              "BAD_REQUEST",
+            );
+            return;
+          }
+
+          const {
+            firstName,
+            middleName,
+            lastName,
+            email,
+            contactNumber,
+            tinNumber,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = clientResponse || {};
+
+          await this.prismaService.clientRequest.create({
+            data: {
+              firstName,
+              middleName,
+              lastName,
+              email,
+              contactNumber,
+              tinNumber,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+              requestType: "DELETE",
+              createdBy: user.id,
+              client: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        }
       });
 
       return "Client deleted successfully";
