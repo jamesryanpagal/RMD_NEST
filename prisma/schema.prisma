@@ -26,6 +26,7 @@ enum REQUEST_MODULE {
   CONTRACT
   PAYMENT
   AGENT_COMMISSION
+  FILE
 }
 
 enum REQUEST_REJECT_DELETE {
@@ -173,6 +174,10 @@ model User {
 
   status STATUS @default(ACTIVE)
 
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
@@ -204,6 +209,10 @@ model Admin {
 
   user User @relation(fields: [userId], references: [id])
 
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
@@ -215,6 +224,10 @@ model Secretary {
   accessLevel Int[]
 
   user User @relation(fields: [userId], references: [id])
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -248,6 +261,10 @@ model Client {
 
   status STATUS @default(ACTIVE)
 
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
@@ -280,13 +297,15 @@ model ClientRequest {
   status REQUEST_STATUS @default(PENDING)
 
   approvedBy String?
+  rejectedBy String?
   createdBy  String?
   updatedBy  String?
   deletedBy  String?
 
-  dateCreated DateTime  @default(now())
-  dateUpdated DateTime  @updatedAt
-  dateDeleted DateTime?
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 model Project {
@@ -308,6 +327,10 @@ model Project {
   phase  Phase[]
 
   status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -348,17 +371,72 @@ model Contract {
 
   excessPayment Float @default(0)
 
-  client            Client?          @relation(fields: [clientId], references: [id])
-  lot               Lot?             @relation(fields: [lotId], references: [id])
-  agent             Agent            @relation(fields: [agentId], references: [id])
+  client            Client?           @relation(fields: [clientId], references: [id])
+  lot               Lot?              @relation(fields: [lotId], references: [id])
+  agent             Agent             @relation(fields: [agentId], references: [id])
   commissionOfAgent AgentCommission?
   payment           Payment[]
+  contractRequest   ContractRequest[]
 
   status CONTRACT_STATUS @default(ON_GOING)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
+}
+
+model ContractRequest {
+  id       String  @id @default(cuid())
+  targetId String?
+
+  sqmPrice                Float
+  downPaymentType         DOWN_PAYMENT_TYPE?
+  downPaymentStatus       DOWN_PAYMENT_STATUS?
+  totalMonthlyDown        Float?
+  totalMonthly            Float?
+  downPayment             Int?
+  totalDownPayment        Float?
+  totalDownPaymentBalance Float?
+  downPaymentTerms        Int?
+  terms                   Int?
+  miscellaneous           MISCELLANEOUS
+  miscellaneousTotal      Float
+  agentCommission         COMMISSION
+  agentCommissionTotal    Float
+  balance                 Float
+  totalLotPrice           Float
+  tcp                     Float
+  paymentType             PAYMENT_TYPE
+  totalCashPayment        Float?
+  recurringPaymentDay     Int?
+  nextPaymentDate         String?
+  paymentStartedDate      String?
+  paymentLastDate         String?
+  penaltyAmount           Float                @default(0)
+  penaltyCount            Int                  @default(0)
+
+  excessPayment Float @default(0)
+
+  requestType REQUEST_TYPE
+
+  contract Contract? @relation(fields: [targetId], references: [id])
+
+  status REQUEST_STATUS @default(PENDING)
+
+  approvedBy String?
+  rejectedBy String?
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
+
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 model Phase {
@@ -371,6 +449,10 @@ model Phase {
 
   project Project @relation(fields: [projectId], references: [id])
   block   Block[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -387,6 +469,10 @@ model Block {
 
   phase Phase @relation(fields: [phaseId], references: [id])
   lot   Lot[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -405,6 +491,10 @@ model Lot {
   block       Block         @relation(fields: [blockId], references: [id])
   contract    Contract[]
   reservation Reservation[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -431,6 +521,8 @@ model Payment {
   reservation     Reservation?     @relation(fields: [reservationId], references: [id])
   agentCommission AgentCommission? @relation(fields: [agentCommissionId], references: [id])
 
+  payment PaymentRequest[]
+
   penalized     Boolean @default(false)
   penaltyAmount Float   @default(0)
 
@@ -438,9 +530,46 @@ model Payment {
 
   status STATUS @default(ACTIVE)
 
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
+}
+
+model PaymentRequest {
+  id       String  @id @default(cuid())
+  targetId String?
+
+  transactionType TRANSACTION_TYPE
+  modeOfPayment   MODE_OF_PAYMENT
+  targetDueDate   String?
+  paymentDate     String
+  amount          Float
+  referenceNumber String?
+
+  penalized     Boolean @default(false)
+  penaltyAmount Float   @default(0)
+
+  receiptNo String?
+
+  payment Payment? @relation(fields: [targetId], references: [id])
+
+  requestType REQUEST_TYPE
+  status      REQUEST_STATUS @default(PENDING)
+
+  approvedBy String?
+  rejectedBy String?
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
+
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 model Reservation {
@@ -455,6 +584,10 @@ model Reservation {
   payment Payment?
 
   status RESERVATION_STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -477,13 +610,15 @@ model ReservationRequest {
   status REQUEST_STATUS @default(PENDING)
 
   approvedBy String?
+  rejectedBy String?
   createdBy  String?
   updatedBy  String?
   deletedBy  String?
 
-  dateCreated DateTime  @default(now())
-  dateUpdated DateTime  @updatedAt
-  dateDeleted DateTime?
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 model Agent {
@@ -497,6 +632,10 @@ model Agent {
   agentCommission AgentCommission[]
 
   status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
@@ -523,9 +662,43 @@ model AgentCommission {
 
   status AGENT_COMMISSION_STATUS @default(PENDING)
 
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
+}
+
+model AgentCommissionRequest {
+  id       String  @id @default(cuid())
+  targetId String?
+
+  terms                Int?
+  recurringReleaseDate Int?
+
+  releaseStartDate     String?
+  releaseEndDate       String?
+  nextReleaseDate      String?
+  monthlyReleaseAmount Float?
+
+  balance Float @default(0)
+
+  requestType REQUEST_TYPE
+
+  status REQUEST_STATUS @default(PENDING)
+
+  approvedBy String?
+  rejectedBy String?
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
+
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 model File {
@@ -537,13 +710,44 @@ model File {
   name        String?
   description String?
 
-  payment Payment? @relation(fields: [paymentId], references: [id])
+  payment     Payment?      @relation(fields: [paymentId], references: [id])
+  fileRequest FileRequest[]
 
   status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt
   dateDeleted DateTime?
+}
+
+model FileRequest {
+  id       String  @id @default(cuid())
+  targetId String?
+
+  path        String?
+  ext         String?
+  name        String?
+  description String?
+
+  file File? @relation(fields: [targetId], references: [id])
+
+  requestType REQUEST_TYPE
+  status      REQUEST_STATUS @default(PENDING)
+
+  approvedBy String?
+  rejectedBy String?
+  createdBy  String?
+  updatedBy  String?
+  deletedBy  String?
+
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  dateRejected DateTime?
 }
 
 // JUNCTION TABLE

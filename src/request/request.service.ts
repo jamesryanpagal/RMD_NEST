@@ -17,6 +17,8 @@ type ModuleResponseProps = {
   dateCreated: string;
   dateUpdated: string;
   dateDeleted?: string;
+  rejectedBy?: string;
+  dateRejected?: string;
   [key: string]: any;
 };
 
@@ -35,6 +37,7 @@ export class RequestService {
     [$Enums.REQUEST_MODULE.CONTRACT]: "contractRequest",
     [$Enums.REQUEST_MODULE.PAYMENT]: "paymentRequest",
     [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: "agentCommissionRequest",
+    [$Enums.REQUEST_MODULE.FILE]: "fileRequest",
   };
 
   private targetModuleModel: Record<$Enums.REQUEST_MODULE, string> = {
@@ -43,6 +46,7 @@ export class RequestService {
     [$Enums.REQUEST_MODULE.CONTRACT]: "contract",
     [$Enums.REQUEST_MODULE.PAYMENT]: "payment",
     [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: "agentCommission",
+    [$Enums.REQUEST_MODULE.FILE]: "file",
   };
 
   private requestTypeModel: Record<$Enums.REQUEST_TYPE, string> = {
@@ -106,6 +110,8 @@ export class RequestService {
           createdBy,
           updatedBy,
           deletedBy,
+          rejectedBy,
+          dateRejected,
           ...rest
         } = moduleResponse as ModuleResponseProps;
 
@@ -172,6 +178,7 @@ export class RequestService {
             },
             data: {
               status: "DELETED",
+              deletedBy: user?.id,
             },
           });
         }
@@ -199,7 +206,7 @@ export class RequestService {
         data: {
           status: this.moduleStatus[requestType],
           ...(requestType === $Enums.REQUEST_REJECT_DELETE.REJECT
-            ? { updatedBy: user?.id }
+            ? { rejectedBy: user?.id }
             : { deletedBy: user?.id }),
         },
       });

@@ -7,6 +7,7 @@ import { FormatterService } from "src/services/formatter/formatter.service";
 import { Prisma } from "generated/prisma";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
+import { UserFullDetailsProps } from "src/type";
 
 export const PAYMENT_PENALTY_AMOUNT = 200;
 
@@ -37,6 +38,7 @@ export class PaymentService {
     contractId: string,
     files: Express.Multer.File[],
     dto: CreateUpdatePaymentDto,
+    user?: UserFullDetailsProps,
   ) {
     const {
       modeOfPayment,
@@ -47,6 +49,11 @@ export class PaymentService {
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
         const contractResponse = await prisma.contract.findFirst({
           where: {
             AND: [
@@ -152,12 +159,13 @@ export class PaymentService {
                     id: contractId,
                   },
                 },
+                createdBy: user.id,
               },
             });
 
             const { id: paymentResponseId } = paymentResponse || {};
 
-            await this.uploadPfp(paymentResponseId, files, prisma);
+            await this.uploadPfp(paymentResponseId, files, user, prisma);
 
             await prisma.contract.update({
               where: {
@@ -177,6 +185,7 @@ export class PaymentService {
                       totalDownPaymentBalance:
                         totalDownPaymentBalanceAfterAmount,
                     }),
+                updatedBy: user.id,
               },
             });
           } else if (
@@ -237,12 +246,13 @@ export class PaymentService {
                     id: contractId,
                   },
                 },
+                createdBy: user.id,
               },
             });
 
             const { id: paymentResponseId } = paymentResponse || {};
 
-            await this.uploadPfp(paymentResponseId, files, prisma);
+            await this.uploadPfp(paymentResponseId, files, user, prisma);
 
             await prisma.contract.update({
               where: {
@@ -260,6 +270,7 @@ export class PaymentService {
                         .toISOString(),
                     }
                   : {}),
+                updatedBy: user.id,
               },
             });
           } else if (
@@ -340,12 +351,13 @@ export class PaymentService {
                     id: contractId,
                   },
                 },
+                createdBy: user.id,
               },
             });
 
             const { id: paymentResponseId } = paymentResponse || {};
 
-            await this.uploadPfp(paymentResponseId, files, prisma);
+            await this.uploadPfp(paymentResponseId, files, user, prisma);
 
             await prisma.contract.update({
               where: {
@@ -359,6 +371,7 @@ export class PaymentService {
                 ...(!totalBalanceAfterAmount
                   ? { status: "DONE" }
                   : { excessPayment: computedExcessPayment }),
+                updatedBy: user.id,
               },
             });
 
@@ -369,6 +382,7 @@ export class PaymentService {
                 },
                 data: {
                   status: "SOLD",
+                  updatedBy: user.id,
                 },
               });
             }
@@ -420,12 +434,13 @@ export class PaymentService {
                   id: contractId,
                 },
               },
+              createdBy: user.id,
             },
           });
 
           const { id: paymentResponseId } = paymentResponse || {};
 
-          await this.uploadPfp(paymentResponseId, files, prisma);
+          await this.uploadPfp(paymentResponseId, files, user, prisma);
 
           await prisma.contract.update({
             where: {
@@ -434,6 +449,7 @@ export class PaymentService {
             data: {
               balance: 0,
               status: "DONE",
+              updatedBy: user.id,
             },
           });
 
@@ -443,6 +459,7 @@ export class PaymentService {
             },
             data: {
               status: "SOLD",
+              updatedBy: user.id,
             },
           });
         }
@@ -455,19 +472,82 @@ export class PaymentService {
     }
   }
 
-  async updatePayment(id: string, dto: CreateUpdatePaymentDto) {
+  async updatePayment(
+    id: string,
+    dto: CreateUpdatePaymentDto,
+    user?: UserFullDetailsProps,
+  ) {
     const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
     try {
-      await this.prismaService.payment.update({
-        where: {
-          id,
-        },
-        data: {
-          modeOfPayment,
-          paymentDate,
-          amount,
-          referenceNumber,
-        },
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        const { role } = user || {};
+
+        if (role === "SECRETARY") {
+          const paymentResponse = await prisma.payment.findFirst({
+            where: {
+              AND: [
+                {
+                  id,
+                },
+                {
+                  status: { not: "DELETED" },
+                },
+              ],
+            },
+          });
+
+          if (!paymentResponse) {
+            this.exceptionService.throw("Payment not found", "NOT_FOUND");
+            return;
+          }
+
+          const {
+            transactionType,
+            targetDueDate,
+            penalized,
+            penaltyAmount,
+            receiptNo,
+          } = paymentResponse || {};
+
+          await prisma.paymentRequest.create({
+            data: {
+              transactionType,
+              modeOfPayment,
+              targetDueDate,
+              paymentDate,
+              amount,
+              referenceNumber,
+              penalized,
+              penaltyAmount,
+              receiptNo,
+              requestType: "UPDATE",
+              createdBy: user.id,
+              payment: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.payment.update({
+            where: {
+              id,
+            },
+            data: {
+              modeOfPayment,
+              paymentDate,
+              amount,
+              referenceNumber,
+              updatedBy: user.id,
+            },
+          });
+        }
       });
 
       return "Payment updated successfully";
@@ -476,15 +556,78 @@ export class PaymentService {
     }
   }
 
-  async deletePayment(id: string) {
+  async deletePayment(id: string, user?: UserFullDetailsProps) {
     try {
-      await this.prismaService.payment.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "DELETED",
-        },
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        const { role } = user || {};
+
+        if (role === "SECRETARY") {
+          const paymentResponse = await prisma.payment.findFirst({
+            where: {
+              AND: [
+                {
+                  id,
+                },
+                {
+                  status: { not: "DELETED" },
+                },
+              ],
+            },
+          });
+
+          if (!paymentResponse) {
+            this.exceptionService.throw("Payment not found", "NOT_FOUND");
+            return;
+          }
+
+          const {
+            transactionType,
+            modeOfPayment,
+            targetDueDate,
+            paymentDate,
+            amount,
+            referenceNumber,
+            penalized,
+            penaltyAmount,
+            receiptNo,
+          } = paymentResponse || {};
+
+          await prisma.paymentRequest.create({
+            data: {
+              transactionType,
+              modeOfPayment,
+              targetDueDate,
+              paymentDate,
+              amount,
+              referenceNumber,
+              penalized,
+              penaltyAmount,
+              receiptNo,
+              requestType: "DELETE",
+              createdBy: user.id,
+              payment: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.payment.update({
+            where: {
+              id,
+            },
+            data: {
+              status: "DELETED",
+              deletedBy: user.id,
+            },
+          });
+        }
       });
 
       return "Payment deleted successfully";
@@ -1104,6 +1247,8 @@ export class PaymentService {
   async releaseAgentCommission(
     agentCommissionId: string,
     dto: CreateUpdatePaymentDto,
+    files: Express.Multer.File[],
+    user?: UserFullDetailsProps,
   ) {
     try {
       const {
@@ -1115,6 +1260,11 @@ export class PaymentService {
       } = dto || {};
 
       await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
         if (transactionType !== "AGENT_COMMISSION_RELEASE") {
           this.exceptionService.throw(
             "Transaction type must be AGENT_COMMISSION_RELEASE",
@@ -1184,7 +1334,7 @@ export class PaymentService {
 
         const isZeroBalance = Math.trunc(computedBalance) <= 0;
 
-        await prisma.payment.create({
+        const paymentResponse = await prisma.payment.create({
           data: {
             agentCommission: {
               connect: {
@@ -1197,8 +1347,13 @@ export class PaymentService {
             paymentDate,
             referenceNumber,
             transactionType: "AGENT_COMMISSION_RELEASE",
+            createdBy: user.id,
           },
         });
+
+        const { id: paymentResponseId } = paymentResponse || {};
+
+        await this.uploadPfp(paymentResponseId, files, user, prisma);
 
         await prisma.agentCommission.update({
           where: {
@@ -1209,6 +1364,7 @@ export class PaymentService {
               ? { balance: computedBalance }
               : { balance: 0, status: "DONE" }),
             nextReleaseDate: releaseNextDate,
+            updatedBy: user.id,
           },
         });
       });
@@ -1431,6 +1587,7 @@ export class PaymentService {
     paymentId: string,
     files: Express.Multer.File[],
     prisma: Prisma.TransactionClient,
+    user?: UserFullDetailsProps,
   ) {
     try {
       await Promise.all(
@@ -1448,6 +1605,7 @@ export class PaymentService {
                   id: paymentId,
                 },
               },
+              createdBy: user?.id,
             },
           });
         }),
@@ -1460,6 +1618,7 @@ export class PaymentService {
   async uploadPfp(
     paymentId: string,
     files: Express.Multer.File[],
+    user?: UserFullDetailsProps,
     transactionClient?: Prisma.TransactionClient,
   ) {
     try {
@@ -1468,10 +1627,15 @@ export class PaymentService {
       if (!files || !files.length) {
         response = "No files to upload";
       } else if (!!transactionClient) {
-        await this.onCreatePaymentFiles(paymentId, files, transactionClient);
+        await this.onCreatePaymentFiles(
+          paymentId,
+          files,
+          transactionClient,
+          user,
+        );
       } else {
         await this.prismaService.$transaction(async prisma => {
-          await this.onCreatePaymentFiles(paymentId, files, prisma);
+          await this.onCreatePaymentFiles(paymentId, files, prisma, user);
         });
       }
 

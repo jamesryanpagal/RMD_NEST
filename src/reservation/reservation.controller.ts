@@ -46,12 +46,14 @@ export class ReservationController {
     @Param("lotId") lotId: string,
     @Param("clientId") clientId: string,
     @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: Request,
   ) {
     return this.reservationService.createReservation(
       lotId,
       clientId,
       dto,
       files,
+      req.user,
     );
   }
 

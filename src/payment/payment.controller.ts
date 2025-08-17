@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -15,8 +16,13 @@ import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { CreateUpdatePaymentDto } from "./dto";
 import { UploadService } from "src/services/upload/upload.service";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
+import { Request } from "express";
 
-@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+@Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
 @Controller("payments")
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
@@ -39,17 +45,37 @@ export class PaymentController {
     @Param("contractId") contractId: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreateUpdatePaymentDto,
+    @Req() req: Request,
   ) {
-    return this.paymentService.createContractPayment(contractId, files, dto);
+    return this.paymentService.createContractPayment(
+      contractId,
+      files,
+      dto,
+      req.user,
+    );
   }
 
-  // ? add file uploads
   @Post("release/agent/commission/:agentCommissionId")
+  @UseInterceptors(
+    UploadService.validate({
+      key: "pfp",
+      path: "payments",
+      multiple: true,
+      accepts: ["png", "jpeg", "jpg"],
+    }),
+  )
   onReleaseAgentCommission(
     @Param("agentCommissionId") agentCommissionId: string,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: CreateUpdatePaymentDto,
+    @Req() req: Request,
   ) {
-    return this.paymentService.releaseAgentCommission(agentCommissionId, dto);
+    return this.paymentService.releaseAgentCommission(
+      agentCommissionId,
+      dto,
+      files,
+      req.user,
+    );
   }
 
   @Post("upload/pfp/:paymentId")
@@ -64,21 +90,23 @@ export class PaymentController {
   onUploadPfp(
     @Param("paymentId") paymentId: string,
     @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: Request,
   ) {
-    return this.paymentService.uploadPfp(paymentId, files);
+    return this.paymentService.uploadPfp(paymentId, files, req.user);
   }
 
   @Patch("update/:id")
   onUpdatePayment(
     @Param("id") id: string,
     @Body() dto: CreateUpdatePaymentDto,
+    @Req() req: Request,
   ) {
-    return this.paymentService.updatePayment(id, dto);
+    return this.paymentService.updatePayment(id, dto, req.user);
   }
 
   @Delete("delete/:id")
-  onDeletePayment(@Param("id") id: string) {
-    return this.paymentService.deletePayment(id);
+  onDeletePayment(@Param("id") id: string, @Req() req: Request) {
+    return this.paymentService.deletePayment(id, req.user);
   }
 
   @Get("agent/commissions/breakdown/:id")

@@ -4,6 +4,7 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class ContractService {
@@ -18,6 +19,7 @@ export class ContractService {
     lotId: string,
     agentId: string,
     dto: CreateUpdateContractDto,
+    user?: UserFullDetailsProps,
   ) {
     const {
       downPaymentType,
@@ -62,6 +64,7 @@ export class ContractService {
                 id: clientId,
               },
             },
+            createdBy: user?.id,
           },
         });
 
@@ -504,18 +507,120 @@ export class ContractService {
   //   }
   // }
 
-  async deleteContract(id: string) {
+  async deleteContract(id: string, user?: UserFullDetailsProps) {
     try {
-      await this.prismaService.contract.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "DELETED",
-        },
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw("Contract not found", "NOT_FOUND");
+          return;
+        }
+
+        const { role } = user || {};
+
+        const {
+          paymentType,
+          terms,
+          downPaymentTerms,
+          downPaymentType,
+          dateCreated,
+          dateDeleted,
+          dateUpdated,
+          sqmPrice,
+          downPaymentStatus,
+          totalMonthlyDown,
+          totalMonthly,
+          downPayment,
+          totalDownPayment,
+          totalDownPaymentBalance,
+          miscellaneous,
+          miscellaneousTotal,
+          agentCommission,
+          agentCommissionTotal,
+          balance,
+          totalLotPrice,
+          tcp,
+          totalCashPayment,
+          penaltyAmount,
+          penaltyCount,
+          excessPayment,
+          paymentStartedDate,
+          nextPaymentDate,
+          recurringPaymentDay,
+          paymentLastDate,
+        } = contractResponse || {};
+
+        if (role === "SECRETARY") {
+          await prisma.contractRequest.create({
+            data: {
+              paymentType,
+              terms,
+              downPaymentTerms,
+              downPaymentType,
+              dateCreated,
+              dateDeleted,
+              dateUpdated,
+              sqmPrice,
+              downPaymentStatus,
+              totalMonthlyDown,
+              totalMonthly,
+              downPayment,
+              totalDownPayment,
+              totalDownPaymentBalance,
+              miscellaneous,
+              miscellaneousTotal,
+              agentCommission,
+              agentCommissionTotal,
+              balance,
+              totalLotPrice,
+              tcp,
+              totalCashPayment,
+              penaltyAmount,
+              penaltyCount,
+              excessPayment,
+              paymentStartedDate,
+              nextPaymentDate,
+              recurringPaymentDay,
+              paymentLastDate,
+              requestType: "DELETE",
+              createdBy: user.id,
+              contract: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.contract.update({
+            where: {
+              id,
+            },
+            data: {
+              status: "DELETED",
+              deletedBy: user?.id,
+            },
+          });
+        }
       });
 
-      return "Contract Deleted";
+      return "Contract deleted successfully.";
     } catch (error) {
       throw error;
     }
@@ -656,10 +761,16 @@ export class ContractService {
   async updateContractPaymentStartDate(
     id: string,
     dto: UpdatePaymentStartDateDto,
+    user?: UserFullDetailsProps,
   ) {
     const { paymentStartDate } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
         const contractResponse = await prisma.contract.findFirst({
           where: {
             AND: [
@@ -681,12 +792,44 @@ export class ContractService {
           return;
         }
 
+        const parsedPaymentStartDate = this.mtzService.mtz(
+          paymentStartDate,
+          "defaultformat",
+        );
+
+        const formattedPaymentStartDate = parsedPaymentStartDate.format(
+          this.mtzService.dateFormat.dateTimeUTCZ,
+        );
+
+        const { role } = user || {};
+
         const {
           payment,
           paymentType,
           terms,
           downPaymentTerms,
           downPaymentType,
+          dateCreated,
+          dateDeleted,
+          dateUpdated,
+          sqmPrice,
+          downPaymentStatus,
+          totalMonthlyDown,
+          totalMonthly,
+          downPayment,
+          totalDownPayment,
+          totalDownPaymentBalance,
+          miscellaneous,
+          miscellaneousTotal,
+          agentCommission,
+          agentCommissionTotal,
+          balance,
+          totalLotPrice,
+          tcp,
+          totalCashPayment,
+          penaltyAmount,
+          penaltyCount,
+          excessPayment,
         } = contractResponse || {};
 
         if (!!payment && !!payment.length) {
@@ -697,55 +840,96 @@ export class ContractService {
           return;
         }
 
-        const parsedPaymentStartDate = this.mtzService.mtz(
-          paymentStartDate,
-          "defaultformat",
+        const computedTerms =
+          (terms || 0) +
+          (downPaymentType === "FULL_DOWN_PAYMENT" ? 1 : downPaymentTerms || 0);
+
+        const recurringPaymentDay = parsedPaymentStartDate.toDate().getDate();
+
+        const lastPaymentDate = this.mtzService.onCalculateLastDate(
+          parsedPaymentStartDate.clone(),
+          computedTerms,
+          recurringPaymentDay,
         );
 
-        const formattedPaymentStartDate = parsedPaymentStartDate.format(
+        const formattedLastPaymentDate = lastPaymentDate.format(
           this.mtzService.dateFormat.dateTimeUTCZ,
         );
 
-        if (paymentType === "INSTALLMENT" && terms) {
-          const computedTerms =
-            terms +
-            (downPaymentType === "FULL_DOWN_PAYMENT"
-              ? 1
-              : downPaymentTerms || 0);
-
-          const recurringPaymentDay = parsedPaymentStartDate.toDate().getDate();
-
-          const lastPaymentDate = this.mtzService.onCalculateLastDate(
-            parsedPaymentStartDate.clone(),
-            computedTerms,
-            recurringPaymentDay,
-          );
-
-          const formattedLastPaymentDate = lastPaymentDate.format(
-            this.mtzService.dateFormat.dateTimeUTCZ,
-          );
-
-          await prisma.contract.update({
-            where: {
-              id,
-            },
+        if (role === "SECRETARY") {
+          await prisma.contractRequest.create({
             data: {
-              paymentStartedDate: formattedPaymentStartDate,
-              nextPaymentDate: formattedPaymentStartDate,
-              recurringPaymentDay,
-              paymentLastDate: formattedLastPaymentDate,
+              paymentType,
+              terms,
+              downPaymentTerms,
+              downPaymentType,
+              dateCreated,
+              dateDeleted,
+              dateUpdated,
+              sqmPrice,
+              downPaymentStatus,
+              totalMonthlyDown,
+              totalMonthly,
+              downPayment,
+              totalDownPayment,
+              totalDownPaymentBalance,
+              miscellaneous,
+              miscellaneousTotal,
+              agentCommission,
+              agentCommissionTotal,
+              balance,
+              totalLotPrice,
+              tcp,
+              totalCashPayment,
+              penaltyAmount,
+              penaltyCount,
+              excessPayment,
+              ...(paymentType === "INSTALLMENT"
+                ? {
+                    paymentStartedDate: formattedPaymentStartDate,
+                    nextPaymentDate: formattedPaymentStartDate,
+                    recurringPaymentDay,
+                    paymentLastDate: formattedLastPaymentDate,
+                  }
+                : {
+                    paymentStartedDate: formattedPaymentStartDate,
+                    paymentLastDate: formattedPaymentStartDate,
+                  }),
+              requestType: "UPDATE",
+              createdBy: user.id,
+              contract: {
+                connect: {
+                  id,
+                },
+              },
             },
           });
         } else {
-          await prisma.contract.update({
-            where: {
-              id,
-            },
-            data: {
-              paymentStartedDate: formattedPaymentStartDate,
-              paymentLastDate: formattedPaymentStartDate,
-            },
-          });
+          if (paymentType === "INSTALLMENT") {
+            await prisma.contract.update({
+              where: {
+                id,
+              },
+              data: {
+                paymentStartedDate: formattedPaymentStartDate,
+                nextPaymentDate: formattedPaymentStartDate,
+                recurringPaymentDay,
+                paymentLastDate: formattedLastPaymentDate,
+                updatedBy: user.id,
+              },
+            });
+          } else {
+            await prisma.contract.update({
+              where: {
+                id,
+              },
+              data: {
+                paymentStartedDate: formattedPaymentStartDate,
+                paymentLastDate: formattedPaymentStartDate,
+                updatedBy: user.id,
+              },
+            });
+          }
         }
       });
 

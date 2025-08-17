@@ -6,14 +6,20 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { ContractService } from "./contract.service";
 import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
+import { Request } from "express";
 
-@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))
+@UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+@Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
 @Controller("contracts")
 export class ContractController {
   constructor(private contractService: ContractService) {}
@@ -29,8 +35,15 @@ export class ContractController {
     @Param("lotId") lotId: string,
     @Param("agentId") agentId: string,
     @Body() dto: CreateUpdateContractDto,
+    @Req() req: Request,
   ) {
-    return this.contractService.createContract(clientId, lotId, agentId, dto);
+    return this.contractService.createContract(
+      clientId,
+      lotId,
+      agentId,
+      dto,
+      req.user,
+    );
   }
 
   @Get("agent/:agentId")
@@ -46,8 +59,13 @@ export class ContractController {
   onUpdateContractPaymentStartDate(
     @Param("id") id: string,
     @Body() dto: UpdatePaymentStartDateDto,
+    @Req() req: Request,
   ) {
-    return this.contractService.updateContractPaymentStartDate(id, dto);
+    return this.contractService.updateContractPaymentStartDate(
+      id,
+      dto,
+      req.user,
+    );
   }
 
   // @Patch("update/:id")
@@ -59,8 +77,8 @@ export class ContractController {
   // }
 
   @Delete("delete/:id")
-  onDeleteContract(@Param("id") id: string) {
-    return this.contractService.deleteContract(id);
+  onDeleteContract(@Param("id") id: string, @Req() req: Request) {
+    return this.contractService.deleteContract(id, req.user);
   }
 
   @Get(":id")

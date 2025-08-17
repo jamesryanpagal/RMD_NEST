@@ -24,6 +24,7 @@ export class ReservationService {
     clientId: string,
     dto: ReservationDto,
     files: Express.Multer.File[],
+    user?: UserFullDetailsProps,
   ) {
     try {
       const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
@@ -65,7 +66,12 @@ export class ReservationService {
           },
         });
 
-        await this.paymentService.uploadPfp(paymentResponse.id, files, prisma);
+        await this.paymentService.uploadPfp(
+          paymentResponse.id,
+          files,
+          user,
+          prisma,
+        );
 
         const reservationResponse = await prisma.reservation.create({
           data: {

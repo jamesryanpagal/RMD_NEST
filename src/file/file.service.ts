@@ -9,6 +9,7 @@ import { DeleteFilesDto } from "./dto";
 import { PaymentFiles } from "src/payment/dto";
 import { config } from "src/config";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class FileService {
@@ -22,23 +23,72 @@ export class FileService {
     id: string,
     file: Express.Multer.File,
     dto: UploadFileDto,
+    user?: UserFullDetailsProps,
   ) {
     const { description } = dto || {};
     try {
-      const { originalname, path } = file || {};
+      await this.prismaService.$transaction(async prisma => {
+        const { originalname, path } = file || {};
 
-      const ext = this.uploadService.extractFileExt(originalname);
+        const ext = this.uploadService.extractFileExt(originalname);
 
-      await this.prismaService.file.update({
-        where: {
-          id,
-        },
-        data: {
-          path,
-          name: originalname,
-          ext,
-          description,
-        },
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        const { role } = user || {};
+
+        if (role === "SECRETARY") {
+          const fileResponse = await prisma.file.findFirst({
+            where: {
+              AND: [
+                {
+                  id,
+                },
+                {
+                  status: { not: "DELETED" },
+                },
+              ],
+            },
+          });
+
+          if (!fileResponse) {
+            this.exceptionService.throw("File not found", "NOT_FOUND");
+            return;
+          }
+
+          const { path, ext, name, description } = fileResponse || {};
+
+          await prisma.fileRequest.create({
+            data: {
+              path,
+              ext,
+              name,
+              description,
+              requestType: "UPDATE",
+              createdBy: user.id,
+              file: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        } else {
+          await prisma.file.update({
+            where: {
+              id,
+            },
+            data: {
+              path,
+              name: originalname,
+              ext,
+              description,
+              updatedBy: user.id,
+            },
+          });
+        }
       });
 
       return "File updated successfully";
@@ -47,30 +97,75 @@ export class FileService {
     }
   }
 
-  async deleteFile(id: string) {
+  async deleteFile(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.$transaction(async prisma => {
-        const fileResponse = await prisma.file.update({
-          where: { id },
-          data: {
-            status: "DELETED",
-          },
-        });
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
 
-        const { path } = fileResponse || {};
+        const { role } = user || {};
 
-        await this.uploadService.rollback(path);
+        if (role === "SECRETARY") {
+          const fileResponse = await prisma.file.findFirst({
+            where: {
+              AND: [
+                {
+                  id,
+                },
+                {
+                  status: { not: "DELETED" },
+                },
+              ],
+            },
+          });
 
-        await prisma.file.update({
-          where: {
-            id,
-          },
-          data: {
-            name: null,
-            path: null,
-            ext: null,
-          },
-        });
+          if (!fileResponse) {
+            this.exceptionService.throw("File not found", "NOT_FOUND");
+            return;
+          }
+
+          const { path, ext, name, description } = fileResponse || {};
+
+          await prisma.fileRequest.create({
+            data: {
+              path,
+              ext,
+              name,
+              description,
+              requestType: "DELETE",
+              createdBy: user.id,
+              file: {
+                connect: {
+                  id,
+                },
+              },
+            },
+          });
+        } else {
+          const fileResponse = await prisma.file.update({
+            where: { id },
+            data: {
+              status: "DELETED",
+            },
+          });
+
+          const { path } = fileResponse || {};
+
+          await this.uploadService.rollback(path);
+
+          await prisma.file.update({
+            where: {
+              id,
+            },
+            data: {
+              name: null,
+              path: null,
+              ext: null,
+            },
+          });
+        }
       });
 
       return "File deleted successfully";
@@ -79,7 +174,7 @@ export class FileService {
     }
   }
 
-  async deleteFiles(dto: DeleteFilesDto) {
+  async deleteFiles(dto: DeleteFilesDto, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.$transaction(async prisma => {
         const { ids } = dto || {};
@@ -87,31 +182,78 @@ export class FileService {
           console.warn("No file IDs provided for deletion");
           return;
         }
+
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        const { role } = user || {};
+
         await Promise.all(
           ids.map(async id => {
-            const fileResponse = await prisma.file.update({
-              where: {
-                id,
-              },
-              data: {
-                status: "DELETED",
-              },
-            });
+            if (role === "SECRETARY") {
+              const fileResponse = await prisma.file.findFirst({
+                where: {
+                  AND: [
+                    {
+                      id,
+                    },
+                    {
+                      status: { not: "DELETED" },
+                    },
+                  ],
+                },
+              });
 
-            const { path } = fileResponse || {};
+              if (!fileResponse) {
+                this.exceptionService.throw("File not found", "NOT_FOUND");
+                return;
+              }
 
-            await this.uploadService.rollback(path);
+              const { path, ext, name, description } = fileResponse || {};
 
-            await prisma.file.update({
-              where: {
-                id,
-              },
-              data: {
-                name: null,
-                path: null,
-                ext: null,
-              },
-            });
+              await prisma.fileRequest.create({
+                data: {
+                  path,
+                  ext,
+                  name,
+                  description,
+                  requestType: "DELETE",
+                  createdBy: user.id,
+                  file: {
+                    connect: {
+                      id,
+                    },
+                  },
+                },
+              });
+            } else {
+              const fileResponse = await prisma.file.update({
+                where: {
+                  id,
+                },
+                data: {
+                  status: "DELETED",
+                  deletedBy: user.id,
+                },
+              });
+
+              const { path } = fileResponse || {};
+
+              await this.uploadService.rollback(path);
+
+              await prisma.file.update({
+                where: {
+                  id,
+                },
+                data: {
+                  name: null,
+                  path: null,
+                  ext: null,
+                },
+              });
+            }
           }),
         );
       });
