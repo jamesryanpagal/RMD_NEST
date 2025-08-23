@@ -30,8 +30,8 @@ export class ClientController {
   }
 
   @Post("create")
-  onCreateClient(@Body() dto: CreateUpdateClientDto) {
-    return this.clientService.createClient(dto);
+  onCreateClient(@Body() dto: CreateUpdateClientDto, @Req() req: Request) {
+    return this.clientService.createClient(dto, req.user);
   }
 
   @Patch("update/:id")

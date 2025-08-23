@@ -10,63 +10,6 @@ import { Request } from "express";
 export const enum PASSPORT_STRATEGY_KEY {
   JWT = "jwt",
   REFRESH_JWT = "refresh-jwt",
-  DUPLICATE_EMAIL = "duplicate-email",
-}
-
-@Injectable()
-export class DuplicateEmail extends PassportStrategy(
-  Strategy,
-  PASSPORT_STRATEGY_KEY.DUPLICATE_EMAIL,
-) {
-  constructor(
-    private prismaService: PrismaService,
-    private exceptionService: ExceptionService,
-  ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: config.jwt_secret,
-    });
-  }
-
-  async validate({ id }: any) {
-    try {
-      const user = await this.prismaService.user.findFirst({
-        where: { id },
-        include: {
-          admin: true,
-          secretary: true,
-        },
-      });
-
-      if (!user) {
-        this.exceptionService.throw("User not found", "UNAUTHORIZED");
-        return;
-      }
-
-      const checkExistingEmail = await this.prismaService.user.findFirst({
-        where: {
-          AND: [
-            {
-              email: user.email,
-            },
-            {
-              status: "ACTIVE",
-            },
-          ],
-        },
-      });
-
-      if (checkExistingEmail) {
-        this.exceptionService.throw("Email already exists", "BAD_REQUEST");
-        return;
-      }
-
-      return user;
-    } catch (error) {
-      throw error;
-    }
-  }
 }
 
 @Injectable()

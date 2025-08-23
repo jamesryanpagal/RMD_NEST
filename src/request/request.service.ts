@@ -19,6 +19,7 @@ type ModuleResponseProps = {
   dateDeleted?: string;
   rejectedBy?: string;
   dateRejected?: string;
+  dateApproved?: string;
   [key: string]: any;
 };
 
@@ -112,6 +113,7 @@ export class RequestService {
           deletedBy,
           rejectedBy,
           dateRejected,
+          dateApproved,
           ...rest
         } = moduleResponse as ModuleResponseProps;
 
@@ -130,12 +132,15 @@ export class RequestService {
                   id: targetId,
                 },
                 data: {
-                  ...(isRequestDelete ? { status: "DELETED" } : rest),
+                  ...(isRequestDelete
+                    ? { status: "DELETED", deletedBy: user?.id }
+                    : { ...rest, updatedBy: user?.id }),
                 },
               }
             : {
                 data: {
                   ...rest,
+                  createdBy: user?.id,
                 },
               }),
         });
@@ -147,6 +152,7 @@ export class RequestService {
           data: {
             status: "APPROVED",
             approvedBy: user?.id,
+            updatedBy: user?.id,
           },
         });
 
@@ -187,7 +193,6 @@ export class RequestService {
 
       return `Request for module ${module} has been approved.`;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

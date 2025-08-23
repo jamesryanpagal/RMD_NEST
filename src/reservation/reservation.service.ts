@@ -515,7 +515,6 @@ export class ReservationService {
 
       return "Reservation updated successfully";
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

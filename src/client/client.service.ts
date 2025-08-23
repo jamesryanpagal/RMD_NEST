@@ -33,7 +33,7 @@ export class ClientService {
     }
   }
 
-  async createClient(dto: CreateClientServiceDto) {
+  async createClient(dto: CreateClientServiceDto, user?: UserFullDetailsProps) {
     const {
       firstName,
       middleName,
@@ -67,6 +67,7 @@ export class ClientService {
           province,
           region,
           zip,
+          createdBy: user?.id,
         },
       });
 
@@ -126,6 +127,7 @@ export class ClientService {
               province,
               region,
               zip,
+              updatedBy: user.id,
             },
           });
         } else {
@@ -179,6 +181,7 @@ export class ClientService {
             },
             data: {
               status: "DELETED",
+              deletedBy: user.id,
             },
           });
         } else {

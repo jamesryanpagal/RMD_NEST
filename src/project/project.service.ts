@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma, PrismaClient } from "generated/prisma";
+import { Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import {
   BlockDto,
@@ -12,7 +12,7 @@ import {
 } from "./dto";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
-import { DefaultArgs } from "generated/prisma/runtime/library";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class ProjectService {
@@ -22,7 +22,7 @@ export class ProjectService {
     private exceptionService: ExceptionService,
   ) {}
 
-  async createProject(dto: CreateProjectDto) {
+  async createProject(dto: CreateProjectDto, user?: UserFullDetailsProps) {
     const {
       projectName,
       description,
@@ -50,6 +50,7 @@ export class ProjectService {
             province,
             region,
             zip,
+            createdBy: user?.id,
           },
         });
 
@@ -61,6 +62,7 @@ export class ProjectService {
             const phaseResponse = await prisma.phase.create({
               data: {
                 title: phaseTitle,
+                createdBy: user?.id,
                 project: {
                   connect: {
                     id,
@@ -75,6 +77,7 @@ export class ProjectService {
                 const blockResponse = await prisma.block.create({
                   data: {
                     title: blockTitle,
+                    createdBy: user?.id,
                     phase: {
                       connect: {
                         id: phaseResponse.id,
@@ -89,6 +92,7 @@ export class ProjectService {
                     await prisma.lot.create({
                       data: {
                         title: lotTitle.toString(),
+                        createdBy: user?.id,
                         block: {
                           connect: {
                             id: blockResponse.id,
@@ -110,7 +114,11 @@ export class ProjectService {
     }
   }
 
-  async updateProject(dto: Prisma.ProjectUpdateInput, id: string) {
+  async updateProject(
+    dto: Prisma.ProjectUpdateInput,
+    id: string,
+    user?: UserFullDetailsProps,
+  ) {
     const {
       projectName,
       description,
@@ -140,6 +148,7 @@ export class ProjectService {
           province,
           region,
           zip,
+          updatedBy: user?.id,
         },
       });
 
@@ -149,7 +158,7 @@ export class ProjectService {
     }
   }
 
-  async deleteProject(id: string) {
+  async deleteProject(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.project.update({
         where: {
@@ -157,6 +166,7 @@ export class ProjectService {
         },
         data: {
           status: "DELETED",
+          deletedBy: user?.id,
         },
       });
 

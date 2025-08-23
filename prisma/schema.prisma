@@ -147,8 +147,14 @@ enum PAYMENT_TARGET {
   MONTHLY_CONTRACT_DOWN_PAYMENT
 }
 
+enum AUDIT_ACTION {
+  CREATE
+  UPDATE
+  DELETE
+}
+
 model User {
-  id         String  @id @default(cuid())
+  id         String  @id @default(uuid())
   firstName  String
   middleName String?
   lastName   String
@@ -171,6 +177,42 @@ model User {
   admin       Admin?
   secretary   Secretary?
   authSession AuthSession[]
+  userAudit   UserAudit[]
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model UserAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  firstName  String
+  middleName String?
+  lastName   String
+  email      String
+  password   String
+  phone      String?
+  mobile     String
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  user User? @relation(fields: [targetId], references: [id])
 
   status STATUS @default(ACTIVE)
 
@@ -184,7 +226,7 @@ model User {
 }
 
 model AuthSession {
-  id         String  @id @default(cuid())
+  id         String  @id @default(uuid())
   userId     String
   token_hash String?
 
@@ -202,7 +244,7 @@ model AuthSession {
 }
 
 model Admin {
-  id           String  @id @default(cuid())
+  id           String  @id @default(uuid())
   userId       String  @unique
   isSuperAdmin Boolean @default(false)
   accessLevel  Int[]
@@ -219,7 +261,7 @@ model Admin {
 }
 
 model Secretary {
-  id          String @id @default(cuid())
+  id          String @id @default(uuid())
   userId      String @unique
   accessLevel Int[]
 
@@ -235,7 +277,7 @@ model Secretary {
 }
 
 model Client {
-  id            String  @id @default(cuid())
+  id            String  @id @default(uuid())
   firstName     String
   middleName    String?
   lastName      String
@@ -259,6 +301,42 @@ model Client {
 
   clientRequest ClientRequest[]
 
+  clientAudit ClientAudit[]
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model ClientAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  firstName     String
+  middleName    String?
+  lastName      String
+  email         String
+  contactNumber String
+  tinNumber     String
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  client Client? @relation(fields: [targetId], references: [id])
+
   status STATUS @default(ACTIVE)
 
   createdBy String?
@@ -271,7 +349,7 @@ model Client {
 }
 
 model ClientRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   firstName     String
@@ -292,7 +370,8 @@ model ClientRequest {
 
   requestType REQUEST_TYPE
 
-  client Client? @relation(fields: [targetId], references: [id])
+  client             Client?              @relation(fields: [targetId], references: [id])
+  clientRequestAudit ClientRequestAudit[]
 
   status REQUEST_STATUS @default(PENDING)
 
@@ -306,10 +385,47 @@ model ClientRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model ClientRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  firstName     String
+  middleName    String?
+  lastName      String
+  email         String
+  contactNumber String
+  tinNumber     String
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  requestType REQUEST_TYPE
+
+  clientRequest ClientRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 model Project {
-  id          String  @id @default(cuid())
+  id          String  @id @default(uuid())
   order       Int     @default(autoincrement())
   projectName String
   description String?
@@ -323,8 +439,40 @@ model Project {
   region      String
   zip         String?
 
-  client UserProject[]
-  phase  Phase[]
+  client       UserProject[]
+  phase        Phase[]
+  projectAudit ProjectAudit[]
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model ProjectAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  order       Int
+  projectName String
+  description String?
+
+  houseNumber String?
+  street      String
+  barangay    String
+  subdivision String?
+  city        String
+  province    String?
+  region      String
+  zip         String?
+
+  project Project? @relation(fields: [targetId], references: [id])
 
   status STATUS @default(ACTIVE)
 
@@ -338,7 +486,7 @@ model Project {
 }
 
 model Contract {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   clientId String
   lotId    String
   agentId  String
@@ -377,6 +525,7 @@ model Contract {
   commissionOfAgent AgentCommission?
   payment           Payment[]
   contractRequest   ContractRequest[]
+  contractAudit     ContractAudit[]
 
   status CONTRACT_STATUS @default(ON_GOING)
 
@@ -389,8 +538,54 @@ model Contract {
   dateDeleted DateTime?
 }
 
+model ContractAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  sqmPrice                Float
+  downPaymentType         DOWN_PAYMENT_TYPE?
+  downPaymentStatus       DOWN_PAYMENT_STATUS?
+  totalMonthlyDown        Float?
+  totalMonthly            Float?
+  downPayment             Int?
+  totalDownPayment        Float?
+  totalDownPaymentBalance Float?
+  downPaymentTerms        Int?
+  terms                   Int?
+  miscellaneous           MISCELLANEOUS
+  miscellaneousTotal      Float
+  agentCommission         COMMISSION
+  agentCommissionTotal    Float
+  balance                 Float
+  totalLotPrice           Float
+  tcp                     Float
+  paymentType             PAYMENT_TYPE
+  totalCashPayment        Float?
+  recurringPaymentDay     Int?
+  nextPaymentDate         String?
+  paymentStartedDate      String?
+  paymentLastDate         String?
+  penaltyAmount           Float                @default(0)
+  penaltyCount            Int                  @default(0)
+
+  excessPayment Float @default(0)
+
+  contract Contract? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
 model ContractRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   sqmPrice                Float
@@ -423,7 +618,8 @@ model ContractRequest {
 
   requestType REQUEST_TYPE
 
-  contract Contract? @relation(fields: [targetId], references: [id])
+  contract             Contract?              @relation(fields: [targetId], references: [id])
+  contractRequestAudit ContractRequestAudit[]
 
   status REQUEST_STATUS @default(PENDING)
 
@@ -437,18 +633,88 @@ model ContractRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model ContractRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  sqmPrice                Float
+  downPaymentType         DOWN_PAYMENT_TYPE?
+  downPaymentStatus       DOWN_PAYMENT_STATUS?
+  totalMonthlyDown        Float?
+  totalMonthly            Float?
+  downPayment             Int?
+  totalDownPayment        Float?
+  totalDownPaymentBalance Float?
+  downPaymentTerms        Int?
+  terms                   Int?
+  miscellaneous           MISCELLANEOUS
+  miscellaneousTotal      Float
+  agentCommission         COMMISSION
+  agentCommissionTotal    Float
+  balance                 Float
+  totalLotPrice           Float
+  tcp                     Float
+  paymentType             PAYMENT_TYPE
+  totalCashPayment        Float?
+  recurringPaymentDay     Int?
+  nextPaymentDate         String?
+  paymentStartedDate      String?
+  paymentLastDate         String?
+  penaltyAmount           Float                @default(0)
+  penaltyCount            Int                  @default(0)
+
+  excessPayment Float @default(0)
+
+  requestType REQUEST_TYPE
+
+  contractRequest ContractRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 model Phase {
-  id        String @id @default(cuid())
+  id        String @id @default(uuid())
   order     Int    @default(autoincrement())
   projectId String
 
   title  String
   status PHASE_STATUS @default(ACTIVE)
 
-  project Project @relation(fields: [projectId], references: [id])
-  block   Block[]
+  project    Project      @relation(fields: [projectId], references: [id])
+  block      Block[]
+  phaseAudit PhaseAudit[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model PhaseAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  title String
+
+  phase Phase? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
 
   createdBy String?
   updatedBy String?
@@ -460,15 +726,36 @@ model Phase {
 }
 
 model Block {
-  id      String @id @default(cuid())
+  id      String @id @default(uuid())
   order   Int    @default(autoincrement())
   phaseId String
   title   String
 
   status STATUS @default(ACTIVE)
 
-  phase Phase @relation(fields: [phaseId], references: [id])
-  lot   Lot[]
+  phase      Phase        @relation(fields: [phaseId], references: [id])
+  lot        Lot[]
+  blockAudit BlockAudit[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model BlockAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  title String
+
+  block Block? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
 
   createdBy String?
   updatedBy String?
@@ -480,7 +767,7 @@ model Block {
 }
 
 model Lot {
-  id      String @id @default(cuid())
+  id      String @id @default(uuid())
   order   Int    @default(autoincrement())
   blockId String
   title   String
@@ -491,6 +778,28 @@ model Lot {
   block       Block         @relation(fields: [blockId], references: [id])
   contract    Contract[]
   reservation Reservation[]
+  lotAudit    LotAudit[]
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model LotAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  title String
+  sqm   Float?
+
+  lot Lot? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
 
   createdBy String?
   updatedBy String?
@@ -502,7 +811,7 @@ model Lot {
 }
 
 model Payment {
-  id                String  @id @default(cuid())
+  id                String  @id @default(uuid())
   contractId        String?
   reservationId     String? @unique
   agentCommissionId String?
@@ -521,7 +830,8 @@ model Payment {
   reservation     Reservation?     @relation(fields: [reservationId], references: [id])
   agentCommission AgentCommission? @relation(fields: [agentCommissionId], references: [id])
 
-  payment PaymentRequest[]
+  payment      PaymentRequest[]
+  paymentAudit PaymentAudit[]
 
   penalized     Boolean @default(false)
   penaltyAmount Float   @default(0)
@@ -539,8 +849,33 @@ model Payment {
   dateDeleted DateTime?
 }
 
+model PaymentAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  transactionType TRANSACTION_TYPE
+  modeOfPayment   MODE_OF_PAYMENT
+  targetDueDate   String?
+  paymentDate     String
+  amount          Float
+  referenceNumber String?
+
+  payment Payment? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
 model PaymentRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   transactionType TRANSACTION_TYPE
@@ -555,7 +890,8 @@ model PaymentRequest {
 
   receiptNo String?
 
-  payment Payment? @relation(fields: [targetId], references: [id])
+  payment             Payment?              @relation(fields: [targetId], references: [id])
+  paymentRequestAudit PaymentRequestAudit[]
 
   requestType REQUEST_TYPE
   status      REQUEST_STATUS @default(PENDING)
@@ -570,18 +906,51 @@ model PaymentRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model PaymentRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  transactionType TRANSACTION_TYPE
+  modeOfPayment   MODE_OF_PAYMENT
+  targetDueDate   String?
+  paymentDate     String
+  amount          Float
+  referenceNumber String?
+
+  penalized     Boolean @default(false)
+  penaltyAmount Float   @default(0)
+
+  receiptNo   String?
+  requestType REQUEST_TYPE
+
+  paymentRequest PaymentRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 model Reservation {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   lotId    String
   clientId String
 
   validity DateTime
 
-  lot     Lot      @relation(fields: [lotId], references: [id])
-  client  Client   @relation(fields: [clientId], references: [id])
-  payment Payment?
+  lot              Lot                @relation(fields: [lotId], references: [id])
+  client           Client             @relation(fields: [clientId], references: [id])
+  payment          Payment?
+  reservationAudit ReservationAudit[]
 
   status RESERVATION_STATUS @default(ACTIVE)
 
@@ -594,8 +963,28 @@ model Reservation {
   dateDeleted DateTime?
 }
 
+model ReservationAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  validity DateTime
+
+  reservation Reservation? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
 model ReservationRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   modeOfPayment   MODE_OF_PAYMENT
@@ -603,7 +992,8 @@ model ReservationRequest {
   amount          Int
   referenceNumber String?
 
-  payment Payment? @relation(fields: [targetId], references: [id])
+  payment                 Payment?                  @relation(fields: [targetId], references: [id])
+  reservationRequestAudit ReservationRequestAudit[]
 
   requestType REQUEST_TYPE
 
@@ -619,10 +1009,35 @@ model ReservationRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model ReservationRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  modeOfPayment   MODE_OF_PAYMENT
+  paymentDate     String
+  amount          Int
+  referenceNumber String?
+  requestType     REQUEST_TYPE
+
+  reservationRequest ReservationRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 model Agent {
-  id         String  @id @default(cuid())
+  id         String  @id @default(uuid())
   firstName  String
   middleName String?
   lastName   String
@@ -630,6 +1045,30 @@ model Agent {
 
   contract        Contract[]
   agentCommission AgentCommission[]
+  agentAudit      AgentAudit[]
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model AgentAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  firstName  String
+  middleName String?
+  lastName   String
+  birthDate  String?
+
+  agent Agent? @relation(fields: [targetId], references: [id])
 
   status STATUS @default(ACTIVE)
 
@@ -643,7 +1082,7 @@ model Agent {
 }
 
 model AgentCommission {
-  id                   String @id @default(cuid())
+  id                   String @id @default(uuid())
   agentId              String
   contractId           String @unique
   terms                Int?
@@ -656,9 +1095,10 @@ model AgentCommission {
 
   balance Float @default(0)
 
-  agent    Agent     @relation(fields: [agentId], references: [id])
-  contract Contract  @relation(fields: [contractId], references: [id])
-  payment  Payment[]
+  agent                Agent                  @relation(fields: [agentId], references: [id])
+  contract             Contract               @relation(fields: [contractId], references: [id])
+  payment              Payment[]
+  agentCommissionAudit AgentCommissionAudit[]
 
   status AGENT_COMMISSION_STATUS @default(PENDING)
 
@@ -671,8 +1111,36 @@ model AgentCommission {
   dateDeleted DateTime?
 }
 
+model AgentCommissionAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  terms                Int?
+  recurringReleaseDate Int?
+
+  releaseStartDate     String?
+  releaseEndDate       String?
+  nextReleaseDate      String?
+  monthlyReleaseAmount Float?
+
+  balance Float @default(0)
+
+  agentCommission AgentCommission? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
 model AgentCommissionRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   terms                Int?
@@ -687,6 +1155,8 @@ model AgentCommissionRequest {
 
   requestType REQUEST_TYPE
 
+  agentCommissionRequestAudit AgentCommissionRequestAudit[]
+
   status REQUEST_STATUS @default(PENDING)
 
   approvedBy String?
@@ -699,10 +1169,41 @@ model AgentCommissionRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model AgentCommissionRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  terms                Int?
+  recurringReleaseDate Int?
+
+  releaseStartDate     String?
+  releaseEndDate       String?
+  nextReleaseDate      String?
+  monthlyReleaseAmount Float?
+
+  balance Float @default(0)
+
+  requestType REQUEST_TYPE
+
+  agentCommissionRequest AgentCommissionRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 model File {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   paymentId String?
 
   path        String?
@@ -712,6 +1213,30 @@ model File {
 
   payment     Payment?      @relation(fields: [paymentId], references: [id])
   fileRequest FileRequest[]
+  fileAudit   FileAudit[]
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model FileAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  path        String?
+  ext         String?
+  name        String?
+  description String?
+
+  file File? @relation(fields: [targetId], references: [id])
 
   status STATUS @default(ACTIVE)
 
@@ -725,7 +1250,7 @@ model File {
 }
 
 model FileRequest {
-  id       String  @id @default(cuid())
+  id       String  @id @default(uuid())
   targetId String?
 
   path        String?
@@ -733,7 +1258,8 @@ model FileRequest {
   name        String?
   description String?
 
-  file File? @relation(fields: [targetId], references: [id])
+  file             File?              @relation(fields: [targetId], references: [id])
+  fileRequestAudit FileRequestAudit[]
 
   requestType REQUEST_TYPE
   status      REQUEST_STATUS @default(PENDING)
@@ -748,6 +1274,31 @@ model FileRequest {
   dateUpdated  DateTime  @updatedAt
   dateDeleted  DateTime?
   dateRejected DateTime?
+  dateApproved DateTime?
+}
+
+model FileRequestAudit {
+  id       String       @id @default(uuid())
+  targetId String?
+  action   AUDIT_ACTION
+
+  path        String?
+  ext         String?
+  name        String?
+  description String?
+  requestType REQUEST_TYPE
+
+  fileRequest FileRequest? @relation(fields: [targetId], references: [id])
+
+  status STATUS @default(ACTIVE)
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
 }
 
 // JUNCTION TABLE

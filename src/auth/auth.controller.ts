@@ -40,7 +40,7 @@ export class AuthController {
   @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
   @Roles($Enums.ROLE.ADMIN)
   @Post("create/account")
-  onCreateAccountAdmin(@Body() dto: CreateAccountDto) {
-    return this.authService.createAccountAdmin(dto);
+  onCreateAccount(@Body() dto: CreateAccountDto, @Req() req: Request) {
+    return this.authService.createAccount(dto, req.user);
   }
 }

@@ -42,7 +42,6 @@ export class RequestController {
   ) {
     return this.requestService.rejectOrDeleteRequest(dto, requestId, req.user);
   }
-
   @Patch("update/client/:requestId")
   onUpdateClientRequest(
     @Param("requestId") requestId: string,
@@ -51,6 +50,8 @@ export class RequestController {
   ) {
     return this.requestService.updateClientRequest(requestId, dto, req.user);
   }
+
+  // ? create request update for request model
 
   @Get(":module")
   onGetRequestList(

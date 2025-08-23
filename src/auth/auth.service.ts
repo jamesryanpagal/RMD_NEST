@@ -101,24 +101,27 @@ export class AuthService {
     }
   }
 
-  async createAccountAdmin({
-    firstName,
-    middleName,
-    lastName,
-    email,
-    password,
-    phone,
-    mobile,
-    houseNumber,
-    street,
-    barangay,
-    subdivision,
-    city,
-    province,
-    region,
-    zip,
-    role,
-  }: CreateAccountDto) {
+  async createAccount(
+    {
+      firstName,
+      middleName,
+      lastName,
+      email,
+      password,
+      phone,
+      mobile,
+      houseNumber,
+      street,
+      barangay,
+      subdivision,
+      city,
+      province,
+      region,
+      zip,
+      role,
+    }: CreateAccountDto,
+    user?: UserFullDetailsProps,
+  ) {
     try {
       await this.prismaService.$transaction(async prisma => {
         const hashPassword = await this.argonService.hash(password);
@@ -140,8 +143,21 @@ export class AuthService {
             region,
             zip,
             role,
-            ...(role === "ADMIN" && { admin: { create: {} } }),
-            ...(role === "SECRETARY" && { secretary: { create: {} } }),
+            ...(role === "ADMIN" && {
+              admin: {
+                create: {
+                  createdBy: user?.id,
+                },
+              },
+            }),
+            ...(role === "SECRETARY" && {
+              secretary: {
+                create: {
+                  createdBy: user?.id,
+                },
+              },
+            }),
+            createdBy: user?.id,
           },
         });
       });
