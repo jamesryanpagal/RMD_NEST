@@ -506,6 +506,14 @@ export class PaymentService {
             return;
           }
 
+          if (paymentResponse.amount > amount) {
+            this.exceptionService.throw(
+              `Amount must be greater than or equal to ${paymentResponse.amount}`,
+              "BAD_REQUEST",
+            );
+            return;
+          }
+
           const {
             transactionType,
             targetDueDate,
