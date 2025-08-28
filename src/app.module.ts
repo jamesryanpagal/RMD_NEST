@@ -13,6 +13,7 @@ import { FileModule } from "./file/file.module";
 // import { CronModule } from "./cron/cron.module";
 import { EmailModule } from "./email/email.module";
 import { RequestModule } from './request/request.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RequestModule } from './request/request.module';
     FileModule,
     EmailModule,
     RequestModule,
+    AuditModule,
     // CronModule,
   ],
 })
