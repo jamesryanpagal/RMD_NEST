@@ -280,19 +280,4 @@ export class ClientService {
       throw error;
     }
   }
-
-  async clientAudit() {
-    try {
-      return await this.prismaService.clientAudit.findMany({
-        where: {
-          status: { not: "DELETED" },
-        },
-        omit: {
-          status: true,
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
 }
