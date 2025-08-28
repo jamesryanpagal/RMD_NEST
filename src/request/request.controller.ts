@@ -53,6 +53,7 @@ export class RequestController {
 
   // ? create request update for request model
 
+  @Roles($Enums.ROLE.ADMIN)
   @Get(":module")
   onGetRequestList(
     @Param("module") module: $Enums.REQUEST_MODULE,

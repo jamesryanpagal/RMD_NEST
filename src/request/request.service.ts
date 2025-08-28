@@ -272,12 +272,6 @@ export class RequestService {
                   },
                 ],
               },
-              omit: {
-                dateCreated: true,
-                dateUpdated: true,
-                dateDeleted: true,
-                status: true,
-              },
             });
 
             return { ...rest, targetId, target: targetResponse || {} };
