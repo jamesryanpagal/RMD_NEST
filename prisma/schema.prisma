@@ -227,6 +227,7 @@ model UserAudit {
   province    String?
   region      String
   zip         String?
+  role        ROLE
 
   user User? @relation(fields: [targetId], references: [id])
 

@@ -122,6 +122,7 @@ export class AuthService {
     }: CreateAccountDto,
     user?: UserFullDetailsProps,
   ) {
+    console.log({ role });
     try {
       await this.prismaService.$transaction(async prisma => {
         const hashPassword = await this.argonService.hash(password);

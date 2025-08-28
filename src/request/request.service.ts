@@ -231,9 +231,8 @@ export class RequestService {
 
   async getRequestList(
     module: $Enums.REQUEST_MODULE,
-    user?: UserFullDetailsProps,
+    _user?: UserFullDetailsProps,
   ) {
-    const { id } = user || {};
     let response = [];
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -252,8 +251,6 @@ export class RequestService {
             dateDeleted: true,
           },
         });
-
-        console.log(moduleResponse);
 
         if (!moduleResponse.length) {
           return;
