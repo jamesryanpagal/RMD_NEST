@@ -13,6 +13,7 @@ import {
 import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { UserFullDetailsProps } from "src/type";
+import { QuerySearchDto } from "src/dto";
 
 @Injectable()
 export class ProjectService {
@@ -176,12 +177,30 @@ export class ProjectService {
     }
   }
 
-  async getProjects() {
+  async getProjects(query: QuerySearchDto) {
     try {
+      const { search } = query || {};
+      const whereQuery: Prisma.ProjectWhereInput = {
+        status: { not: "DELETED" },
+        ...(search && {
+          OR: [
+            {
+              projectName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }),
+      };
       return await this.prismaService.project.findMany({
-        where: {
-          status: { not: "DELETED" },
-        },
+        where: whereQuery,
         orderBy: {
           order: "asc",
         },

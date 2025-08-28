@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -26,6 +27,7 @@ import { RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
 import { Request } from "express";
+import { QuerySearchDto } from "src/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Controller("projects")
@@ -34,8 +36,8 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get()
-  onGetProjects() {
-    return this.projectService.getProjects();
+  onGetProjects(@Query() query: QuerySearchDto) {
+    return this.projectService.getProjects(query);
   }
 
   @Roles($Enums.ROLE.ADMIN)

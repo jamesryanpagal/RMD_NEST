@@ -199,6 +199,7 @@ export class ContractService {
                     : {}),
                 downPaymentStatus: "ON_GOING",
                 totalMonthly: Number((balance / terms).toFixed(2)),
+                createdBy: user?.id,
               },
             });
           }
@@ -216,6 +217,7 @@ export class ContractService {
               paymentLastDate: formattedBaseDate,
               balance: cashComputedBalance,
               totalCashPayment: cashComputedBalance,
+              createdBy: user?.id,
             },
           });
         }
@@ -226,6 +228,7 @@ export class ContractService {
           },
           data: {
             status: "ON_GOING",
+            updatedBy: user?.id,
           },
         });
 
@@ -242,6 +245,7 @@ export class ContractService {
               },
             },
             balance: agentCommissionTotal,
+            createdBy: user?.id,
           },
         });
       });

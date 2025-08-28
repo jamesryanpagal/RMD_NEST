@@ -28,12 +28,8 @@ export class AuditService {
         where: {
           status: { not: "DELETED" },
         },
-        omit: {
-          status: true,
-        },
       });
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
