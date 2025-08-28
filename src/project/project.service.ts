@@ -415,7 +415,7 @@ export class ProjectService {
     }
   }
 
-  async addBlock(id: string, dto: BlockDto) {
+  async addBlock(id: string, dto: BlockDto, user?: UserFullDetailsProps) {
     const { title, lot } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -436,6 +436,7 @@ export class ProjectService {
             await prisma.lot.create({
               data: {
                 title: lotTitle.toString(),
+                createdBy: user?.id,
                 block: {
                   connect: {
                     id: blockResponse.id,
@@ -474,7 +475,7 @@ export class ProjectService {
     }
   }
 
-  async deletePhase(id: string) {
+  async deletePhase(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.phase.update({
         where: {
@@ -482,6 +483,7 @@ export class ProjectService {
         },
         data: {
           status: "DELETED",
+          deletedBy: user?.id,
         },
       });
 

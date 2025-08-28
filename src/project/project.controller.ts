@@ -93,14 +93,18 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN)
   @Delete("delete/phase/:id")
-  onDeletePhase(@Param("id") id: string) {
-    return this.projectService.deletePhase(id);
+  onDeletePhase(@Param("id") id: string, @Req() req: Request) {
+    return this.projectService.deletePhase(id, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
   @Post("add/block/:id") // ? id represents the phaseId
-  onAddBlock(@Param("id") id: string, @Body() dto: BlockDto) {
-    return this.projectService.addBlock(id, dto);
+  onAddBlock(
+    @Param("id") id: string,
+    @Body() dto: BlockDto,
+    @Req() req: Request,
+  ) {
+    return this.projectService.addBlock(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
