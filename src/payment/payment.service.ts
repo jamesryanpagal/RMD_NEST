@@ -889,6 +889,7 @@ export class PaymentService {
                 .format(this.mtzService.dateFormat.dateAbbrev);
 
               downPaymentBreakdown.push({
+                referenceNumber: reservationPayment.referenceNumber,
                 modeOfPayment: reservationPayment.modeOfPayment,
                 paymentDate: reservationPayment.paymentDate,
                 receiptNo: reservationPayment.receiptNo,
@@ -934,6 +935,7 @@ export class PaymentService {
                 });
 
                 downPaymentBreakdown.push({
+                  referenceNumber: paymentInDate?.referenceNumber,
                   modeOfPayment: paymentInDate?.modeOfPayment,
                   paymentDate: paymentInDate?.paymentDate,
                   receiptNo: paymentInDate?.receiptNo,
@@ -964,6 +966,7 @@ export class PaymentService {
               });
 
               downPaymentBreakdown.push({
+                referenceNumber: paymentInDate?.referenceNumber,
                 modeOfPayment: paymentInDate?.modeOfPayment,
                 paymentDate: paymentInDate?.paymentDate,
                 receiptNo: paymentInDate?.receiptNo,
@@ -1009,6 +1012,7 @@ export class PaymentService {
               });
 
               totalPaymentBreakdown.push({
+                referenceNumber: paymentInDate?.referenceNumber,
                 modeOfPayment: paymentInDate?.modeOfPayment,
                 paymentDate: paymentInDate?.paymentDate,
                 receiptNo: paymentInDate?.receiptNo,
@@ -1062,6 +1066,7 @@ export class PaymentService {
               .format(this.mtzService.dateFormat.dateAbbrev);
 
             totalPaymentBreakdown.push({
+              referenceNumber: reservationPayment.referenceNumber,
               modeOfPayment: reservationPayment.modeOfPayment,
               paymentDate: reservationPayment.paymentDate,
               receiptNo: reservationPayment.receiptNo,
@@ -1092,6 +1097,7 @@ export class PaymentService {
           });
 
           totalPaymentBreakdown.push({
+            referenceNumber: paymentInDate?.referenceNumber,
             modeOfPayment: paymentInDate?.modeOfPayment,
             paymentDate: paymentInDate?.paymentDate,
             receiptNo: paymentInDate?.receiptNo,

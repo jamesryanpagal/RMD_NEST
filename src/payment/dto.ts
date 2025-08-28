@@ -21,6 +21,7 @@ export type PaymentBreakdownType = {
   paymentDate?: string;
   receiptNo?: string | null;
   dueDate: string;
+  referenceNumber?: string | null;
   amount: number;
   remainingBalance: number;
   transactionType: $Enums.TRANSACTION_TYPE;
