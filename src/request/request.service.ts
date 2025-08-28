@@ -30,7 +30,14 @@ export class RequestService {
     private exceptionService: ExceptionService,
   ) {}
 
-  private moduleList: $Enums.REQUEST_MODULE[] = [$Enums.REQUEST_MODULE.CLIENT];
+  private moduleList: $Enums.REQUEST_MODULE[] = [
+    $Enums.REQUEST_MODULE.CLIENT,
+    $Enums.REQUEST_MODULE.AGENT_COMMISSION,
+    $Enums.REQUEST_MODULE.CONTRACT,
+    $Enums.REQUEST_MODULE.FILE,
+    $Enums.REQUEST_MODULE.PAYMENT,
+    $Enums.REQUEST_MODULE.RESERVATION,
+  ];
 
   private moduleModel: Record<$Enums.REQUEST_MODULE, string> = {
     [$Enums.REQUEST_MODULE.CLIENT]: "clientRequest",
@@ -239,19 +246,14 @@ export class RequestService {
         }
         const moduleResponse = await prisma[this.moduleModel[module]].findMany({
           where: {
-            AND: [
-              {
-                createdBy: id,
-              },
-              {
-                status: { not: "DELETED" },
-              },
-            ],
+            status: { not: "DELETED" },
           },
           omit: {
             dateDeleted: true,
           },
         });
+
+        console.log(moduleResponse);
 
         if (!moduleResponse.length) {
           return;
