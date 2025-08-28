@@ -1501,39 +1501,53 @@ export class PaymentService {
 
   async getCommissionPaymentHistory(agentCommissionId: string) {
     try {
-      return await this.prismaService.payment.findMany({
-        where: {
-          AND: [
-            {
-              transactionType: "AGENT_COMMISSION_RELEASE",
-            },
-            {
-              agentCommissionId,
-            },
-            {
-              status: { not: "DELETED" },
-            },
-          ],
-        },
-        omit: {
-          dateCreated: true,
-          dateUpdated: true,
-          dateDeleted: true,
-          status: true,
-        },
-        include: {
-          files: {
-            where: {
-              status: { not: "DELETED" },
-            },
-            omit: {
-              dateCreated: true,
-              dateDeleted: true,
-              dateUpdated: true,
+      const paymentCommissionResponse =
+        await this.prismaService.payment.findMany({
+          where: {
+            AND: [
+              {
+                transactionType: "AGENT_COMMISSION_RELEASE",
+              },
+              {
+                agentCommissionId,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+          omit: {
+            dateCreated: true,
+            dateUpdated: true,
+            dateDeleted: true,
+            status: true,
+          },
+          include: {
+            files: {
+              where: {
+                status: { not: "DELETED" },
+              },
+              omit: {
+                dateCreated: true,
+                dateDeleted: true,
+                dateUpdated: true,
+              },
             },
           },
-        },
-      });
+        });
+
+      const formattedResponse = await Promise.all(
+        paymentCommissionResponse.map(async ({ files, ...rest }) => {
+          const formattedFiles =
+            this.fileService.onFormatPaymentFilesResponse(files);
+          return {
+            ...rest,
+            files: formattedFiles,
+          };
+        }),
+      );
+
+      return formattedResponse;
     } catch (error) {
       throw error;
     }
