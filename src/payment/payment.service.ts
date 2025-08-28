@@ -1479,7 +1479,18 @@ export class PaymentService {
           },
         });
 
-        response = payments;
+        const formattedPaymentResponse = await Promise.all(
+          payments.map(async ({ files, ...rest }) => {
+            const formattedFiles =
+              this.fileService.onFormatPaymentFilesResponse(files);
+            return {
+              ...rest,
+              files: formattedFiles,
+            };
+          }),
+        );
+
+        response = formattedPaymentResponse;
       });
 
       return response;
