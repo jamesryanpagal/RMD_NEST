@@ -487,33 +487,33 @@ export class PaymentService {
 
         const { role } = user || {};
 
+        const paymentResponse = await prisma.payment.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!paymentResponse) {
+          this.exceptionService.throw("Payment not found", "NOT_FOUND");
+          return;
+        }
+
+        if (paymentResponse.amount > amount) {
+          this.exceptionService.throw(
+            `Amount must be greater than or equal to ${paymentResponse.amount}`,
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
         if (role === "SECRETARY") {
-          const paymentResponse = await prisma.payment.findFirst({
-            where: {
-              AND: [
-                {
-                  id,
-                },
-                {
-                  status: { not: "DELETED" },
-                },
-              ],
-            },
-          });
-
-          if (!paymentResponse) {
-            this.exceptionService.throw("Payment not found", "NOT_FOUND");
-            return;
-          }
-
-          if (paymentResponse.amount > amount) {
-            this.exceptionService.throw(
-              `Amount must be greater than or equal to ${paymentResponse.amount}`,
-              "BAD_REQUEST",
-            );
-            return;
-          }
-
           const {
             transactionType,
             targetDueDate,
