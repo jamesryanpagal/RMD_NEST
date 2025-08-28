@@ -17,6 +17,9 @@ export type PaymentFiles = {
 };
 
 export type PaymentBreakdownType = {
+  modeOfPayment?: $Enums.MODE_OF_PAYMENT;
+  paymentDate?: string;
+  receiptNo?: string | null;
   dueDate: string;
   amount: number;
   remainingBalance: number;

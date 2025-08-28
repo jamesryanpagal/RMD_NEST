@@ -321,13 +321,32 @@ export class ProjectService {
     }
   }
 
-  async addPhase(id: string, dto: PhaseDto) {
+  async addPhase(id: string, dto: PhaseDto, user?: UserFullDetailsProps) {
     const { title, block } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
+        const projectResponse = await prisma.project.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!projectResponse) {
+          this.exceptionService.throw("Project not found", "NOT_FOUND");
+          return;
+        }
+
         const phaseResponse = await prisma.phase.create({
           data: {
             title,
+            createdBy: user?.id,
             project: {
               connect: {
                 id,
@@ -342,6 +361,7 @@ export class ProjectService {
             const blockResponse = await prisma.block.create({
               data: {
                 title: blockTitle,
+                createdBy: user?.id,
                 phase: {
                   connect: {
                     id: phaseResponse.id,
@@ -356,6 +376,7 @@ export class ProjectService {
                 await prisma.lot.create({
                   data: {
                     title: lotTitle.toString(),
+                    createdBy: user?.id,
                     block: {
                       connect: {
                         id: blockResponse.id,
@@ -485,7 +506,12 @@ export class ProjectService {
     }
   }
 
-  async updatePhase(projectId: string, id: string, dto: UpdatePhaseDto) {
+  async updatePhase(
+    projectId: string,
+    id: string,
+    dto: UpdatePhaseDto,
+    user?: UserFullDetailsProps,
+  ) {
     const { title } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -498,9 +524,17 @@ export class ProjectService {
               {
                 id,
               },
+              {
+                status: { not: "DELETED" },
+              },
             ],
           },
         });
+
+        if (!phaseResponse) {
+          this.exceptionService.throw("Phase not found", "NOT_FOUND");
+          return;
+        }
 
         await prisma.phase.update({
           where: {
@@ -508,6 +542,7 @@ export class ProjectService {
           },
           data: {
             title,
+            updatedBy: user?.id,
           },
         });
       });

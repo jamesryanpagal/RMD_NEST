@@ -62,8 +62,12 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN)
   @Post("add/phase/:id") // ? id represents the projectId
-  onAddPhase(@Param("id") id: string, @Body() dto: PhaseDto) {
-    return this.projectService.addPhase(id, dto);
+  onAddPhase(
+    @Param("id") id: string,
+    @Body() dto: PhaseDto,
+    @Req() req: Request,
+  ) {
+    return this.projectService.addPhase(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
@@ -72,9 +76,12 @@ export class ProjectController {
     @Param("projectId") projectId: string,
     @Param("id") id: string,
     @Body() dto: UpdatePhaseDto,
+    @Req() req: Request,
   ) {
-    return this.projectService.updatePhase(projectId, id, dto);
+    return this.projectService.updatePhase(projectId, id, dto, req.user);
   }
+
+  // ? continue applying the req.user for audit trail
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get("get/phase/:id")

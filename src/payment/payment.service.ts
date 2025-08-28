@@ -889,6 +889,9 @@ export class PaymentService {
                 .format(this.mtzService.dateFormat.dateAbbrev);
 
               downPaymentBreakdown.push({
+                modeOfPayment: reservationPayment.modeOfPayment,
+                paymentDate: reservationPayment.paymentDate,
+                receiptNo: reservationPayment.receiptNo,
                 dueDate: reservationPaymentDate,
                 amount: reservationPayment.amount,
                 paidAmount: reservationPayment.amount,
@@ -931,6 +934,9 @@ export class PaymentService {
                 });
 
                 downPaymentBreakdown.push({
+                  modeOfPayment: paymentInDate?.modeOfPayment,
+                  paymentDate: paymentInDate?.paymentDate,
+                  receiptNo: paymentInDate?.receiptNo,
                   dueDate,
                   amount: totalMonthlyDown,
                   paidAmount: paymentInDate?.amount || 0,
@@ -958,6 +964,9 @@ export class PaymentService {
               });
 
               downPaymentBreakdown.push({
+                modeOfPayment: paymentInDate?.modeOfPayment,
+                paymentDate: paymentInDate?.paymentDate,
+                receiptNo: paymentInDate?.receiptNo,
                 dueDate,
                 amount: totalMonthlyDown,
                 paidAmount: paymentInDate?.amount || 0,
@@ -1000,6 +1009,9 @@ export class PaymentService {
               });
 
               totalPaymentBreakdown.push({
+                modeOfPayment: paymentInDate?.modeOfPayment,
+                paymentDate: paymentInDate?.paymentDate,
+                receiptNo: paymentInDate?.receiptNo,
                 dueDate,
                 amount: totalMonthly - (isLastPaymentDate ? excessPayment : 0),
                 paidAmount: paymentInDate?.amount || 0,
@@ -1050,6 +1062,9 @@ export class PaymentService {
               .format(this.mtzService.dateFormat.dateAbbrev);
 
             totalPaymentBreakdown.push({
+              modeOfPayment: reservationPayment.modeOfPayment,
+              paymentDate: reservationPayment.paymentDate,
+              receiptNo: reservationPayment.receiptNo,
               dueDate: reservationPaymentDate,
               amount: reservationPayment.amount,
               paidAmount: reservationPayment.amount,
@@ -1077,6 +1092,9 @@ export class PaymentService {
           });
 
           totalPaymentBreakdown.push({
+            modeOfPayment: paymentInDate?.modeOfPayment,
+            paymentDate: paymentInDate?.paymentDate,
+            receiptNo: paymentInDate?.receiptNo,
             dueDate,
             amount: totalCashPayment || 0,
             paidAmount: paymentInDate?.amount || 0,
