@@ -48,6 +48,11 @@ export class ClientController {
     return this.clientService.deleteClient(id, req.user);
   }
 
+  @Get("audit")
+  onGetClientAudit() {
+    return this.clientService.clientAudit();
+  }
+
   @Get(":id")
   onGetClient(@Param("id") id: string) {
     return this.clientService.getClient(id);

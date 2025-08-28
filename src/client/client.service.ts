@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { $Enums, Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { CreateClientServiceDto, CreateUpdateClientDto } from "./dto";
 import { UserFullDetailsProps } from "src/type";
@@ -275,6 +274,21 @@ export class ClientService {
           dateCreated: true,
           dateUpdated: true,
           dateDeleted: true,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async clientAudit() {
+    try {
+      return await this.prismaService.clientAudit.findMany({
+        where: {
+          status: { not: "DELETED" },
+        },
+        omit: {
+          status: true,
         },
       });
     } catch (error) {
