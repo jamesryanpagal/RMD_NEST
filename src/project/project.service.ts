@@ -454,7 +454,7 @@ export class ProjectService {
     }
   }
 
-  async addLot(id: string, dto: LotDto) {
+  async addLot(id: string, dto: LotDto, user?: UserFullDetailsProps) {
     const { title, sqm } = dto || {};
     try {
       await this.prismaService.lot.create({
@@ -466,6 +466,7 @@ export class ProjectService {
               id,
             },
           },
+          createdBy: user?.id,
         },
       });
 
@@ -493,7 +494,7 @@ export class ProjectService {
     }
   }
 
-  async deleteBlock(id: string) {
+  async deleteBlock(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.block.update({
         where: {
@@ -501,6 +502,7 @@ export class ProjectService {
         },
         data: {
           status: "DELETED",
+          deletedBy: user?.id,
         },
       });
 
@@ -510,7 +512,7 @@ export class ProjectService {
     }
   }
 
-  async deleteLot(id: string) {
+  async deleteLot(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.lot.update({
         where: {
@@ -518,6 +520,7 @@ export class ProjectService {
         },
         data: {
           status: "DELETED",
+          deletedBy: user?.id,
         },
       });
 
@@ -618,7 +621,11 @@ export class ProjectService {
     }
   }
 
-  async updateBlock(id: string, dto: UpdateBlockDto) {
+  async updateBlock(
+    id: string,
+    dto: UpdateBlockDto,
+    user?: UserFullDetailsProps,
+  ) {
     const { title } = dto || {};
     try {
       await this.prismaService.block.update({
@@ -627,6 +634,7 @@ export class ProjectService {
         },
         data: {
           title,
+          updatedBy: user?.id,
         },
       });
 
@@ -648,7 +656,7 @@ export class ProjectService {
     }
   }
 
-  async updateLot(id: string, dto: UpdateLotDto) {
+  async updateLot(id: string, dto: UpdateLotDto, user?: UserFullDetailsProps) {
     const { title, sqm } = dto || {};
     try {
       await this.prismaService.lot.update({
@@ -658,6 +666,7 @@ export class ProjectService {
         data: {
           title: title.toString(),
           sqm,
+          updatedBy: user?.id,
         },
       });
 

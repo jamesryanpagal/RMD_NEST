@@ -83,8 +83,6 @@ export class ProjectController {
     return this.projectService.updatePhase(projectId, id, dto, req.user);
   }
 
-  // ? continue applying the req.user for audit trail
-
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get("get/phase/:id")
   onGetPhase(@Param("id") id: string) {
@@ -109,8 +107,12 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN)
   @Patch("update/block/:id")
-  onUpdateBlock(@Param("id") id: string, @Body() dto: UpdateBlockDto) {
-    return this.projectService.updateBlock(id, dto);
+  onUpdateBlock(
+    @Param("id") id: string,
+    @Body() dto: UpdateBlockDto,
+    @Req() req: Request,
+  ) {
+    return this.projectService.updateBlock(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
@@ -121,20 +123,24 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN)
   @Delete("delete/block/:id")
-  onDeleteBlock(@Param("id") id: string) {
-    return this.projectService.deleteBlock(id);
+  onDeleteBlock(@Param("id") id: string, @Req() req: Request) {
+    return this.projectService.deleteBlock(id, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
   @Post("add/lot/:id") // ? id represents the blockId
-  onAddLot(@Param("id") id: string, @Body() dto: LotDto) {
-    return this.projectService.addLot(id, dto);
+  onAddLot(@Param("id") id: string, @Body() dto: LotDto, @Req() req: Request) {
+    return this.projectService.addLot(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
   @Patch("update/lot/:id")
-  onUpdateLot(@Param("id") id: string, @Body() dto: UpdateLotDto) {
-    return this.projectService.updateLot(id, dto);
+  onUpdateLot(
+    @Param("id") id: string,
+    @Body() dto: UpdateLotDto,
+    @Req() req: Request,
+  ) {
+    return this.projectService.updateLot(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
@@ -145,8 +151,8 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN)
   @Delete("delete/lot/:id")
-  onDeleteLot(@Param("id") id: string) {
-    return this.projectService.deleteLot(id);
+  onDeleteLot(@Param("id") id: string, @Req() req: Request) {
+    return this.projectService.deleteLot(id, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
