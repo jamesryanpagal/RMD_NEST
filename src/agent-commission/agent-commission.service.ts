@@ -5,6 +5,8 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { StartAgentCommissionDto } from "./dto";
+import { QuerySearchDto } from "src/dto";
+import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class AgentCommissionService {
@@ -14,15 +16,90 @@ export class AgentCommissionService {
     private exceptionService: ExceptionService,
   ) {}
 
-  async agentCommissions() {
+  async agentCommissions(query: QuerySearchDto) {
     try {
+      const { search } = query || {};
+      const searchArr = search?.split(" ") || [];
+      const whereQuery: Prisma.AgentCommissionWhereInput = {
+        status: {
+          not: "DELETED",
+        },
+        ...(search && {
+          OR: [
+            {
+              agent: {
+                OR: [
+                  {
+                    firstName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    middleName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    lastName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    firstName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    middleName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    lastName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              contract: {
+                lot: {
+                  block: {
+                    phase: {
+                      project: {
+                        OR: [
+                          {
+                            projectName: {
+                              contains: search,
+                              mode: "insensitive",
+                            },
+                          },
+                          {
+                            projectName: {
+                              in: searchArr,
+                              mode: "insensitive",
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      };
       const agentCommissionResponse =
         await this.prismaService.agentCommission.findMany({
-          where: {
-            status: {
-              not: "DELETED",
-            },
-          },
+          where: whereQuery,
           omit: {
             dateCreated: true,
             dateDeleted: true,

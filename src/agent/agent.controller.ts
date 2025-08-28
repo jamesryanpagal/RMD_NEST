@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { AgentService } from "./agent.service";
@@ -15,6 +16,7 @@ import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { RolesGuard } from "src/services/guard/guard.service";
 import { $Enums } from "generated/prisma";
 import { Roles } from "src/decorator";
+import { QuerySearchDto } from "src/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Roles($Enums.ROLE.ADMIN)
@@ -23,8 +25,8 @@ export class AgentController {
   constructor(private agentService: AgentService) {}
 
   @Get()
-  onGetAgents() {
-    return this.agentService.getAgents();
+  onGetAgents(@Query() query: QuerySearchDto) {
+    return this.agentService.getAgents(query);
   }
 
   @Post("create")

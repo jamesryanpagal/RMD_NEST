@@ -7,6 +7,8 @@ import { PaymentService } from "src/payment/payment.service";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
 import { UserFullDetailsProps } from "src/type";
+import { QuerySearchDto } from "src/dto";
+import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class ReservationService {
@@ -124,14 +126,87 @@ export class ReservationService {
     }
   }
 
-  async getReservations() {
+  async getReservations(query: QuerySearchDto) {
     try {
       let response: any[] = [];
       await this.prismaService.$transaction(async prisma => {
+        const { search } = query || {};
+        const searchArr = search?.split(" ") || [];
+        const whereQuery: Prisma.ReservationWhereInput = {
+          status: { not: "DELETED" },
+          ...(search && {
+            OR: [
+              {
+                client: {
+                  OR: [
+                    {
+                      firstName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      firstName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                lot: {
+                  block: {
+                    phase: {
+                      project: {
+                        OR: [
+                          {
+                            projectName: {
+                              contains: search,
+                              mode: "insensitive",
+                            },
+                          },
+                          {
+                            projectName: {
+                              in: searchArr,
+                              mode: "insensitive",
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          }),
+        };
         const reservationList = await prisma.reservation.findMany({
-          where: {
-            status: { not: "DELETED" },
-          },
+          where: whereQuery,
           omit: {
             dateCreated: true,
             dateUpdated: true,

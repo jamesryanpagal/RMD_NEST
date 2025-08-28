@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "generated/prisma";
+import { QuerySearchDto } from "src/dto";
 import { PrismaService } from "src/services/prisma/prisma.service";
 
 @Injectable()
@@ -45,12 +46,57 @@ export class AgentService {
     }
   }
 
-  async getAgents() {
+  async getAgents(query: QuerySearchDto) {
     try {
-      return await this.prismaService.agent.findMany({
-        where: {
-          status: { not: "DELETED" },
+      const { search } = query || {};
+      const searchArr = search?.split(" ") || [];
+      const whereQuery: Prisma.AgentWhereInput = {
+        status: {
+          not: "DELETED",
         },
+        ...(search && {
+          OR: [
+            {
+              firstName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }),
+      };
+      return await this.prismaService.agent.findMany({
+        where: whereQuery,
         omit: {
           status: true,
           dateCreated: true,

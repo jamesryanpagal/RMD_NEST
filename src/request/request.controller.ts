@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -17,6 +18,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
+import { QuerySearchDto } from "src/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Controller("requests")
@@ -58,7 +60,8 @@ export class RequestController {
   onGetRequestList(
     @Param("module") module: $Enums.REQUEST_MODULE,
     @Req() req: Request,
+    @Query() query: QuerySearchDto,
   ) {
-    return this.requestService.getRequestList(module, req.user);
+    return this.requestService.getRequestList(module, query, req.user);
   }
 }

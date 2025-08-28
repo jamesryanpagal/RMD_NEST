@@ -1,14 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Query,
+} from "@nestjs/common";
 import { AgentCommissionService } from "./agent-commission.service";
 import { StartAgentCommissionDto } from "./dto";
+import { QuerySearchDto } from "src/dto";
 
 @Controller("agent-commissions")
 export class AgentCommissionController {
   constructor(private agentCommissionService: AgentCommissionService) {}
 
   @Get()
-  onGetAgentCommissions() {
-    return this.agentCommissionService.agentCommissions();
+  onGetAgentCommissions(@Query() query: QuerySearchDto) {
+    return this.agentCommissionService.agentCommissions(query);
   }
 
   @Patch("start/:id")

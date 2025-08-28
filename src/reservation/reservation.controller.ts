@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseGuards,
@@ -20,6 +21,7 @@ import { RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
 import { Request } from "express";
+import { QuerySearchDto } from "src/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
@@ -28,8 +30,8 @@ export class ReservationController {
   constructor(private reservationService: ReservationService) {}
 
   @Get()
-  onGetReservations() {
-    return this.reservationService.getReservations();
+  onGetReservations(@Query() query: QuerySearchDto) {
+    return this.reservationService.getReservations(query);
   }
 
   @Post("create/:lotId/:clientId")

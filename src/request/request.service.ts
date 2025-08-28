@@ -3,8 +3,9 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { UserFullDetailsProps } from "src/type";
 import { ApproveRequestDto, RejectDeleteRequestDto } from "./dto";
-import { $Enums } from "generated/prisma";
+import { $Enums, Prisma } from "generated/prisma";
 import { CreateUpdateClientDto } from "src/client/dto";
+import { QuerySearchDto } from "src/dto";
 
 type ModuleResponseProps = {
   targetId: string;
@@ -46,6 +47,310 @@ export class RequestService {
     [$Enums.REQUEST_MODULE.PAYMENT]: "paymentRequest",
     [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: "agentCommissionRequest",
     [$Enums.REQUEST_MODULE.FILE]: "fileRequest",
+  };
+
+  private moduleModelSearch: Record<
+    $Enums.REQUEST_MODULE,
+    (search: string, searchArr: string[]) => any
+  > = {
+    [$Enums.REQUEST_MODULE.CLIENT]: (search, searchArr) => [
+      {
+        client: {
+          OR: [
+            {
+              firstName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      },
+    ],
+    [$Enums.REQUEST_MODULE.RESERVATION]: (search, searchArr) => [
+      {
+        payment: {
+          reservation: {
+            client: {
+              OR: [
+                {
+                  firstName: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  middleName: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  lastName: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  firstName: {
+                    in: searchArr,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  middleName: {
+                    in: searchArr,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  lastName: {
+                    in: searchArr,
+                    mode: "insensitive",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    ],
+    [$Enums.REQUEST_MODULE.CONTRACT]: (search, searchArr) => [
+      {
+        contract: {
+          client: {
+            OR: [
+              {
+                firstName: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                middleName: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                lastName: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                firstName: {
+                  in: searchArr,
+                  mode: "insensitive",
+                },
+              },
+              {
+                middleName: {
+                  in: searchArr,
+                  mode: "insensitive",
+                },
+              },
+              {
+                lastName: {
+                  in: searchArr,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+    [$Enums.REQUEST_MODULE.PAYMENT]: (search, searchArr) => [
+      {
+        payment: {
+          OR: [
+            {
+              reservation: {
+                client: {
+                  OR: [
+                    {
+                      firstName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      firstName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              contract: {
+                client: {
+                  OR: [
+                    {
+                      firstName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        contains: search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      firstName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      middleName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      lastName: {
+                        in: searchArr,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    [$Enums.REQUEST_MODULE.AGENT_COMMISSION]: (search, searchArr) => [
+      {
+        agent: {
+          OR: [
+            {
+              firstName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      },
+    ],
+    [$Enums.REQUEST_MODULE.FILE]: (search, searchArr) => [
+      {
+        file: {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              name: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      },
+    ],
   };
 
   private targetModuleModel: Record<$Enums.REQUEST_MODULE, string> = {
@@ -231,10 +536,12 @@ export class RequestService {
 
   async getRequestList(
     module: $Enums.REQUEST_MODULE,
+    query: QuerySearchDto,
     _user?: UserFullDetailsProps,
   ) {
     let response = [];
     try {
+      const { search } = query || {};
       await this.prismaService.$transaction(async prisma => {
         if (!this.moduleList.includes(module)) {
           this.exceptionService.throw(
@@ -243,10 +550,16 @@ export class RequestService {
           );
           return;
         }
+
+        const searchArr = search?.split(" ") || [];
+        const whereQuery = {
+          status: { not: "DELETED" },
+          ...(search && {
+            OR: this.moduleModelSearch[module](search, searchArr),
+          }),
+        };
         const moduleResponse = await prisma[this.moduleModel[module]].findMany({
-          where: {
-            status: { not: "DELETED" },
-          },
+          where: whereQuery,
           omit: {
             dateDeleted: true,
           },
@@ -282,6 +595,7 @@ export class RequestService {
 
       return response;
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
