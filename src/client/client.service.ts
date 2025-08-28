@@ -16,6 +16,7 @@ export class ClientService {
   async getClients(query: QuerySearchDto) {
     try {
       const { search } = query;
+      const searchArr = search?.split(" ") || [];
 
       const whereQuery: Prisma.ClientWhereInput = {
         status: { not: "DELETED" },
@@ -36,6 +37,24 @@ export class ClientService {
             {
               lastName: {
                 contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                in: searchArr,
                 mode: "insensitive",
               },
             },

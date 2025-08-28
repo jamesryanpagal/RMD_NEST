@@ -5,6 +5,8 @@ import { MtzService } from "src/services/mtz/mtz.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
 import { UserFullDetailsProps } from "src/type";
+import { QuerySearchDto } from "src/dto";
+import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class ContractService {
@@ -343,12 +345,85 @@ export class ContractService {
     }
   }
 
-  async getContracts() {
+  async getContracts(query: QuerySearchDto) {
     try {
+      const { search } = query || {};
+      const searchArr = search?.split(" ") || [];
+      const whereQuery: Prisma.ContractWhereInput = {
+        status: { not: "DELETED" },
+        ...(search && {
+          OR: [
+            {
+              client: {
+                OR: [
+                  {
+                    firstName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    middleName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    lastName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    firstName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    middleName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    lastName: {
+                      in: searchArr,
+                      mode: "insensitive",
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              lot: {
+                block: {
+                  phase: {
+                    project: {
+                      OR: [
+                        {
+                          projectName: {
+                            contains: search,
+                            mode: "insensitive",
+                          },
+                        },
+                        {
+                          projectName: {
+                            in: searchArr,
+                            mode: "insensitive",
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      };
       const contractsResponse = await this.prismaService.contract.findMany({
-        where: {
-          status: { not: "DELETED" },
-        },
+        where: whereQuery,
         omit: {
           dateCreated: true,
           dateUpdated: true,

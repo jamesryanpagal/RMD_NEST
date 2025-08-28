@@ -180,6 +180,7 @@ export class ProjectService {
   async getProjects(query: QuerySearchDto) {
     try {
       const { search } = query || {};
+      const searchArr = search?.split(" ") || [];
       const whereQuery: Prisma.ProjectWhereInput = {
         status: { not: "DELETED" },
         ...(search && {
@@ -193,6 +194,18 @@ export class ProjectService {
             {
               description: {
                 contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              projectName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              description: {
+                in: searchArr,
                 mode: "insensitive",
               },
             },

@@ -5,6 +5,8 @@ import { UserFullDetailsProps } from "src/type";
 import { UpdatePasswordDto, UpdateUserDto } from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { ArgonService } from "src/services/argon/argon.service";
+import { QuerySearchDto } from "src/dto";
+import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class UserService {
@@ -14,12 +16,55 @@ export class UserService {
     private argonService: ArgonService,
   ) {}
 
-  async getUsers() {
+  async getUsers(query: QuerySearchDto) {
     try {
+      const { search } = query || {};
+      const searchArr = search?.split(" ") || [];
+      const whereQuery: Prisma.UserWhereInput = {
+        status: { not: "DELETED" },
+        ...(search && {
+          OR: [
+            {
+              firstName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }),
+      };
       return await this.prismaService.user.findMany({
-        where: {
-          status: { not: "DELETED" },
-        },
+        where: whereQuery,
         omit: {
           password: true,
         },

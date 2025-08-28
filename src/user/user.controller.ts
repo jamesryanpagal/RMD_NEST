@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -16,6 +17,7 @@ import { UpdatePasswordDto, UpdateUserDto } from "./dto";
 import { EmailExistsGuard, RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
+import { QuerySearchDto } from "src/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Controller("users")
@@ -24,8 +26,8 @@ export class UserController {
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get()
-  onGetUsers() {
-    return this.userService.getUsers();
+  onGetUsers(@Query() query: QuerySearchDto) {
+    return this.userService.getUsers(query);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
