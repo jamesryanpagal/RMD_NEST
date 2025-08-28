@@ -18,7 +18,16 @@ export class LoginMiddleware implements NestMiddleware {
 
     try {
       const user = await this.prismaService.user.findFirst({
-        where: { email },
+        where: {
+          AND: [
+            {
+              email,
+            },
+            {
+              status: "ACTIVE",
+            },
+          ],
+        },
       });
 
       if (!user) {
