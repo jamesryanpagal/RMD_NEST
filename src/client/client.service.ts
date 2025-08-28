@@ -3,6 +3,8 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import { CreateClientServiceDto, CreateUpdateClientDto } from "./dto";
 import { UserFullDetailsProps } from "src/type";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { QuerySearchDto } from "src/dto";
+import { Prisma } from "generated/prisma";
 
 @Injectable()
 export class ClientService {
@@ -11,12 +13,37 @@ export class ClientService {
     private exceptionService: ExceptionService,
   ) {}
 
-  async getClients() {
+  async getClients(query: QuerySearchDto) {
     try {
+      const { search } = query;
+
+      const whereQuery: Prisma.ClientWhereInput = {
+        status: { not: "DELETED" },
+        ...(search && {
+          OR: [
+            {
+              firstName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              middleName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          ],
+        }),
+      };
       return await this.prismaService.client.findMany({
-        where: {
-          status: { not: "DELETED" },
-        },
+        where: whereQuery,
         orderBy: {
           firstName: "asc",
         },
