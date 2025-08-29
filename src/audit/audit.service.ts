@@ -19,7 +19,12 @@ export class AuditService {
     [$Enums.MODULES.AGENT]: "agentAudit",
     [$Enums.MODULES.AGENT_COMMISSION]: "agentCommissionAudit",
     [$Enums.MODULES.FILES]: "fileAudit",
-    [$Enums.MODULES.REQUEST]: "requestAudit",
+    [$Enums.MODULES.CLIENT_REQUEST]: "clientRequestAudit",
+    [$Enums.MODULES.RESERVATION_REQUEST]: "reservationRequestAudit",
+    [$Enums.MODULES.CONTRACT_REQUEST]: "contractRequestAudit",
+    [$Enums.MODULES.PAYMENT_REQUEST]: "paymentRequestAudit",
+    [$Enums.MODULES.AGENT_COMMISSION_REQUEST]: "agentCommissionRequestAudit",
+    [$Enums.MODULES.FILES_REQUEST]: "filesRequestAudit",
   };
 
   private targetModuleIncludesModel: Partial<Record<$Enums.MODULES, any>> = {
@@ -177,7 +182,86 @@ export class AuditService {
       },
     },
     [$Enums.MODULES.FILES]: {},
-    [$Enums.MODULES.REQUEST]: {},
+    [$Enums.MODULES.CLIENT_REQUEST]: {
+      include: {
+        clientRequest: true,
+      },
+    },
+    [$Enums.MODULES.RESERVATION_REQUEST]: {
+      include: {
+        reservationRequest: {
+          include: {
+            payment: {
+              include: {
+                reservation: {
+                  include: {
+                    lot: {
+                      include: {
+                        block: {
+                          include: {
+                            phase: {
+                              include: {
+                                project: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                    client: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.CONTRACT_REQUEST]: {
+      include: {
+        contractRequest: {
+          include: {
+            contract: {
+              include: {
+                client: true,
+                lot: {
+                  include: {
+                    block: {
+                      include: {
+                        phase: {
+                          include: {
+                            project: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                agent: true,
+                commissionOfAgent: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.PAYMENT_REQUEST]: {
+      include: {
+        paymentRequest: {
+          include: {
+            payment: {
+              include: {
+                contract: true,
+                reservation: true,
+                agentCommission: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.AGENT_COMMISSION_REQUEST]: {},
+    [$Enums.MODULES.FILES_REQUEST]: {},
   };
 
   private onFormatResponse(type: $Enums.MODULES, data: any[]) {
@@ -390,6 +474,137 @@ export class AuditService {
             ...rest,
             contract,
             agent,
+          };
+        });
+      case "CLIENT_REQUEST":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["CLIENT_REQUEST"][]
+        ).map(({ clientRequest, ...rest }) => {
+          return {
+            ...rest,
+            clientRequest,
+          };
+        });
+      case "RESERVATION_REQUEST":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["RESERVATION_REQUEST"][]
+        ).map(({ reservationRequest, ...rest }) => {
+          const { payment } = reservationRequest || {};
+          const { reservation } = payment || {};
+          const { lot } = reservation || {};
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            lot: {
+              title: lotTitle,
+              sqm,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
+            project: {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+          };
+        });
+      case "CONTRACT_REQUEST":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["CONTRACT_REQUEST"][]
+        ).map(({ contractRequest, ...rest }) => {
+          const { contract } = contractRequest || {};
+          const { lot } = contract || {};
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            lot: {
+              title: lotTitle,
+              sqm,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
+            project: {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+          };
+        });
+      case "PAYMENT_REQUEST":
+        return (
+          data as Prisma.PaymentRequestAuditGetPayload<{
+            include: {
+              paymentRequest: {
+                include: {
+                  payment: {
+                    include: {
+                      contract: true;
+                      reservation: true;
+                      agentCommission: true;
+                    };
+                  };
+                };
+              };
+            };
+          }>[]
+        ).map(({ paymentRequest, ...rest }) => {
+          const { payment } = paymentRequest || {};
+          const { contract, reservation, agentCommission } = payment || {};
+          return {
+            ...rest,
+            contract,
+            reservation,
+            agentCommission,
           };
         });
       default:
