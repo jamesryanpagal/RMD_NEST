@@ -43,6 +43,12 @@ export class UserService {
               },
             },
             {
+              email: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+            {
               firstName: {
                 in: searchArr,
                 mode: "insensitive",
@@ -56,6 +62,12 @@ export class UserService {
             },
             {
               lastName: {
+                in: searchArr,
+                mode: "insensitive",
+              },
+            },
+            {
+              email: {
                 in: searchArr,
                 mode: "insensitive",
               },
