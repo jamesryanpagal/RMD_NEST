@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { $Enums } from "generated/prisma";
+import { $Enums, Prisma } from "generated/prisma";
 import { PrismaService } from "src/services/prisma/prisma.service";
 
 @Injectable()
@@ -22,13 +22,393 @@ export class AuditService {
     [$Enums.MODULES.REQUEST]: "requestAudit",
   };
 
+  private targetModuleIncludesModel: Partial<Record<$Enums.MODULES, any>> = {
+    [$Enums.MODULES.PROJECT]: {
+      include: {
+        project: {
+          include: {
+            phase: {
+              include: {
+                block: {
+                  include: {
+                    lot: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.PHASE]: {
+      include: {
+        phase: {
+          include: {
+            project: true,
+            block: {
+              include: {
+                lot: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.BLOCK]: {
+      include: {
+        block: {
+          include: {
+            lot: true,
+            phase: {
+              include: {
+                project: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.LOT]: {
+      include: {
+        lot: {
+          include: {
+            block: {
+              include: {
+                phase: {
+                  include: {
+                    project: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.CLIENT]: {},
+    [$Enums.MODULES.USER]: {},
+    [$Enums.MODULES.CONTRACT]: {
+      include: {
+        contract: {
+          include: {
+            client: true,
+            lot: {
+              include: {
+                block: {
+                  include: {
+                    phase: {
+                      include: {
+                        project: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            agent: true,
+            commissionOfAgent: true,
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.PAYMENT]: {
+      include: {
+        payment: {
+          include: {
+            contract: true,
+            reservation: true,
+            agentCommission: true,
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.RESERVATION]: {
+      include: {
+        reservation: {
+          include: {
+            lot: {
+              include: {
+                block: {
+                  include: {
+                    phase: {
+                      include: {
+                        project: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            client: true,
+            payment: {
+              include: {
+                files: true,
+              },
+            },
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.AGENT]: {},
+    [$Enums.MODULES.AGENT_COMMISSION]: {
+      include: {
+        agentCommission: {
+          include: {
+            contract: {
+              include: {
+                lot: {
+                  include: {
+                    block: {
+                      include: {
+                        phase: {
+                          include: {
+                            project: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            agent: true,
+          },
+        },
+      },
+    },
+    [$Enums.MODULES.FILES]: {},
+    [$Enums.MODULES.REQUEST]: {},
+  };
+
+  private onFormatResponse(type: $Enums.MODULES, data: any[]) {
+    switch (type) {
+      case "RESERVATION":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["RESERVATION"][]
+        ).map(({ reservation, ...rest }) => {
+          const { lot, client, payment } = reservation || {};
+          const { block, sqm, title: lotTitle } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            lot: {
+              sqm,
+              title: lotTitle,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
+            project: {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+            client,
+            payment,
+          };
+        });
+      case "PROJECT":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["PROJECT"][]
+        ).map(({ project, ...rest }) => {
+          const { phase } = project || {};
+          return {
+            ...rest,
+            project,
+            phase,
+          };
+        });
+      case "PHASE":
+        return (data as (typeof this.targetModuleIncludesModel)["PHASE"][]).map(
+          ({ phase, ...rest }) => {
+            const { project, block } = phase || {};
+            const {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            } = project || {};
+            return {
+              ...rest,
+              project: {
+                projectName,
+                description,
+                houseNumber,
+                street,
+                barangay,
+                subdivision,
+                city,
+                province,
+                region,
+                zip,
+              },
+              block,
+            };
+          },
+        );
+      case "LOT":
+        return (data as (typeof this.targetModuleIncludesModel)["LOT"][]).map(
+          ({ lot, ...rest }) => {
+            const { block, title: lotTitle, sqm } = lot || {};
+            const { phase, title: blockTitle } = block || {};
+            const { project, title: phaseTitle } = phase || {};
+            const {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            } = project || {};
+            return {
+              ...rest,
+              lot: {
+                title: lotTitle,
+                sqm,
+              },
+              block: {
+                title: blockTitle,
+              },
+              phase: {
+                title: phaseTitle,
+              },
+              project: {
+                projectName,
+                description,
+                houseNumber,
+                street,
+                barangay,
+                subdivision,
+                city,
+                province,
+                region,
+                zip,
+              },
+            };
+          },
+        );
+      case "CONTRACT":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["CONTRACT"][]
+        ).map(({ contract, ...rest }) => {
+          const { client, lot, agent, commissionOfAgent } = contract || {};
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            client,
+            lot: {
+              title: lotTitle,
+              sqm,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
+            project: {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+            agent,
+            commissionOfAgent,
+          };
+        });
+      case "PAYMENT":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["PAYMENT"][]
+        ).map(({ payment, ...rest }) => {
+          const { contract, agentCommission, reservation } = payment || {};
+          return {
+            ...rest,
+            contract,
+            agentCommission,
+            reservation,
+          };
+        });
+      case "AGENT_COMMISSION":
+        return (
+          data as (typeof this.targetModuleIncludesModel)["AGENT_COMMISSION"][]
+        ).map(({ agentCommission, ...rest }) => {
+          const { contract, agent } = agentCommission || {};
+          return {
+            ...rest,
+            contract,
+            agent,
+          };
+        });
+      default:
+        return data;
+    }
+  }
+
   async audit(module: $Enums.MODULES) {
     try {
-      return await this.prismaService[this.targetModule[module]].findMany({
+      const auditModuleResponse = await this.prismaService[
+        this.targetModule[module]
+      ].findMany({
         where: {
           status: { not: "DELETED" },
         },
+        ...(this.targetModuleIncludesModel?.[module] || {}),
       });
+
+      return this.onFormatResponse(module, auditModuleResponse);
     } catch (error) {
       throw error;
     }
