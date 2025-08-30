@@ -535,6 +535,7 @@ export class AuditService {
               region,
               zip,
             },
+            reservationRequest,
           };
         });
       case "CONTRACT_REQUEST":
@@ -582,6 +583,7 @@ export class AuditService {
               region,
               zip,
             },
+            contractRequest,
           };
         });
       case "PAYMENT_REQUEST":
@@ -609,6 +611,7 @@ export class AuditService {
             contract,
             reservation,
             agentCommission,
+            paymentRequest,
           };
         });
       case "FILES":
@@ -617,6 +620,12 @@ export class AuditService {
             data as Prisma.FileGetPayload<{}>[],
           );
         return formattedFilesResponse;
+      case "FILES_REQUEST":
+        const formattedFilesRequestResponse =
+          this.fileService.onFormatPaymentFilesResponse(
+            data as Prisma.FileGetPayload<{}>[],
+          );
+        return formattedFilesRequestResponse;
       default:
         return data;
     }
@@ -639,7 +648,6 @@ export class AuditService {
 
       return this.onFormatResponse(module, auditModuleResponse);
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }
