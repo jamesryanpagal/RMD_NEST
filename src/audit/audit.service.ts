@@ -669,9 +669,36 @@ export class AuditService {
         });
       case "CONTRACT_REQUEST":
         return (
-          data as (typeof this.targetModuleIncludesModel)["CONTRACT_REQUEST"][]
+          data as Prisma.ContractRequestAuditGetPayload<{
+            include: {
+              contractRequest: {
+                include: {
+                  contract: {
+                    include: {
+                      client: true;
+                      lot: {
+                        include: {
+                          block: {
+                            include: {
+                              phase: {
+                                include: {
+                                  project: true;
+                                };
+                              };
+                            };
+                          };
+                        };
+                      };
+                      agent: true;
+                      commissionOfAgent: true;
+                    };
+                  };
+                };
+              };
+            };
+          }>[]
         ).map(({ contractRequest, ...rest }) => {
-          const { contract } = contractRequest || {};
+          const { contract, status } = contractRequest || {};
           const {
             lot,
             sqmPrice,
@@ -765,6 +792,7 @@ export class AuditService {
               penaltyAmount,
               penaltyCount,
               excessPayment,
+              status,
             },
           };
         });
