@@ -1,10 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { $Enums, Prisma } from "generated/prisma";
+import { FileService } from "src/file/file.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 
 @Injectable()
 export class AuditService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private fileService: FileService,
+  ) {}
 
   private targetModule: Record<$Enums.MODULES, string> = {
     [$Enums.MODULES.PROJECT]: "projectAudit",
@@ -607,6 +611,12 @@ export class AuditService {
             agentCommission,
           };
         });
+      case "FILES":
+        const formattedFilesResponse =
+          this.fileService.onFormatPaymentFilesResponse(
+            data as Prisma.FileGetPayload<{}>[],
+          );
+        return formattedFilesResponse;
       default:
         return data;
     }
