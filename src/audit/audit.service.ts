@@ -28,7 +28,7 @@ export class AuditService {
     [$Enums.MODULES.CONTRACT_REQUEST]: "contractRequestAudit",
     [$Enums.MODULES.PAYMENT_REQUEST]: "paymentRequestAudit",
     [$Enums.MODULES.AGENT_COMMISSION_REQUEST]: "agentCommissionRequestAudit",
-    [$Enums.MODULES.FILES_REQUEST]: "filesRequestAudit",
+    [$Enums.MODULES.FILES_REQUEST]: "fileRequestAudit",
   };
 
   private targetModuleIncludesModel: Partial<Record<$Enums.MODULES, any>> = {
@@ -623,6 +623,7 @@ export class AuditService {
   }
 
   async audit(module: $Enums.MODULES) {
+    console.log("Test");
     try {
       const auditModuleResponse = await this.prismaService[
         this.targetModule[module]
@@ -638,6 +639,7 @@ export class AuditService {
 
       return this.onFormatResponse(module, auditModuleResponse);
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
