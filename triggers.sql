@@ -1,1733 +1,1691 @@
--- CREATE OR REPLACE FUNCTION set_deleted_date()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		NEW."dateDeleted" := NOW();
--- 	ELSE
--- 	END IF;
-
--- 	RETURN NEW;
--- END;
--- $$ LANGUAGE "plpgsql";
-
--- CREATE OR REPLACE FUNCTION set_rejected_date()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'REJECTED' THEN
--- 		NEW."dateRejected" := NOW();
--- 	ELSE
--- 	END IF;
-
--- 	RETURN NEW;
--- END;
--- $$ LANGUAGE "plpgsql";
-
--- CREATE OR REPLACE FUNCTION set_approved_date()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'APPROVED' THEN
--- 		NEW."dateApproved" := NOW();
--- 	ELSE
--- 	END IF;
-
--- 	RETURN NEW;
--- END;
--- $$ LANGUAGE "plpgsql";
-
--- --- Approved Dates -----
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "ClientRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "ContractRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "PaymentRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "ReservationRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "AgentCommissionRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- CREATE OR REPLACE TRIGGER set_approved_date_trigger
--- BEFORE UPDATE ON "FileRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_approved_date();
-
--- --- Rejected Dates -----
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "ClientRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "ContractRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "PaymentRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "ReservationRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "AgentCommissionRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- CREATE OR REPLACE TRIGGER set_rejected_date_trigger
--- BEFORE UPDATE ON "FileRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_rejected_date();
-
--- --- Deleted Dates -----
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "User"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "UserAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Admin"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Secretary"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Client"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ClientAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ClientRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ClientRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Project"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ProjectAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Contract"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ContractAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ContractRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ContractRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Phase"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "PhaseAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Block"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "BlockAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Lot"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "LotAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Payment"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "PaymentAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "PaymentRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "PaymentRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Reservation"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ReservationAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ReservationRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "ReservationRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "Agent"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "AgentAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "AgentCommission"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "AgentCommissionAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "AgentCommissionRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "AgentCommissionRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "File"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "FileAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "FileRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- CREATE OR REPLACE TRIGGER set_deleted_date_trigger
--- BEFORE UPDATE ON "FileRequestAudit"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_deleted_date();
-
--- --- User -----
-
--- CREATE OR REPLACE FUNCTION set_user_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "UserAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"password",
--- 		"phone",
--- 		"mobile",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"role",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."firstName",
--- 		OLD."middleName",
--- 		OLD."lastName",
--- 		OLD."email",
--- 		OLD."password",
--- 		OLD."phone",
--- 		OLD."mobile",
--- 		OLD."houseNumber",
--- 		OLD."street",
--- 		OLD."barangay",
--- 		OLD."subdivision",
--- 		OLD."city",
--- 		OLD."province",
--- 		OLD."region",
--- 		OLD."zip",
--- 		OLD."role",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "UserAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"password",
--- 		"phone",
--- 		"mobile",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"role",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."firstName",
--- 		NEW."middleName",
--- 		NEW."lastName",
--- 		NEW."email",
--- 		NEW."password",
--- 		NEW."phone",
--- 		NEW."mobile",
--- 		NEW."houseNumber",
--- 		NEW."street",
--- 		NEW."barangay",
--- 		NEW."subdivision",
--- 		NEW."city",
--- 		NEW."province",
--- 		NEW."region",
--- 		NEW."zip",
--- 		NEW."role",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER user_audit_trigger
--- AFTER INSERT OR UPDATE ON "User"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_user_audit();
-
--- --- Client -----
-
--- CREATE OR REPLACE FUNCTION set_client_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ClientAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"contactNumber",
--- 		"tinNumber",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."firstName",
--- 		OLD."middleName",
--- 		OLD."lastName",
--- 		OLD."email",
--- 		OLD."contactNumber",
--- 		OLD."tinNumber",
--- 		OLD."houseNumber",
--- 		OLD."street",
--- 		OLD."barangay",
--- 		OLD."subdivision",
--- 		OLD."city",
--- 		OLD."province",
--- 		OLD."region",
--- 		OLD."zip",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "ClientAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"contactNumber",
--- 		"tinNumber",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."firstName",
--- 		NEW."middleName",
--- 		NEW."lastName",
--- 		NEW."email",
--- 		NEW."contactNumber",
--- 		NEW."tinNumber",
--- 		NEW."houseNumber",
--- 		NEW."street",
--- 		NEW."barangay",
--- 		NEW."subdivision",
--- 		NEW."city",
--- 		NEW."province",
--- 		NEW."region",
--- 		NEW."zip",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER client_audit_trigger
--- AFTER INSERT OR UPDATE ON "Client"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_client_audit();
-
--- --- Client Request -----
-
--- CREATE OR REPLACE FUNCTION set_client_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ClientRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"contactNumber",
--- 		"tinNumber",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."firstName",
--- 		OLD."middleName",
--- 		OLD."lastName",
--- 		OLD."email",
--- 		OLD."contactNumber",
--- 		OLD."tinNumber",
--- 		OLD."houseNumber",
--- 		OLD."street",
--- 		OLD."barangay",
--- 		OLD."subdivision",
--- 		OLD."city",
--- 		OLD."province",
--- 		OLD."region",
--- 		OLD."zip",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "ClientRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"email",
--- 		"contactNumber",
--- 		"tinNumber",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."firstName",
--- 		NEW."middleName",
--- 		NEW."lastName",
--- 		NEW."email",
--- 		NEW."contactNumber",
--- 		NEW."tinNumber",
--- 		NEW."houseNumber",
--- 		NEW."street",
--- 		NEW."barangay",
--- 		NEW."subdivision",
--- 		NEW."city",
--- 		NEW."province",
--- 		NEW."region",
--- 		NEW."zip",
--- 		NEW."requestType",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER client_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "ClientRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_client_request_audit();
-
--- --- Project -----
-
--- CREATE OR REPLACE FUNCTION set_project_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ProjectAudit" (
--- 		"targetId",
--- 		"action",
--- 		"projectName",
--- 		"description",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."projectName",
--- 		OLD."description",
--- 		OLD."houseNumber",
--- 		OLD."street",
--- 		OLD."barangay",
--- 		OLD."subdivision",
--- 		OLD."city",
--- 		OLD."province",
--- 		OLD."region",
--- 		OLD."zip",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "ProjectAudit" (
--- 		"targetId",
--- 		"action",
--- 		"projectName",
--- 		"description",
--- 		"houseNumber",
--- 		"street",
--- 		"barangay",
--- 		"subdivision",
--- 		"city",
--- 		"province",
--- 		"region",
--- 		"zip",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."projectName",
--- 		NEW."description",
--- 		NEW."houseNumber",
--- 		NEW."street",
--- 		NEW."barangay",
--- 		NEW."subdivision",
--- 		NEW."city",
--- 		NEW."province",
--- 		NEW."region",
--- 		NEW."zip",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER project_audit_trigger
--- AFTER INSERT OR UPDATE ON "Project"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_project_audit();
-
--- --- Phase -----
-
--- CREATE OR REPLACE FUNCTION set_phase_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "PhaseAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."title",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "PhaseAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."title",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER phase_audit_trigger
--- AFTER INSERT OR UPDATE ON "Phase"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_phase_audit();
-
--- --- Block -----
-
--- CREATE OR REPLACE FUNCTION set_block_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "BlockAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."title",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "BlockAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."title",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER block_audit_trigger
--- AFTER INSERT OR UPDATE ON "Block"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_block_audit();
-
--- --- Lot -----
-
--- CREATE OR REPLACE FUNCTION set_lot_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "LotAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"sqm",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."title",
--- 		OLD."sqm",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "LotAudit" (
--- 		"targetId",
--- 		"action",
--- 		"title",
--- 		"sqm",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."title",
--- 		NEW."sqm",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER lot_audit_trigger
--- AFTER INSERT OR UPDATE ON "Lot"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_lot_audit();
-
--- --- Payment -----
-
--- CREATE OR REPLACE FUNCTION set_payment_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "PaymentAudit" (
--- 		"targetId",
--- 		"action",
--- 		"transactionType",
--- 		"modeOfPayment",
--- 		"targetDueDate",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."transactionType",
--- 		OLD."modeOfPayment",
--- 		OLD."targetDueDate",
--- 		OLD."paymentDate",
--- 		OLD."amount",
--- 		OLD."referenceNumber",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "PaymentAudit" (
--- 		"targetId",
--- 		"action",
--- 		"transactionType",
--- 		"modeOfPayment",
--- 		"targetDueDate",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."transactionType",
--- 		NEW."modeOfPayment",
--- 		NEW."targetDueDate",
--- 		NEW."paymentDate",
--- 		NEW."amount",
--- 		NEW."referenceNumber",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER payment_audit_trigger
--- AFTER INSERT OR UPDATE ON "Payment"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_payment_audit();
-
--- --- Payment Request -----
-
--- CREATE OR REPLACE FUNCTION set_payment_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "PaymentRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"transactionType",
--- 		"modeOfPayment",
--- 		"targetDueDate",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."transactionType",
--- 		OLD."modeOfPayment",
--- 		OLD."targetDueDate",
--- 		OLD."paymentDate",
--- 		OLD."amount",
--- 		OLD."referenceNumber",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "PaymentRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"transactionType",
--- 		"modeOfPayment",
--- 		"targetDueDate",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."transactionType",
--- 		NEW."modeOfPayment",
--- 		NEW."targetDueDate",
--- 		NEW."paymentDate",
--- 		NEW."amount",
--- 		NEW."referenceNumber",
--- 		NEW."requestType",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER payment_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "PaymentRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_payment_request_audit();
-
--- --- Reservation -----
-
--- CREATE OR REPLACE FUNCTION set_reservation_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ReservationAudit" (
--- 		"targetId",
--- 		"action",
--- 		"validity",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."validity",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "ReservationAudit" (
--- 		"targetId",
--- 		"action",
--- 		"validity",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."validity",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER reservation_audit_trigger
--- AFTER INSERT OR UPDATE ON "Reservation"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_reservation_audit();
-
--- --- Reservation Request -----
-
--- CREATE OR REPLACE FUNCTION set_reservation_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ReservationRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"modeOfPayment",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."modeOfPayment",
--- 		OLD."paymentDate",
--- 		OLD."amount",
--- 		OLD."referenceNumber",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "ReservationRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"modeOfPayment",
--- 		"paymentDate",
--- 		"amount",
--- 		"referenceNumber",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."modeOfPayment",
--- 		NEW."paymentDate",
--- 		NEW."amount",
--- 		NEW."referenceNumber",
--- 		NEW."requestType",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER reservation_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "ReservationRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_reservation_request_audit();
-
--- --- Agent -----
-
--- CREATE OR REPLACE FUNCTION set_agent_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "AgentAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"birthDate",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."firstName",
--- 		OLD."middleName",
--- 		OLD."lastName",
--- 		OLD."birthDate",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "AgentAudit" (
--- 		"targetId",
--- 		"action",
--- 		"firstName",
--- 		"middleName",
--- 		"lastName",
--- 		"birthDate",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."firstName",
--- 		NEW."middleName",
--- 		NEW."lastName",
--- 		NEW."birthDate",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER agent_audit_trigger
--- AFTER INSERT OR UPDATE ON "Agent"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_agent_audit();
-
--- --- Agent Commission -----
-
--- CREATE OR REPLACE FUNCTION set_agent_commission_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "AgentCommissionAudit" (
--- 		"targetId",
--- 		"action",
--- 		"terms",
--- 		"recurringReleaseDate",
--- 		"releaseStartDate",
--- 		"releaseEndDate",
--- 		"nextReleaseDate",
--- 		"monthlyReleaseAmount",
--- 		"balance",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."terms",
--- 		OLD."recurringReleaseDate",
--- 		OLD."releaseStartDate",
--- 		OLD."releaseEndDate",
--- 		OLD."nextReleaseDate",
--- 		OLD."monthlyReleaseAmount",
--- 		OLD."balance",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "AgentCommissionAudit" (
--- 		"targetId",
--- 		"action",
--- 		"terms",
--- 		"recurringReleaseDate",
--- 		"releaseStartDate",
--- 		"releaseEndDate",
--- 		"nextReleaseDate",
--- 		"monthlyReleaseAmount",
--- 		"balance",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
+CREATE OR REPLACE FUNCTION set_deleted_date()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		NEW."dateDeleted" := NOW();
+	ELSE
+	END IF;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE "plpgsql";
+
+CREATE OR REPLACE FUNCTION set_rejected_date()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'REJECTED' THEN
+		NEW."dateRejected" := NOW();
+	ELSE
+	END IF;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE "plpgsql";
+
+CREATE OR REPLACE FUNCTION set_approved_date()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'APPROVED' THEN
+		NEW."dateApproved" := NOW();
+	ELSE
+	END IF;
+
+	RETURN NEW;
+END;
+$$ LANGUAGE "plpgsql";
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "ClientRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "ContractRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "PaymentRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "ReservationRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "AgentCommissionRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_approved_date_trigger
+BEFORE UPDATE ON "FileRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_approved_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "ClientRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "ContractRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "PaymentRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "ReservationRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "AgentCommissionRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_rejected_date_trigger
+BEFORE UPDATE ON "FileRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_rejected_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "User"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "UserAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Admin"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Secretary"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Client"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ClientAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ClientRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ClientRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Project"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ProjectAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Contract"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ContractAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ContractRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ContractRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Phase"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "PhaseAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Block"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "BlockAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Lot"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "LotAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Payment"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "PaymentAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "PaymentRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "PaymentRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Reservation"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ReservationAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ReservationRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "ReservationRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "Agent"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "AgentAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "AgentCommission"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "AgentCommissionAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "AgentCommissionRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "AgentCommissionRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "File"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "FileAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "FileRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE TRIGGER set_deleted_date_trigger
+BEFORE UPDATE ON "FileRequestAudit"
+FOR EACH ROW
+EXECUTE FUNCTION set_deleted_date();
+
+CREATE OR REPLACE FUNCTION set_user_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "UserAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"password",
+		"phone",
+		"mobile",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"role",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."firstName",
+		OLD."middleName",
+		OLD."lastName",
+		OLD."email",
+		OLD."password",
+		OLD."phone",
+		OLD."mobile",
+		OLD."houseNumber",
+		OLD."street",
+		OLD."barangay",
+		OLD."subdivision",
+		OLD."city",
+		OLD."province",
+		OLD."region",
+		OLD."zip",
+		OLD."role",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "UserAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"password",
+		"phone",
+		"mobile",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"role",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."firstName",
+		NEW."middleName",
+		NEW."lastName",
+		NEW."email",
+		NEW."password",
+		NEW."phone",
+		NEW."mobile",
+		NEW."houseNumber",
+		NEW."street",
+		NEW."barangay",
+		NEW."subdivision",
+		NEW."city",
+		NEW."province",
+		NEW."region",
+		NEW."zip",
+		NEW."role",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER user_audit_trigger
+AFTER INSERT OR UPDATE ON "User"
+FOR EACH ROW
+EXECUTE FUNCTION set_user_audit();
+
+CREATE OR REPLACE FUNCTION set_client_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ClientAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"contactNumber",
+		"tinNumber",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."firstName",
+		OLD."middleName",
+		OLD."lastName",
+		OLD."email",
+		OLD."contactNumber",
+		OLD."tinNumber",
+		OLD."houseNumber",
+		OLD."street",
+		OLD."barangay",
+		OLD."subdivision",
+		OLD."city",
+		OLD."province",
+		OLD."region",
+		OLD."zip",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "ClientAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"contactNumber",
+		"tinNumber",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."firstName",
+		NEW."middleName",
+		NEW."lastName",
+		NEW."email",
+		NEW."contactNumber",
+		NEW."tinNumber",
+		NEW."houseNumber",
+		NEW."street",
+		NEW."barangay",
+		NEW."subdivision",
+		NEW."city",
+		NEW."province",
+		NEW."region",
+		NEW."zip",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER client_audit_trigger
+AFTER INSERT OR UPDATE ON "Client"
+FOR EACH ROW
+EXECUTE FUNCTION set_client_audit();
+
+CREATE OR REPLACE FUNCTION set_client_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ClientRequestAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"contactNumber",
+		"tinNumber",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."firstName",
+		OLD."middleName",
+		OLD."lastName",
+		OLD."email",
+		OLD."contactNumber",
+		OLD."tinNumber",
+		OLD."houseNumber",
+		OLD."street",
+		OLD."barangay",
+		OLD."subdivision",
+		OLD."city",
+		OLD."province",
+		OLD."region",
+		OLD."zip",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "ClientRequestAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"email",
+		"contactNumber",
+		"tinNumber",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."firstName",
+		NEW."middleName",
+		NEW."lastName",
+		NEW."email",
+		NEW."contactNumber",
+		NEW."tinNumber",
+		NEW."houseNumber",
+		NEW."street",
+		NEW."barangay",
+		NEW."subdivision",
+		NEW."city",
+		NEW."province",
+		NEW."region",
+		NEW."zip",
+		NEW."requestType",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER client_request_audit_trigger
+AFTER INSERT OR UPDATE ON "ClientRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_client_request_audit();
+
+CREATE OR REPLACE FUNCTION set_project_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ProjectAudit" (
+		"targetId",
+		"action",
+		"projectName",
+		"description",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."projectName",
+		OLD."description",
+		OLD."houseNumber",
+		OLD."street",
+		OLD."barangay",
+		OLD."subdivision",
+		OLD."city",
+		OLD."province",
+		OLD."region",
+		OLD."zip",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "ProjectAudit" (
+		"targetId",
+		"action",
+		"projectName",
+		"description",
+		"houseNumber",
+		"street",
+		"barangay",
+		"subdivision",
+		"city",
+		"province",
+		"region",
+		"zip",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."projectName",
+		NEW."description",
+		NEW."houseNumber",
+		NEW."street",
+		NEW."barangay",
+		NEW."subdivision",
+		NEW."city",
+		NEW."province",
+		NEW."region",
+		NEW."zip",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER project_audit_trigger
+AFTER INSERT OR UPDATE ON "Project"
+FOR EACH ROW
+EXECUTE FUNCTION set_project_audit();
+
+CREATE OR REPLACE FUNCTION set_phase_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "PhaseAudit" (
+		"targetId",
+		"action",
+		"title",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."title",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "PhaseAudit" (
+		"targetId",
+		"action",
+		"title",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."title",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER phase_audit_trigger
+AFTER INSERT OR UPDATE ON "Phase"
+FOR EACH ROW
+EXECUTE FUNCTION set_phase_audit();
+
+CREATE OR REPLACE FUNCTION set_block_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "BlockAudit" (
+		"targetId",
+		"action",
+		"title",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."title",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "BlockAudit" (
+		"targetId",
+		"action",
+		"title",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."title",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER block_audit_trigger
+AFTER INSERT OR UPDATE ON "Block"
+FOR EACH ROW
+EXECUTE FUNCTION set_block_audit();
+
+CREATE OR REPLACE FUNCTION set_lot_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "LotAudit" (
+		"targetId",
+		"action",
+		"title",
+		"sqm",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."title",
+		OLD."sqm",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "LotAudit" (
+		"targetId",
+		"action",
+		"title",
+		"sqm",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."title",
+		NEW."sqm",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER lot_audit_trigger
+AFTER INSERT OR UPDATE ON "Lot"
+FOR EACH ROW
+EXECUTE FUNCTION set_lot_audit();
+
+CREATE OR REPLACE FUNCTION set_payment_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "PaymentAudit" (
+		"targetId",
+		"action",
+		"transactionType",
+		"modeOfPayment",
+		"targetDueDate",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."transactionType",
+		OLD."modeOfPayment",
+		OLD."targetDueDate",
+		OLD."paymentDate",
+		OLD."amount",
+		OLD."referenceNumber",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "PaymentAudit" (
+		"targetId",
+		"action",
+		"transactionType",
+		"modeOfPayment",
+		"targetDueDate",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."transactionType",
+		NEW."modeOfPayment",
+		NEW."targetDueDate",
+		NEW."paymentDate",
+		NEW."amount",
+		NEW."referenceNumber",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER payment_audit_trigger
+AFTER INSERT OR UPDATE ON "Payment"
+FOR EACH ROW
+EXECUTE FUNCTION set_payment_audit();
+
+CREATE OR REPLACE FUNCTION set_payment_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "PaymentRequestAudit" (
+		"targetId",
+		"action",
+		"transactionType",
+		"modeOfPayment",
+		"targetDueDate",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."transactionType",
+		OLD."modeOfPayment",
+		OLD."targetDueDate",
+		OLD."paymentDate",
+		OLD."amount",
+		OLD."referenceNumber",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "PaymentRequestAudit" (
+		"targetId",
+		"action",
+		"transactionType",
+		"modeOfPayment",
+		"targetDueDate",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."transactionType",
+		NEW."modeOfPayment",
+		NEW."targetDueDate",
+		NEW."paymentDate",
+		NEW."amount",
+		NEW."referenceNumber",
+		NEW."requestType",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER payment_request_audit_trigger
+AFTER INSERT OR UPDATE ON "PaymentRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_payment_request_audit();
+
+CREATE OR REPLACE FUNCTION set_reservation_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ReservationAudit" (
+		"targetId",
+		"action",
+		"validity",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."validity",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "ReservationAudit" (
+		"targetId",
+		"action",
+		"validity",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."validity",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER reservation_audit_trigger
+AFTER INSERT OR UPDATE ON "Reservation"
+FOR EACH ROW
+EXECUTE FUNCTION set_reservation_audit();
+
+CREATE OR REPLACE FUNCTION set_reservation_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ReservationRequestAudit" (
+		"targetId",
+		"action",
+		"modeOfPayment",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."modeOfPayment",
+		OLD."paymentDate",
+		OLD."amount",
+		OLD."referenceNumber",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "ReservationRequestAudit" (
+		"targetId",
+		"action",
+		"modeOfPayment",
+		"paymentDate",
+		"amount",
+		"referenceNumber",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."modeOfPayment",
+		NEW."paymentDate",
+		NEW."amount",
+		NEW."referenceNumber",
+		NEW."requestType",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER reservation_request_audit_trigger
+AFTER INSERT OR UPDATE ON "ReservationRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_reservation_request_audit();
+
+CREATE OR REPLACE FUNCTION set_agent_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "AgentAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"birthDate",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."firstName",
+		OLD."middleName",
+		OLD."lastName",
+		OLD."birthDate",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "AgentAudit" (
+		"targetId",
+		"action",
+		"firstName",
+		"middleName",
+		"lastName",
+		"birthDate",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."firstName",
+		NEW."middleName",
+		NEW."lastName",
+		NEW."birthDate",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
+
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER agent_audit_trigger
+AFTER INSERT OR UPDATE ON "Agent"
+FOR EACH ROW
+EXECUTE FUNCTION set_agent_audit();
+
+CREATE OR REPLACE FUNCTION set_agent_commission_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "AgentCommissionAudit" (
+		"targetId",
+		"action",
+		"terms",
+		"recurringReleaseDate",
+		"releaseStartDate",
+		"releaseEndDate",
+		"nextReleaseDate",
+		"monthlyReleaseAmount",
+		"balance",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."terms",
+		OLD."recurringReleaseDate",
+		OLD."releaseStartDate",
+		OLD."releaseEndDate",
+		OLD."nextReleaseDate",
+		OLD."monthlyReleaseAmount",
+		OLD."balance",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "AgentCommissionAudit" (
+		"targetId",
+		"action",
+		"terms",
+		"recurringReleaseDate",
+		"releaseStartDate",
+		"releaseEndDate",
+		"nextReleaseDate",
+		"monthlyReleaseAmount",
+		"balance",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
 		NEW."terms",
--- 		NEW."recurringReleaseDate",
--- 		NEW."releaseStartDate",
--- 		NEW."releaseEndDate",
--- 		NEW."nextReleaseDate",
--- 		NEW."monthlyReleaseAmount",
--- 		NEW."balance",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
+		NEW."recurringReleaseDate",
+		NEW."releaseStartDate",
+		NEW."releaseEndDate",
+		NEW."nextReleaseDate",
+		NEW."monthlyReleaseAmount",
+		NEW."balance",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
 
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- CREATE OR REPLACE TRIGGER agent_commission_audit_trigger
--- AFTER INSERT OR UPDATE ON "AgentCommission"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_agent_commission_audit();
+CREATE OR REPLACE TRIGGER agent_commission_audit_trigger
+AFTER INSERT OR UPDATE ON "AgentCommission"
+FOR EACH ROW
+EXECUTE FUNCTION set_agent_commission_audit();
 
--- --- Agent Commission Request -----
+CREATE OR REPLACE FUNCTION set_agent_commission_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "AgentCommissionRequestAudit" (
+		"targetId",
+		"action",
+		"terms",
+		"recurringReleaseDate",
+		"releaseStartDate",
+		"releaseEndDate",
+		"nextReleaseDate",
+		"monthlyReleaseAmount",
+		"balance",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."terms",
+		OLD."recurringReleaseDate",
+		OLD."releaseStartDate",
+		OLD."releaseEndDate",
+		OLD."nextReleaseDate",
+		OLD."monthlyReleaseAmount",
+		OLD."balance",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "AgentCommissionRequestAudit" (
+		"targetId",
+		"action",
+		"terms",
+		"recurringReleaseDate",
+		"releaseStartDate",
+		"releaseEndDate",
+		"nextReleaseDate",
+		"monthlyReleaseAmount",
+		"balance",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."terms",
+		NEW."recurringReleaseDate",
+		NEW."releaseStartDate",
+		NEW."releaseEndDate",
+		NEW."nextReleaseDate",
+		NEW."monthlyReleaseAmount",
+		NEW."balance",
+		NEW."requestType",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
 
--- CREATE OR REPLACE FUNCTION set_agent_commission_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "AgentCommissionRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"terms",
--- 		"recurringReleaseDate",
--- 		"releaseStartDate",
--- 		"releaseEndDate",
--- 		"nextReleaseDate",
--- 		"monthlyReleaseAmount",
--- 		"balance",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."terms",
--- 		OLD."recurringReleaseDate",
--- 		OLD."releaseStartDate",
--- 		OLD."releaseEndDate",
--- 		OLD."nextReleaseDate",
--- 		OLD."monthlyReleaseAmount",
--- 		OLD."balance",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "AgentCommissionRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"terms",
--- 		"recurringReleaseDate",
--- 		"releaseStartDate",
--- 		"releaseEndDate",
--- 		"nextReleaseDate",
--- 		"monthlyReleaseAmount",
--- 		"balance",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."terms",
--- 		NEW."recurringReleaseDate",
--- 		NEW."releaseStartDate",
--- 		NEW."releaseEndDate",
--- 		NEW."nextReleaseDate",
--- 		NEW."monthlyReleaseAmount",
--- 		NEW."balance",
--- 		NEW."requestType",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
+CREATE OR REPLACE TRIGGER agent_commission_request_audit_trigger
+AFTER INSERT OR UPDATE ON "AgentCommissionRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_agent_commission_request_audit();
 
--- CREATE OR REPLACE TRIGGER agent_commission_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "AgentCommissionRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_agent_commission_request_audit();
+CREATE OR REPLACE FUNCTION set_file_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "FileAudit" (
+		"targetId",
+		"action",
+		"path",
+		"ext",
+		"name",
+		"description",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."path",
+		OLD."ext",
+		OLD."name",
+		OLD."description",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "FileAudit" (
+		"targetId",
+		"action",
+		"path",
+		"ext",
+		"name",
+		"description",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."path",
+		NEW."ext",
+		NEW."name",
+		NEW."description",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
 
--- --- File -----
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- CREATE OR REPLACE FUNCTION set_file_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "FileAudit" (
--- 		"targetId",
--- 		"action",
--- 		"path",
--- 		"ext",
--- 		"name",
--- 		"description",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."path",
--- 		OLD."ext",
--- 		OLD."name",
--- 		OLD."description",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "FileAudit" (
--- 		"targetId",
--- 		"action",
--- 		"path",
--- 		"ext",
--- 		"name",
--- 		"description",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."path",
--- 		NEW."ext",
--- 		NEW."name",
--- 		NEW."description",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
+CREATE OR REPLACE TRIGGER file_audit_trigger
+AFTER INSERT OR UPDATE ON "File"
+FOR EACH ROW
+EXECUTE FUNCTION set_file_audit();
 
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION set_file_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "FileRequestAudit" (
+		"targetId",
+		"action",
+		"path",
+		"ext",
+		"name",
+		"description",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."path",
+		OLD."ext",
+		OLD."name",
+		OLD."description",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSE
+		INSERT INTO "FileRequestAudit" (
+		"targetId",
+		"action",
+		"path",
+		"ext",
+		"name",
+		"description",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."path",
+		NEW."ext",
+		NEW."name",
+		NEW."description",
+		NEW."requestType",
+		CASE
+			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
+			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
+		END
+		);
+	END IF;
 
--- CREATE OR REPLACE TRIGGER file_audit_trigger
--- AFTER INSERT OR UPDATE ON "File"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_file_audit();
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- --- File Request -----
+CREATE OR REPLACE TRIGGER file_request_audit_trigger
+AFTER INSERT OR UPDATE ON "FileRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_file_request_audit();
 
--- CREATE OR REPLACE FUNCTION set_file_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "FileRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"path",
--- 		"ext",
--- 		"name",
--- 		"description",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."path",
--- 		OLD."ext",
--- 		OLD."name",
--- 		OLD."description",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSE
--- 		INSERT INTO "FileRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"path",
--- 		"ext",
--- 		"name",
--- 		"description",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."path",
--- 		NEW."ext",
--- 		NEW."name",
--- 		NEW."description",
--- 		NEW."requestType",
--- 		CASE
--- 			WHEN TG_OP = 'INSERT' THEN NEW."createdBy"
--- 			WHEN TG_OP = 'UPDATE' THEN NEW."updatedBy"
--- 		END
--- 		);
--- 	END IF;
+CREATE OR REPLACE FUNCTION set_contract_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ContractAudit" (
+		"targetId",
+		"action",
+		"sqmPrice",
+		"downPaymentType",
+		"downPaymentStatus",
+		"totalMonthlyDown",
+		"totalMonthly",
+		"downPayment",
+		"totalDownPayment",
+		"totalDownPaymentBalance",
+		"downPaymentTerms",
+		"terms",
+		"miscellaneous",
+		"miscellaneousTotal",
+		"agentCommission",
+		"agentCommissionTotal",
+		"balance",
+		"totalLotPrice",
+		"tcp",
+		"paymentType",
+		"totalCashPayment",
+		"recurringPaymentDay",
+		"nextPaymentDate",
+		"paymentStartedDate",
+		"paymentLastDate",
+		"penaltyAmount",
+		"penaltyCount",
+		"excessPayment",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."sqmPrice",
+		OLD."downPaymentType",
+		OLD."downPaymentStatus",
+		OLD."totalMonthlyDown",
+		OLD."totalMonthly",
+		OLD."downPayment",
+		OLD."totalDownPayment",
+		OLD."totalDownPaymentBalance",
+		OLD."downPaymentTerms",
+		OLD."terms",
+		OLD."miscellaneous",
+		OLD."miscellaneousTotal",
+		OLD."agentCommission",
+		OLD."agentCommissionTotal",
+		OLD."balance",
+		OLD."totalLotPrice",
+		OLD."tcp",
+		OLD."paymentType",
+		OLD."totalCashPayment",
+		OLD."recurringPaymentDay",
+		OLD."nextPaymentDate",
+		OLD."paymentStartedDate",
+		OLD."paymentLastDate",
+		OLD."penaltyAmount",
+		OLD."penaltyCount",
+		OLD."excessPayment",
+		OLD."createdBy"
+		);
+	ELSEIF TG_OP = 'UPDATE' THEN
+		INSERT INTO "ContractAudit" (
+		"targetId",
+		"action",
+		"sqmPrice",
+		"downPaymentType",
+		"downPaymentStatus",
+		"totalMonthlyDown",
+		"totalMonthly",
+		"downPayment",
+		"totalDownPayment",
+		"totalDownPaymentBalance",
+		"downPaymentTerms",
+		"terms",
+		"miscellaneous",
+		"miscellaneousTotal",
+		"agentCommission",
+		"agentCommissionTotal",
+		"balance",
+		"totalLotPrice",
+		"tcp",
+		"paymentType",
+		"totalCashPayment",
+		"recurringPaymentDay",
+		"nextPaymentDate",
+		"paymentStartedDate",
+		"paymentLastDate",
+		"penaltyAmount",
+		"penaltyCount",
+		"excessPayment",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NULL THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NOT NULL THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."sqmPrice",
+		NEW."downPaymentType",
+		NEW."downPaymentStatus",
+		NEW."totalMonthlyDown",
+		NEW."totalMonthly",
+		NEW."downPayment",
+		NEW."totalDownPayment",
+		NEW."totalDownPaymentBalance",
+		NEW."downPaymentTerms",
+		NEW."terms",
+		NEW."miscellaneous",
+		NEW."miscellaneousTotal",
+		NEW."agentCommission",
+		NEW."agentCommissionTotal",
+		NEW."balance",
+		NEW."totalLotPrice",
+		NEW."tcp",
+		NEW."paymentType",
+		NEW."totalCashPayment",
+		NEW."recurringPaymentDay",
+		NEW."nextPaymentDate",
+		NEW."paymentStartedDate",
+		NEW."paymentLastDate",
+		NEW."penaltyAmount",
+		NEW."penaltyCount",
+		NEW."excessPayment",
+		NEW."createdBy"
+		);
+	ELSE
+	END IF;
 
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- CREATE OR REPLACE TRIGGER file_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "FileRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_file_request_audit();
+CREATE OR REPLACE TRIGGER contract_audit_trigger
+AFTER INSERT OR UPDATE ON "Contract"
+FOR EACH ROW
+EXECUTE FUNCTION set_contract_audit();
 
------ Contract -----
+CREATE OR REPLACE FUNCTION set_contract_request_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
+		INSERT INTO "ContractRequestAudit" (
+		"targetId",
+		"action",
+		"sqmPrice",
+		"downPaymentType",
+		"downPaymentStatus",
+		"totalMonthlyDown",
+		"totalMonthly",
+		"downPayment",
+		"totalDownPayment",
+		"totalDownPaymentBalance",
+		"downPaymentTerms",
+		"terms",
+		"miscellaneous",
+		"miscellaneousTotal",
+		"agentCommission",
+		"agentCommissionTotal",
+		"balance",
+		"totalLotPrice",
+		"tcp",
+		"paymentType",
+		"totalCashPayment",
+		"recurringPaymentDay",
+		"nextPaymentDate",
+		"paymentStartedDate",
+		"paymentLastDate",
+		"penaltyAmount",
+		"penaltyCount",
+		"excessPayment",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		OLD."id",
+		'DELETE'::"AUDIT_ACTION",
+		OLD."sqmPrice",
+		OLD."downPaymentType",
+		OLD."downPaymentStatus",
+		OLD."totalMonthlyDown",
+		OLD."totalMonthly",
+		OLD."downPayment",
+		OLD."totalDownPayment",
+		OLD."totalDownPaymentBalance",
+		OLD."downPaymentTerms",
+		OLD."terms",
+		OLD."miscellaneous",
+		OLD."miscellaneousTotal",
+		OLD."agentCommission",
+		OLD."agentCommissionTotal",
+		OLD."balance",
+		OLD."totalLotPrice",
+		OLD."tcp",
+		OLD."paymentType",
+		OLD."totalCashPayment",
+		OLD."recurringPaymentDay",
+		OLD."nextPaymentDate",
+		OLD."paymentStartedDate",
+		OLD."paymentLastDate",
+		OLD."penaltyAmount",
+		OLD."penaltyCount",
+		OLD."excessPayment",
+		OLD."requestType",
+		OLD."createdBy"
+		);
+	ELSEIF TG_OP = 'UPDATE' THEN
+		INSERT INTO "ContractRequestAudit" (
+		"targetId",
+		"action",
+		"sqmPrice",
+		"downPaymentType",
+		"downPaymentStatus",
+		"totalMonthlyDown",
+		"totalMonthly",
+		"downPayment",
+		"totalDownPayment",
+		"totalDownPaymentBalance",
+		"downPaymentTerms",
+		"terms",
+		"miscellaneous",
+		"miscellaneousTotal",
+		"agentCommission",
+		"agentCommissionTotal",
+		"balance",
+		"totalLotPrice",
+		"tcp",
+		"paymentType",
+		"totalCashPayment",
+		"recurringPaymentDay",
+		"nextPaymentDate",
+		"paymentStartedDate",
+		"paymentLastDate",
+		"penaltyAmount",
+		"penaltyCount",
+		"excessPayment",
+		"requestType",
+		"createdBy"
+		) VALUES (
+		NEW."id",
+		CASE
+			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NULL THEN 'CREATE'::"AUDIT_ACTION"
+			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NOT NULL THEN 'UPDATE'::"AUDIT_ACTION"
+		END,
+		NEW."sqmPrice",
+		NEW."downPaymentType",
+		NEW."downPaymentStatus",
+		NEW."totalMonthlyDown",
+		NEW."totalMonthly",
+		NEW."downPayment",
+		NEW."totalDownPayment",
+		NEW."totalDownPaymentBalance",
+		NEW."downPaymentTerms",
+		NEW."terms",
+		NEW."miscellaneous",
+		NEW."miscellaneousTotal",
+		NEW."agentCommission",
+		NEW."agentCommissionTotal",
+		NEW."balance",
+		NEW."totalLotPrice",
+		NEW."tcp",
+		NEW."paymentType",
+		NEW."totalCashPayment",
+		NEW."recurringPaymentDay",
+		NEW."nextPaymentDate",
+		NEW."paymentStartedDate",
+		NEW."paymentLastDate",
+		NEW."penaltyAmount",
+		NEW."penaltyCount",
+		NEW."excessPayment",
+		NEW."requestType",
+		NEW."createdBy"
+		);
+	ELSE
+	END IF;
 
--- CREATE OR REPLACE FUNCTION set_contract_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ContractAudit" (
--- 		"targetId",
--- 		"action",
--- 		"sqmPrice",
--- 		"downPaymentType",
--- 		"downPaymentStatus",
--- 		"totalMonthlyDown",
--- 		"totalMonthly",
--- 		"downPayment",
--- 		"totalDownPayment",
--- 		"totalDownPaymentBalance",
--- 		"downPaymentTerms",
--- 		"terms",
--- 		"miscellaneous",
--- 		"miscellaneousTotal",
--- 		"agentCommission",
--- 		"agentCommissionTotal",
--- 		"balance",
--- 		"totalLotPrice",
--- 		"tcp",
--- 		"paymentType",
--- 		"totalCashPayment",
--- 		"recurringPaymentDay",
--- 		"nextPaymentDate",
--- 		"paymentStartedDate",
--- 		"paymentLastDate",
--- 		"penaltyAmount",
--- 		"penaltyCount",
--- 		"excessPayment",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."sqmPrice",
--- 		OLD."downPaymentType",
--- 		OLD."downPaymentStatus",
--- 		OLD."totalMonthlyDown",
--- 		OLD."totalMonthly",
--- 		OLD."downPayment",
--- 		OLD."totalDownPayment",
--- 		OLD."totalDownPaymentBalance",
--- 		OLD."downPaymentTerms",
--- 		OLD."terms",
--- 		OLD."miscellaneous",
--- 		OLD."miscellaneousTotal",
--- 		OLD."agentCommission",
--- 		OLD."agentCommissionTotal",
--- 		OLD."balance",
--- 		OLD."totalLotPrice",
--- 		OLD."tcp",
--- 		OLD."paymentType",
--- 		OLD."totalCashPayment",
--- 		OLD."recurringPaymentDay",
--- 		OLD."nextPaymentDate",
--- 		OLD."paymentStartedDate",
--- 		OLD."paymentLastDate",
--- 		OLD."penaltyAmount",
--- 		OLD."penaltyCount",
--- 		OLD."excessPayment",
--- 		OLD."createdBy"
--- 		);
--- 	ELSEIF TG_OP = 'UPDATE' THEN
--- 		INSERT INTO "ContractAudit" (
--- 		"targetId",
--- 		"action",
--- 		"sqmPrice",
--- 		"downPaymentType",
--- 		"downPaymentStatus",
--- 		"totalMonthlyDown",
--- 		"totalMonthly",
--- 		"downPayment",
--- 		"totalDownPayment",
--- 		"totalDownPaymentBalance",
--- 		"downPaymentTerms",
--- 		"terms",
--- 		"miscellaneous",
--- 		"miscellaneousTotal",
--- 		"agentCommission",
--- 		"agentCommissionTotal",
--- 		"balance",
--- 		"totalLotPrice",
--- 		"tcp",
--- 		"paymentType",
--- 		"totalCashPayment",
--- 		"recurringPaymentDay",
--- 		"nextPaymentDate",
--- 		"paymentStartedDate",
--- 		"paymentLastDate",
--- 		"penaltyAmount",
--- 		"penaltyCount",
--- 		"excessPayment",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NULL THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NOT NULL THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."sqmPrice",
--- 		NEW."downPaymentType",
--- 		NEW."downPaymentStatus",
--- 		NEW."totalMonthlyDown",
--- 		NEW."totalMonthly",
--- 		NEW."downPayment",
--- 		NEW."totalDownPayment",
--- 		NEW."totalDownPaymentBalance",
--- 		NEW."downPaymentTerms",
--- 		NEW."terms",
--- 		NEW."miscellaneous",
--- 		NEW."miscellaneousTotal",
--- 		NEW."agentCommission",
--- 		NEW."agentCommissionTotal",
--- 		NEW."balance",
--- 		NEW."totalLotPrice",
--- 		NEW."tcp",
--- 		NEW."paymentType",
--- 		NEW."totalCashPayment",
--- 		NEW."recurringPaymentDay",
--- 		NEW."nextPaymentDate",
--- 		NEW."paymentStartedDate",
--- 		NEW."paymentLastDate",
--- 		NEW."penaltyAmount",
--- 		NEW."penaltyCount",
--- 		NEW."excessPayment",
--- 		NEW."createdBy"
--- 		);
--- 	ELSE
--- 	END IF;
+	RETURN CASE
+		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
+		ELSE NEW
+	END;
+END;
+$$ LANGUAGE plpgsql;
 
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER contract_audit_trigger
--- AFTER INSERT OR UPDATE ON "Contract"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_contract_audit();
-
------ Contract Request -----
-
--- CREATE OR REPLACE FUNCTION set_contract_request_audit()
--- RETURNS TRIGGER AS $$
--- BEGIN
--- 	IF TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN
--- 		INSERT INTO "ContractRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"sqmPrice",
--- 		"downPaymentType",
--- 		"downPaymentStatus",
--- 		"totalMonthlyDown",
--- 		"totalMonthly",
--- 		"downPayment",
--- 		"totalDownPayment",
--- 		"totalDownPaymentBalance",
--- 		"downPaymentTerms",
--- 		"terms",
--- 		"miscellaneous",
--- 		"miscellaneousTotal",
--- 		"agentCommission",
--- 		"agentCommissionTotal",
--- 		"balance",
--- 		"totalLotPrice",
--- 		"tcp",
--- 		"paymentType",
--- 		"totalCashPayment",
--- 		"recurringPaymentDay",
--- 		"nextPaymentDate",
--- 		"paymentStartedDate",
--- 		"paymentLastDate",
--- 		"penaltyAmount",
--- 		"penaltyCount",
--- 		"excessPayment",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		OLD."id",
--- 		'DELETE'::"AUDIT_ACTION",
--- 		OLD."sqmPrice",
--- 		OLD."downPaymentType",
--- 		OLD."downPaymentStatus",
--- 		OLD."totalMonthlyDown",
--- 		OLD."totalMonthly",
--- 		OLD."downPayment",
--- 		OLD."totalDownPayment",
--- 		OLD."totalDownPaymentBalance",
--- 		OLD."downPaymentTerms",
--- 		OLD."terms",
--- 		OLD."miscellaneous",
--- 		OLD."miscellaneousTotal",
--- 		OLD."agentCommission",
--- 		OLD."agentCommissionTotal",
--- 		OLD."balance",
--- 		OLD."totalLotPrice",
--- 		OLD."tcp",
--- 		OLD."paymentType",
--- 		OLD."totalCashPayment",
--- 		OLD."recurringPaymentDay",
--- 		OLD."nextPaymentDate",
--- 		OLD."paymentStartedDate",
--- 		OLD."paymentLastDate",
--- 		OLD."penaltyAmount",
--- 		OLD."penaltyCount",
--- 		OLD."excessPayment",
--- 		OLD."requestType",
--- 		OLD."createdBy"
--- 		);
--- 	ELSEIF TG_OP = 'UPDATE' THEN
--- 		INSERT INTO "ContractRequestAudit" (
--- 		"targetId",
--- 		"action",
--- 		"sqmPrice",
--- 		"downPaymentType",
--- 		"downPaymentStatus",
--- 		"totalMonthlyDown",
--- 		"totalMonthly",
--- 		"downPayment",
--- 		"totalDownPayment",
--- 		"totalDownPaymentBalance",
--- 		"downPaymentTerms",
--- 		"terms",
--- 		"miscellaneous",
--- 		"miscellaneousTotal",
--- 		"agentCommission",
--- 		"agentCommissionTotal",
--- 		"balance",
--- 		"totalLotPrice",
--- 		"tcp",
--- 		"paymentType",
--- 		"totalCashPayment",
--- 		"recurringPaymentDay",
--- 		"nextPaymentDate",
--- 		"paymentStartedDate",
--- 		"paymentLastDate",
--- 		"penaltyAmount",
--- 		"penaltyCount",
--- 		"excessPayment",
--- 		"requestType",
--- 		"createdBy"
--- 		) VALUES (
--- 		NEW."id",
--- 		CASE
--- 			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NULL THEN 'CREATE'::"AUDIT_ACTION"
--- 			WHEN TG_OP = 'UPDATE' AND NEW."updatedBy" IS NOT NULL THEN 'UPDATE'::"AUDIT_ACTION"
--- 		END,
--- 		NEW."sqmPrice",
--- 		NEW."downPaymentType",
--- 		NEW."downPaymentStatus",
--- 		NEW."totalMonthlyDown",
--- 		NEW."totalMonthly",
--- 		NEW."downPayment",
--- 		NEW."totalDownPayment",
--- 		NEW."totalDownPaymentBalance",
--- 		NEW."downPaymentTerms",
--- 		NEW."terms",
--- 		NEW."miscellaneous",
--- 		NEW."miscellaneousTotal",
--- 		NEW."agentCommission",
--- 		NEW."agentCommissionTotal",
--- 		NEW."balance",
--- 		NEW."totalLotPrice",
--- 		NEW."tcp",
--- 		NEW."paymentType",
--- 		NEW."totalCashPayment",
--- 		NEW."recurringPaymentDay",
--- 		NEW."nextPaymentDate",
--- 		NEW."paymentStartedDate",
--- 		NEW."paymentLastDate",
--- 		NEW."penaltyAmount",
--- 		NEW."penaltyCount",
--- 		NEW."excessPayment",
--- 		NEW."requestType",
--- 		NEW."createdBy"
--- 		);
--- 	ELSE
--- 	END IF;
-
--- 	RETURN CASE
--- 		WHEN TG_OP = 'UPDATE' AND NEW."status" = 'DELETED' THEN OLD
--- 		ELSE NEW
--- 	END;
--- END;
--- $$ LANGUAGE plpgsql;
-
--- CREATE OR REPLACE TRIGGER contract_request_audit_trigger
--- AFTER INSERT OR UPDATE ON "ContractRequest"
--- FOR EACH ROW
--- EXECUTE FUNCTION set_contract_request_audit();
+CREATE OR REPLACE TRIGGER contract_request_audit_trigger
+AFTER INSERT OR UPDATE ON "ContractRequest"
+FOR EACH ROW
+EXECUTE FUNCTION set_contract_request_audit();
