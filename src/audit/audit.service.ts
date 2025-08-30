@@ -726,6 +726,8 @@ export class AuditService {
             penaltyAmount,
             penaltyCount,
             excessPayment,
+            client,
+            agent,
           } = contract || {};
           const { block, title: lotTitle, sqm } = lot || {};
           const { phase, title: blockTitle } = block || {};
@@ -766,6 +768,8 @@ export class AuditService {
               region,
               zip,
             },
+            client,
+            agent,
             contractRequest: {
               sqmPrice,
               downPaymentType,
