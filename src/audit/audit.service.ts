@@ -265,7 +265,11 @@ export class AuditService {
       },
     },
     [$Enums.MODULES.AGENT_COMMISSION_REQUEST]: {},
-    [$Enums.MODULES.FILES_REQUEST]: {},
+    [$Enums.MODULES.FILES_REQUEST]: {
+      include: {
+        fileRequest: true,
+      },
+    },
   };
 
   private onFormatResponse(type: $Enums.MODULES, data: any[]) {
@@ -623,7 +627,14 @@ export class AuditService {
       case "FILES_REQUEST":
         const formattedFilesRequestResponse =
           this.fileService.onFormatPaymentFilesResponse(
-            data as Prisma.FileGetPayload<{}>[],
+            (
+              data as (typeof this.targetModuleIncludesModel)["FILES_REQUEST"][]
+            ).map(({ fileRequest, ...rest }) => {
+              return {
+                ...rest,
+                fileRequest,
+              };
+            }),
           );
         return formattedFilesRequestResponse;
       default:
