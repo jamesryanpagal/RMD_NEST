@@ -144,27 +144,28 @@ export class FileService {
             },
           });
         } else {
-          const fileResponse = await prisma.file.update({
+          // const fileResponse =
+          await prisma.file.update({
             where: { id },
             data: {
               status: "DELETED",
             },
           });
 
-          const { path } = fileResponse || {};
+          // const { path } = fileResponse || {};
 
-          await this.uploadService.rollback(path);
+          // await this.uploadService.rollback(path);
 
-          await prisma.file.update({
-            where: {
-              id,
-            },
-            data: {
-              name: null,
-              path: null,
-              ext: null,
-            },
-          });
+          // await prisma.file.update({
+          //   where: {
+          //     id,
+          //   },
+          //   data: {
+          //     name: null,
+          //     path: null,
+          //     ext: null,
+          //   },
+          // });
         }
       });
 
@@ -229,7 +230,8 @@ export class FileService {
                 },
               });
             } else {
-              const fileResponse = await prisma.file.update({
+              // const fileResponse =
+              await prisma.file.update({
                 where: {
                   id,
                 },
@@ -239,20 +241,20 @@ export class FileService {
                 },
               });
 
-              const { path } = fileResponse || {};
+              // const { path } = fileResponse || {};
 
-              await this.uploadService.rollback(path);
+              // await this.uploadService.rollback(path);
 
-              await prisma.file.update({
-                where: {
-                  id,
-                },
-                data: {
-                  name: null,
-                  path: null,
-                  ext: null,
-                },
-              });
+              // await prisma.file.update({
+              //   where: {
+              //     id,
+              //   },
+              //   data: {
+              //     name: null,
+              //     path: null,
+              //     ext: null,
+              //   },
+              // });
             }
           }),
         );
