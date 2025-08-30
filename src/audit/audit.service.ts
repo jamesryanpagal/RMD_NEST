@@ -127,6 +127,7 @@ export class AuditService {
             contract: {
               include: {
                 client: true,
+                agent: true,
                 lot: {
                   include: {
                     block: {
@@ -142,7 +143,23 @@ export class AuditService {
                 },
               },
             },
-            reservation: true,
+            reservation: {
+              include: {
+                lot: {
+                  include: {
+                    block: {
+                      include: {
+                        phase: {
+                          include: {
+                            project: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
             agentCommission: true,
           },
         },
@@ -497,51 +514,7 @@ export class AuditService {
         });
       case "PAYMENT":
         return (
-          data as Prisma.PaymentAuditGetPayload<{
-            include: {
-              payment: {
-                include: {
-                  contract: {
-                    include: {
-                      client: true;
-                      agent: true;
-                      lot: {
-                        include: {
-                          block: {
-                            include: {
-                              phase: {
-                                include: {
-                                  project: true;
-                                };
-                              };
-                            };
-                          };
-                        };
-                      };
-                    };
-                  };
-                  reservation: {
-                    include: {
-                      lot: {
-                        include: {
-                          block: {
-                            include: {
-                              phase: {
-                                include: {
-                                  project: true;
-                                };
-                              };
-                            };
-                          };
-                        };
-                      };
-                    };
-                  };
-                  agentCommission: true;
-                };
-              };
-            };
-          }>[]
+          data as (typeof this.targetModuleIncludesModel)["PAYMENT"][]
         ).map(({ payment, ...rest }) => {
           const { contract, agentCommission, reservation } = payment || {};
           const { lot: reservationLot } = reservation || {};
@@ -845,21 +818,7 @@ export class AuditService {
         });
       case "PAYMENT_REQUEST":
         return (
-          data as Prisma.PaymentRequestAuditGetPayload<{
-            include: {
-              paymentRequest: {
-                include: {
-                  payment: {
-                    include: {
-                      contract: true;
-                      reservation: true;
-                      agentCommission: true;
-                    };
-                  };
-                };
-              };
-            };
-          }>[]
+          data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
         ).map(({ paymentRequest, ...rest }) => {
           const { payment } = paymentRequest || {};
           const { contract, reservation, agentCommission } = payment || {};
@@ -897,34 +856,6 @@ export class AuditService {
 
   async audit(module: $Enums.MODULES) {
     try {
-      this.prismaService.paymentAudit.findMany({
-        include: {
-          payment: {
-            include: {
-              contract: {
-                include: {
-                  client: true,
-                  lot: {
-                    include: {
-                      block: {
-                        include: {
-                          phase: {
-                            include: {
-                              project: true,
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              reservation: true,
-              agentCommission: true,
-            },
-          },
-        },
-      });
       const auditModuleResponse = await this.prismaService[
         this.targetModule[module]
       ].findMany({
