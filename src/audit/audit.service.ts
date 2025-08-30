@@ -630,6 +630,9 @@ export class AuditService {
         where: {
           status: { not: "DELETED" },
         },
+        orderBy: {
+          dateCreated: "desc",
+        },
         ...(this.targetModuleIncludesModel?.[module] || {}),
       });
 
