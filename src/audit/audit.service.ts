@@ -124,7 +124,24 @@ export class AuditService {
       include: {
         payment: {
           include: {
-            contract: true,
+            contract: {
+              include: {
+                client: true,
+                lot: {
+                  include: {
+                    block: {
+                      include: {
+                        phase: {
+                          include: {
+                            project: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
             reservation: true,
             agentCommission: true,
           },
@@ -255,7 +272,24 @@ export class AuditService {
           include: {
             payment: {
               include: {
-                contract: true,
+                contract: {
+                  include: {
+                    client: true,
+                    lot: {
+                      include: {
+                        block: {
+                          include: {
+                            phase: {
+                              include: {
+                                project: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 reservation: true,
                 agentCommission: true,
               },
@@ -466,9 +500,100 @@ export class AuditService {
           data as (typeof this.targetModuleIncludesModel)["PAYMENT"][]
         ).map(({ payment, ...rest }) => {
           const { contract, agentCommission, reservation } = payment || {};
+          const {
+            lot,
+            sqmPrice,
+            downPaymentType,
+            downPaymentStatus,
+            totalMonthlyDown,
+            totalMonthly,
+            downPayment,
+            totalDownPayment,
+            totalDownPaymentBalance,
+            downPaymentTerms,
+            terms,
+            miscellaneous,
+            miscellaneousTotal,
+            agentCommissionTotal,
+            balance,
+            totalLotPrice,
+            tcp,
+            paymentType,
+            totalCashPayment,
+            recurringPaymentDay,
+            nextPaymentDate,
+            paymentStartedDate,
+            paymentLastDate,
+            penaltyAmount,
+            penaltyCount,
+            excessPayment,
+          } = contract || {};
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
           return {
             ...rest,
-            contract,
+            contract: {
+              sqmPrice,
+              downPaymentType,
+              downPaymentStatus,
+              totalMonthlyDown,
+              totalMonthly,
+              downPayment,
+              totalDownPayment,
+              totalDownPaymentBalance,
+              downPaymentTerms,
+              terms,
+              miscellaneous,
+              miscellaneousTotal,
+              agentCommissionTotal,
+              balance,
+              totalLotPrice,
+              tcp,
+              paymentType,
+              totalCashPayment,
+              recurringPaymentDay,
+              nextPaymentDate,
+              paymentStartedDate,
+              paymentLastDate,
+              penaltyAmount,
+              penaltyCount,
+              excessPayment,
+            },
+            project: {
+              projectName,
+              description,
+              houseNumber,
+              street,
+              barangay,
+              subdivision,
+              city,
+              province,
+              region,
+              zip,
+            },
+            lot: {
+              title: lotTitle,
+              sqm,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
             agentCommission,
             reservation,
           };
@@ -547,7 +672,34 @@ export class AuditService {
           data as (typeof this.targetModuleIncludesModel)["CONTRACT_REQUEST"][]
         ).map(({ contractRequest, ...rest }) => {
           const { contract } = contractRequest || {};
-          const { lot } = contract || {};
+          const {
+            lot,
+            sqmPrice,
+            downPaymentType,
+            downPaymentStatus,
+            totalMonthlyDown,
+            totalMonthly,
+            downPayment,
+            totalDownPayment,
+            totalDownPaymentBalance,
+            downPaymentTerms,
+            terms,
+            miscellaneous,
+            miscellaneousTotal,
+            agentCommissionTotal,
+            balance,
+            totalLotPrice,
+            tcp,
+            paymentType,
+            totalCashPayment,
+            recurringPaymentDay,
+            nextPaymentDate,
+            paymentStartedDate,
+            paymentLastDate,
+            penaltyAmount,
+            penaltyCount,
+            excessPayment,
+          } = contract || {};
           const { block, title: lotTitle, sqm } = lot || {};
           const { phase, title: blockTitle } = block || {};
           const { project, title: phaseTitle } = phase || {};
@@ -587,7 +739,33 @@ export class AuditService {
               region,
               zip,
             },
-            contractRequest,
+            contractRequest: {
+              sqmPrice,
+              downPaymentType,
+              downPaymentStatus,
+              totalMonthlyDown,
+              totalMonthly,
+              downPayment,
+              totalDownPayment,
+              totalDownPaymentBalance,
+              downPaymentTerms,
+              terms,
+              miscellaneous,
+              miscellaneousTotal,
+              agentCommissionTotal,
+              balance,
+              totalLotPrice,
+              tcp,
+              paymentType,
+              totalCashPayment,
+              recurringPaymentDay,
+              nextPaymentDate,
+              paymentStartedDate,
+              paymentLastDate,
+              penaltyAmount,
+              penaltyCount,
+              excessPayment,
+            },
           };
         });
       case "PAYMENT_REQUEST":
