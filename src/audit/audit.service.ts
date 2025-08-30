@@ -632,7 +632,6 @@ export class AuditService {
   }
 
   async audit(module: $Enums.MODULES) {
-    console.log("Test");
     try {
       const auditModuleResponse = await this.prismaService[
         this.targetModule[module]
