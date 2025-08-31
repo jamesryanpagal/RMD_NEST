@@ -292,6 +292,7 @@ export class AuditService {
                 contract: {
                   include: {
                     client: true,
+                    agent: true,
                     lot: {
                       include: {
                         block: {
@@ -307,7 +308,23 @@ export class AuditService {
                     },
                   },
                 },
-                reservation: true,
+                reservation: {
+                  include: {
+                    lot: {
+                      include: {
+                        block: {
+                          include: {
+                            phase: {
+                              include: {
+                                project: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 agentCommission: true,
               },
             },
@@ -821,13 +838,129 @@ export class AuditService {
           data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
         ).map(({ paymentRequest, ...rest }) => {
           const { payment } = paymentRequest || {};
-          const { contract, reservation, agentCommission } = payment || {};
+          const { contract, agentCommission, reservation } = payment || {};
+          const { lot: reservationLot } = reservation || {};
+          const {
+            block: reservationBlock,
+            title: reservationLotTitle,
+            sqm: reservationSqm,
+          } = reservationLot || {};
+          const { phase: reservationPhase, title: reservationBlockTitle } =
+            reservationBlock || {};
+          const { project: reservationProject, title: reservationPhaseTitle } =
+            reservationPhase || {};
+          const {
+            projectName: reservationProjectName,
+            description: reservationDescription,
+            houseNumber: reservationHouseNumber,
+            street: reservationStreet,
+            barangay: reservationBarangay,
+            subdivision: reservationSubdivision,
+            city: reservationCity,
+            province: reservationProvince,
+            region: reservationRegion,
+            zip: reservationZip,
+          } = reservationProject || {};
+          const {
+            lot,
+            sqmPrice,
+            downPaymentType,
+            downPaymentStatus,
+            totalMonthlyDown,
+            totalMonthly,
+            downPayment,
+            totalDownPayment,
+            totalDownPaymentBalance,
+            downPaymentTerms,
+            terms,
+            miscellaneous,
+            miscellaneousTotal,
+            agentCommissionTotal,
+            balance,
+            totalLotPrice,
+            tcp,
+            paymentType,
+            totalCashPayment,
+            recurringPaymentDay,
+            nextPaymentDate,
+            paymentStartedDate,
+            paymentLastDate,
+            penaltyAmount,
+            penaltyCount,
+            excessPayment,
+            client,
+            agent,
+          } = contract || {};
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
           return {
             ...rest,
-            contract,
-            reservation,
+            contract: {
+              sqmPrice,
+              downPaymentType,
+              downPaymentStatus,
+              totalMonthlyDown,
+              totalMonthly,
+              downPayment,
+              totalDownPayment,
+              totalDownPaymentBalance,
+              downPaymentTerms,
+              terms,
+              miscellaneous,
+              miscellaneousTotal,
+              agentCommissionTotal,
+              balance,
+              totalLotPrice,
+              tcp,
+              paymentType,
+              totalCashPayment,
+              recurringPaymentDay,
+              nextPaymentDate,
+              paymentStartedDate,
+              paymentLastDate,
+              penaltyAmount,
+              penaltyCount,
+              excessPayment,
+            },
+            agent,
+            client,
+            project: {
+              projectName: projectName || reservationProjectName,
+              description: description || reservationDescription,
+              houseNumber: houseNumber || reservationHouseNumber,
+              street: street || reservationStreet,
+              barangay: barangay || reservationBarangay,
+              subdivision: subdivision || reservationSubdivision,
+              city: city || reservationCity,
+              province: province || reservationProvince,
+              region: region || reservationRegion,
+              zip: zip || reservationZip,
+            },
+            lot: {
+              title: lotTitle || reservationLotTitle,
+              sqm: sqm || reservationSqm,
+            },
+            block: {
+              title: blockTitle || reservationBlockTitle,
+            },
+            phase: {
+              title: phaseTitle || reservationPhaseTitle,
+            },
             agentCommission,
-            paymentRequest,
+            reservation,
           };
         });
       case "FILES":
