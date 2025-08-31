@@ -12,7 +12,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_PROD")
+  url      = env("DATABASE_URL_DEV")
 }
 
 enum ROLE {
@@ -76,6 +76,7 @@ enum STATUS {
 enum AGENT_COMMISSION_STATUS {
   PENDING
   DELETED
+  CONTRACT_FORFEITED
   ON_GOING
   DONE
 }
