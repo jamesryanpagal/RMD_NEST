@@ -1008,7 +1008,26 @@ export class AuditService {
         ...(this.targetModuleIncludesModel?.[module] || {}),
       });
 
-      return this.onFormatResponse(module, auditModuleResponse);
+      const formattedResponse = await Promise.all(
+        this.onFormatResponse(module, auditModuleResponse).map(
+          async ({ createdBy, ...rest }) => {
+            const userCreated = await this.prismaService.user.findUnique({
+              where: {
+                id: createdBy,
+              },
+            });
+
+            const { password, ...restUserCreated } = userCreated || {};
+
+            return {
+              ...rest,
+              createdBy: restUserCreated || null,
+            };
+          },
+        ),
+      );
+
+      return formattedResponse;
     } catch (error) {
       throw error;
     }
