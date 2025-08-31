@@ -335,7 +335,11 @@ export class AuditService {
     [$Enums.MODULES.AGENT_COMMISSION_REQUEST]: {},
     [$Enums.MODULES.FILES_REQUEST]: {
       include: {
-        fileRequest: true,
+        fileRequest: {
+          include: {
+            file: true,
+          },
+        },
       },
     },
   };
@@ -973,11 +977,14 @@ export class AuditService {
         const formattedFilesRequestResponse =
           this.fileService.onFormatPaymentFilesResponse(
             (
-              data as (typeof this.targetModuleIncludesModel)["FILES_REQUEST"][]
+              data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
             ).map(({ fileRequest, ...rest }) => {
+              const { file } = fileRequest || {};
               return {
                 ...rest,
-                fileRequest,
+                fileRequest:
+                  this.fileService.onFormatPaymentFilesResponse([file])?.[0] ||
+                  {},
               };
             }),
           );

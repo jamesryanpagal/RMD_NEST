@@ -58,13 +58,11 @@ export class FileService {
             return;
           }
 
-          const { path, ext, name, description } = fileResponse || {};
-
           await prisma.fileRequest.create({
             data: {
               path,
               ext,
-              name,
+              name: originalname,
               description,
               requestType: "UPDATE",
               createdBy: user.id,
