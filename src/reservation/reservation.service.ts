@@ -93,6 +93,7 @@ export class ReservationService {
               },
             },
             validity: reservationValidity,
+            createdBy: user?.id,
           },
         });
 
@@ -500,6 +501,7 @@ export class ReservationService {
             },
             data: {
               status: "DELETED",
+              deletedBy: user.id,
             },
           });
 
@@ -509,6 +511,7 @@ export class ReservationService {
             },
             data: {
               status: "DELETED",
+              updatedBy: user.id,
             },
           });
         }
@@ -583,6 +586,7 @@ export class ReservationService {
               paymentDate,
               amount,
               referenceNumber,
+              updatedBy: user.id,
             },
           });
         }

@@ -686,9 +686,10 @@ export class AuditService {
         return (
           data as (typeof this.targetModuleIncludesModel)["RESERVATION_REQUEST"][]
         ).map(({ reservationRequest, ...rest }) => {
-          const { payment, status } = reservationRequest || {};
-          const { reservation } = payment || {};
-          const { lot } = reservation || {};
+          const { payment, status, ...restReservationRequest } =
+            reservationRequest || {};
+          const { reservation, ...restPayment } = payment || {};
+          const { client, lot } = reservation || {};
           const { block, title: lotTitle, sqm } = lot || {};
           const { phase, title: blockTitle } = block || {};
           const { project, title: phaseTitle } = phase || {};
@@ -729,7 +730,9 @@ export class AuditService {
               region,
               zip,
             },
-            reservationRequest,
+            reservationRequest: restReservationRequest,
+            client,
+            payment: restPayment,
           };
         });
       case "CONTRACT_REQUEST":
