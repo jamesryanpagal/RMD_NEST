@@ -65,6 +65,7 @@ export class ReservationService {
             paymentDate,
             amount,
             referenceNumber,
+            createdBy: user?.id,
           },
         });
 

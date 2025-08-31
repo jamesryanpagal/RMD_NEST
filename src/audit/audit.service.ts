@@ -538,7 +538,7 @@ export class AuditService {
           data as (typeof this.targetModuleIncludesModel)["PAYMENT"][]
         ).map(({ payment, ...rest }) => {
           const { contract, agentCommission, reservation } = payment || {};
-          const { lot: reservationLot } = reservation || {};
+          const { lot: reservationLot, ...restReservation } = reservation || {};
           const {
             block: reservationBlock,
             title: reservationLotTitle,
@@ -659,7 +659,7 @@ export class AuditService {
               title: phaseTitle || reservationPhaseTitle,
             },
             agentCommission,
-            reservation,
+            reservation: restReservation,
           };
         });
       case "AGENT_COMMISSION":
@@ -1017,18 +1017,25 @@ export class AuditService {
       const formattedResponse = await Promise.all(
         this.onFormatResponse(module, auditModuleResponse).map(
           async ({ createdBy, ...rest }) => {
-            const userCreated = await this.prismaService.user.findUnique({
-              where: {
-                id: createdBy,
-              },
-            });
+            if (!createdBy) {
+              return {
+                ...rest,
+                createdBy: null,
+              };
+            } else {
+              const userCreated = await this.prismaService.user.findUnique({
+                where: {
+                  id: createdBy,
+                },
+              });
 
-            const { password, ...restUserCreated } = userCreated || {};
+              const { password, ...restUserCreated } = userCreated || {};
 
-            return {
-              ...rest,
-              createdBy: restUserCreated || null,
-            };
+              return {
+                ...rest,
+                createdBy: restUserCreated || null,
+              };
+            }
           },
         ),
       );
