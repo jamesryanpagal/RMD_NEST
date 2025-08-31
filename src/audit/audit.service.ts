@@ -686,7 +686,7 @@ export class AuditService {
         return (
           data as (typeof this.targetModuleIncludesModel)["RESERVATION_REQUEST"][]
         ).map(({ reservationRequest, ...rest }) => {
-          const { payment } = reservationRequest || {};
+          const { payment, status } = reservationRequest || {};
           const { reservation } = payment || {};
           const { lot } = reservation || {};
           const { block, title: lotTitle, sqm } = lot || {};
@@ -706,6 +706,7 @@ export class AuditService {
           } = project || {};
           return {
             ...rest,
+            status,
             lot: {
               title: lotTitle,
               sqm,
@@ -783,6 +784,7 @@ export class AuditService {
           } = project || {};
           return {
             ...rest,
+            status,
             lot: {
               title: lotTitle,
               sqm,
@@ -833,7 +835,6 @@ export class AuditService {
               penaltyAmount,
               penaltyCount,
               excessPayment,
-              status,
             },
           };
         });
@@ -841,7 +842,7 @@ export class AuditService {
         return (
           data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
         ).map(({ paymentRequest, ...rest }) => {
-          const { payment } = paymentRequest || {};
+          const { payment, status } = paymentRequest || {};
           const { contract, agentCommission, reservation } = payment || {};
           const { lot: reservationLot } = reservation || {};
           const {
@@ -912,6 +913,7 @@ export class AuditService {
           } = project || {};
           return {
             ...rest,
+            status,
             contract: {
               sqmPrice,
               downPaymentType,
@@ -979,9 +981,10 @@ export class AuditService {
             (
               data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
             ).map(({ fileRequest, ...rest }) => {
-              const { file } = fileRequest || {};
+              const { file, status } = fileRequest || {};
               return {
                 ...rest,
+                status,
                 fileRequest:
                   this.fileService.onFormatPaymentFilesResponse([file])?.[0] ||
                   {},
