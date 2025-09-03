@@ -219,6 +219,50 @@ export class ClientService {
 
         const { role } = user || {};
 
+        const clientResponse = await this.prismaService.client.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: "ACTIVE",
+              },
+            ],
+          },
+          include: {
+            contract: {
+              where: {
+                status: { not: "DELETED" },
+              },
+            },
+            reservation: {
+              where: {
+                status: { notIn: ["DELETED", "FORFEITED"] },
+              },
+            },
+          },
+        });
+
+        if (!clientResponse) {
+          this.exceptionService.throw(
+            "Client not found, data might be already deleted.",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        if (
+          !!clientResponse.contract.length ||
+          !!clientResponse.reservation.length
+        ) {
+          this.exceptionService.throw(
+            "Cannot delete client with active contracts or reservations",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
         if (role === "ADMIN") {
           await this.prismaService.client.update({
             where: {
@@ -230,27 +274,6 @@ export class ClientService {
             },
           });
         } else {
-          const clientResponse = await this.prismaService.client.findFirst({
-            where: {
-              AND: [
-                {
-                  id,
-                },
-                {
-                  status: "ACTIVE",
-                },
-              ],
-            },
-          });
-
-          if (!clientResponse) {
-            this.exceptionService.throw(
-              "Client not found, data might be already deleted.",
-              "BAD_REQUEST",
-            );
-            return;
-          }
-
           const {
             firstName,
             middleName,

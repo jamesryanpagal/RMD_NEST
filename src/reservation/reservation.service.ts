@@ -32,6 +32,24 @@ export class ReservationService {
       const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
 
       await this.prismaService.$transaction(async prisma => {
+        const checkClientStatus = await this.prismaService.client.findFirst({
+          where: {
+            AND: [
+              {
+                id: clientId,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!checkClientStatus) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
         const checkReservation = await prisma.reservation.findFirst({
           where: {
             AND: [
