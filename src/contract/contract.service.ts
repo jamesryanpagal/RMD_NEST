@@ -1037,6 +1037,15 @@ export class ContractService {
           },
           include: {
             commissionOfAgent: true,
+            lot: {
+              include: {
+                reservation: {
+                  where: {
+                    status: "DONE",
+                  },
+                },
+              },
+            },
           },
         });
 
@@ -1048,8 +1057,9 @@ export class ContractService {
           return;
         }
 
-        const { commissionOfAgent, lotId, downPaymentStatus } =
+        const { commissionOfAgent, lotId, downPaymentStatus, lot } =
           contractResponse || {};
+        const { reservation } = lot || {};
 
         await prisma.contract.update({
           where: {
@@ -1072,6 +1082,20 @@ export class ContractService {
             updatedBy: user?.id,
           },
         });
+
+        await Promise.all(
+          reservation?.map(async ({ id: reservationId }) => {
+            await prisma.reservation.update({
+              where: {
+                id: reservationId,
+              },
+              data: {
+                status: "CONTRACT_FORFEITED",
+                updatedBy: user?.id,
+              },
+            });
+          }) || [],
+        );
 
         await prisma.lot.update({
           where: {

@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -59,4 +60,15 @@ export class CreateUpdatePaymentDto {
   @IsString()
   @Transform(({ value }) => value || null)
   referenceNumber?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      return value.toLowerCase() === "true";
+    }
+
+    return Boolean(value);
+  })
+  sendReceipt?: boolean;
 }

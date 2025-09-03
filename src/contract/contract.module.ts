@@ -15,6 +15,7 @@ import { PaymentService } from "src/payment/payment.service";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
+import { MessagingService } from "src/services/messaging/messaging.service";
 
 @Module({
   controllers: [ContractController],
@@ -28,6 +29,7 @@ import { FormatterService } from "src/services/formatter/formatter.service";
     UploadService,
     FileService,
     FormatterService,
+    MessagingService,
   ],
 })
 export class ContractModule implements NestModule {

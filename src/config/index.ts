@@ -35,6 +35,7 @@ type StandAlongConfigKey = {
   transaction_timeout: number;
   resend_api_key: string;
   domain: string;
+  email_reply_to: string;
 };
 
 const loadEnvbaseConfig = (key: string, environment: ENVIRONMENT) => {
@@ -55,6 +56,7 @@ export const standAloneConfig: StandAlongConfigKey = {
   transaction_timeout: Number(loadConfig("TRANSACTION_TIMEOUT") || "100000"),
   resend_api_key: loadConfig("RESEND_API_KEY"),
   domain: loadConfig("DOMAIN"),
+  email_reply_to: loadConfig("EMAIL_REPLY_TO"),
 };
 
 const envBaseConfig: Record<ENVIRONMENT, EnvBaseConfigKey> = {

@@ -7,6 +7,7 @@ import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
+import { MessagingService } from "src/services/messaging/messaging.service";
 
 @Module({
   controllers: [PaymentController],
@@ -18,6 +19,7 @@ import { FileService } from "src/file/file.service";
     FormatterService,
     UploadService,
     FileService,
+    MessagingService,
   ],
 })
 export class PaymentModule {}

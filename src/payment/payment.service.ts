@@ -8,6 +8,7 @@ import { Prisma } from "generated/prisma";
 import { UploadService } from "src/services/upload/upload.service";
 import { FileService } from "src/file/file.service";
 import { UserFullDetailsProps } from "src/type";
+import { MessagingService } from "src/services/messaging/messaging.service";
 
 export const PAYMENT_PENALTY_AMOUNT = 200;
 
@@ -20,6 +21,7 @@ export class PaymentService {
     private formatterService: FormatterService,
     private uploadService: UploadService,
     private fileService: FileService,
+    private messagingService: MessagingService,
   ) {}
 
   async getPayments() {
@@ -46,6 +48,7 @@ export class PaymentService {
       amount,
       referenceNumber,
       transactionType,
+      sendReceipt,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -64,6 +67,23 @@ export class PaymentService {
                 status: { notIn: ["DELETED", "FORFEITED"] },
               },
             ],
+          },
+          include: {
+            client: true,
+            lot: {
+              include: {
+                block: {
+                  include: {
+                    phase: {
+                      include: {
+                        project: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            agent: true,
           },
         });
 
@@ -90,6 +110,9 @@ export class PaymentService {
           recurringPaymentDay,
           excessPayment,
           penaltyAmount,
+          client,
+          lot,
+          agent,
         } = contractResponse || {};
 
         if (paymentType === "INSTALLMENT") {
@@ -166,7 +189,7 @@ export class PaymentService {
               },
             });
 
-            const { id: paymentResponseId } = paymentResponse || {};
+            const { id: paymentResponseId, receiptNo } = paymentResponse || {};
 
             await this.uploadPfp(paymentResponseId, files, user, prisma);
 
@@ -191,6 +214,41 @@ export class PaymentService {
                 updatedBy: user.id,
               },
             });
+
+            if (!!sendReceipt && !!client && !!lot && !!agent) {
+              const {
+                email,
+                firstName,
+                lastName,
+                street,
+                barangay,
+                city,
+                province,
+              } = client || {};
+              const { firstName: agentFirstName, lastName: agentLastName } =
+                agent || {};
+              const { block, title: lotTitle } = lot || {};
+              const { phase, title: blockTitle } = block || {};
+              const { project } = phase || {};
+              const { projectName } = project || {};
+              await this.messagingService.onSendPaymentReceipt({
+                clientName: `${firstName} ${lastName}`,
+                email,
+                street,
+                barangay,
+                city,
+                province,
+                projectName,
+                lot: lotTitle || "",
+                block: blockTitle || "",
+                modeOfPayment,
+                referenceNumber,
+                agent: `${agentFirstName} ${agentLastName}`,
+                totalInWords: this.formatterService.onNumberToWords(amount),
+                total: this.formatterService.onParseToPhp(amount),
+                receiptNumber: receiptNo,
+              });
+            }
           } else if (
             downPaymentType === "FULL_DOWN_PAYMENT" &&
             downPaymentStatus === "ON_GOING" &&
@@ -253,7 +311,7 @@ export class PaymentService {
               },
             });
 
-            const { id: paymentResponseId } = paymentResponse || {};
+            const { id: paymentResponseId, receiptNo } = paymentResponse || {};
 
             await this.uploadPfp(paymentResponseId, files, user, prisma);
 
@@ -276,6 +334,41 @@ export class PaymentService {
                 updatedBy: user.id,
               },
             });
+
+            if (!!sendReceipt && !!client && !!lot && !!agent) {
+              const {
+                email,
+                firstName,
+                lastName,
+                street,
+                barangay,
+                city,
+                province,
+              } = client || {};
+              const { firstName: agentFirstName, lastName: agentLastName } =
+                agent || {};
+              const { block, title: lotTitle } = lot || {};
+              const { phase, title: blockTitle } = block || {};
+              const { project } = phase || {};
+              const { projectName } = project || {};
+              await this.messagingService.onSendPaymentReceipt({
+                clientName: `${firstName} ${lastName}`,
+                email,
+                street,
+                barangay,
+                city,
+                province,
+                projectName,
+                lot: lotTitle || "",
+                block: blockTitle || "",
+                modeOfPayment,
+                referenceNumber,
+                agent: `${agentFirstName} ${agentLastName}`,
+                totalInWords: this.formatterService.onNumberToWords(amount),
+                total: this.formatterService.onParseToPhp(amount),
+                receiptNumber: receiptNo,
+              });
+            }
           } else if (
             downPaymentStatus === "DONE" &&
             status === "ON_GOING" &&
@@ -358,7 +451,7 @@ export class PaymentService {
               },
             });
 
-            const { id: paymentResponseId } = paymentResponse || {};
+            const { id: paymentResponseId, receiptNo } = paymentResponse || {};
 
             await this.uploadPfp(paymentResponseId, files, user, prisma);
 
@@ -387,6 +480,41 @@ export class PaymentService {
                   status: "SOLD",
                   updatedBy: user.id,
                 },
+              });
+            }
+
+            if (!!sendReceipt && !!client && !!lot && !!agent) {
+              const {
+                email,
+                firstName,
+                lastName,
+                street,
+                barangay,
+                city,
+                province,
+              } = client || {};
+              const { firstName: agentFirstName, lastName: agentLastName } =
+                agent || {};
+              const { block, title: lotTitle } = lot || {};
+              const { phase, title: blockTitle } = block || {};
+              const { project } = phase || {};
+              const { projectName } = project || {};
+              await this.messagingService.onSendPaymentReceipt({
+                clientName: `${firstName} ${lastName}`,
+                email,
+                street,
+                barangay,
+                city,
+                province,
+                projectName,
+                lot: lotTitle || "",
+                block: blockTitle || "",
+                modeOfPayment,
+                referenceNumber,
+                agent: `${agentFirstName} ${agentLastName}`,
+                totalInWords: this.formatterService.onNumberToWords(amount),
+                total: this.formatterService.onParseToPhp(amount),
+                receiptNumber: receiptNo,
               });
             }
           } else {
@@ -441,7 +569,7 @@ export class PaymentService {
             },
           });
 
-          const { id: paymentResponseId } = paymentResponse || {};
+          const { id: paymentResponseId, receiptNo } = paymentResponse || {};
 
           await this.uploadPfp(paymentResponseId, files, user, prisma);
 
@@ -465,6 +593,41 @@ export class PaymentService {
               updatedBy: user.id,
             },
           });
+
+          if (!!sendReceipt && !!client && !!lot && !!agent) {
+            const {
+              email,
+              firstName,
+              lastName,
+              street,
+              barangay,
+              city,
+              province,
+            } = client || {};
+            const { firstName: agentFirstName, lastName: agentLastName } =
+              agent || {};
+            const { block, title: lotTitle } = lot || {};
+            const { phase, title: blockTitle } = block || {};
+            const { project } = phase || {};
+            const { projectName } = project || {};
+            await this.messagingService.onSendPaymentReceipt({
+              clientName: `${firstName} ${lastName}`,
+              email,
+              street,
+              barangay,
+              city,
+              province,
+              projectName,
+              lot: lotTitle || "",
+              block: blockTitle || "",
+              modeOfPayment,
+              referenceNumber,
+              agent: `${agentFirstName} ${agentLastName}`,
+              totalInWords: this.formatterService.onNumberToWords(amount),
+              total: this.formatterService.onParseToPhp(amount),
+              receiptNumber: receiptNo,
+            });
+          }
         }
       });
 

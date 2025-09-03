@@ -8,6 +8,7 @@ import { UploadService } from "src/services/upload/upload.service";
 import { PaymentService } from "src/payment/payment.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
 import { FileService } from "src/file/file.service";
+import { MessagingService } from "src/services/messaging/messaging.service";
 
 @Module({
   controllers: [ReservationController],
@@ -20,6 +21,7 @@ import { FileService } from "src/file/file.service";
     PaymentService,
     FormatterService,
     FileService,
+    MessagingService,
   ],
 })
 export class ReservationModule {}
