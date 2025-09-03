@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import { AgentService } from "./agent.service";
@@ -17,6 +18,7 @@ import { RolesGuard } from "src/services/guard/guard.service";
 import { $Enums } from "generated/prisma";
 import { Roles } from "src/decorator";
 import { QuerySearchDto } from "src/dto";
+import { Request } from "express";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Roles($Enums.ROLE.ADMIN)
@@ -30,18 +32,22 @@ export class AgentController {
   }
 
   @Post("create")
-  onCreateAgent(@Body() dto: AgentDto) {
-    return this.agentService.createAgent(dto);
+  onCreateAgent(@Body() dto: AgentDto, @Req() req: Request) {
+    return this.agentService.createAgent(dto, req.user);
   }
 
   @Patch("update/:id")
-  onUpdateAgent(@Body() dto: AgentDto, @Param("id") id: string) {
-    return this.agentService.updateAgent(id, dto);
+  onUpdateAgent(
+    @Body() dto: AgentDto,
+    @Param("id") id: string,
+    @Req() req: Request,
+  ) {
+    return this.agentService.updateAgent(id, dto, req.user);
   }
 
   @Delete("delete/:id")
-  onDeleteAgent(@Param("id") id: string) {
-    return this.agentService.deleteAgent(id);
+  onDeleteAgent(@Param("id") id: string, @Req() req: Request) {
+    return this.agentService.deleteAgent(id, req.user);
   }
 
   @Get(":id")

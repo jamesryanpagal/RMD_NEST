@@ -233,7 +233,7 @@ export class ClientService {
           include: {
             contract: {
               where: {
-                status: { not: "DELETED" },
+                status: { notIn: ["DELETED", "FORFEITED"] },
               },
             },
             reservation: {

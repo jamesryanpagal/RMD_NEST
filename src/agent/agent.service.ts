@@ -1,13 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "generated/prisma";
 import { QuerySearchDto } from "src/dto";
+import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class AgentService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private exceptionService: ExceptionService,
+  ) {}
 
-  async createAgent(dto: Prisma.AgentCreateInput) {
+  async createAgent(dto: Prisma.AgentCreateInput, user?: UserFullDetailsProps) {
     const { firstName, middleName, lastName, birthDate } = dto || {};
     try {
       await this.prismaService.agent.create({
@@ -16,6 +21,7 @@ export class AgentService {
           middleName,
           lastName,
           birthDate,
+          createdBy: user?.id,
         },
       });
 
@@ -25,7 +31,11 @@ export class AgentService {
     }
   }
 
-  async updateAgent(id: string, dto: Prisma.AgentUpdateInput) {
+  async updateAgent(
+    id: string,
+    dto: Prisma.AgentUpdateInput,
+    user?: UserFullDetailsProps,
+  ) {
     const { firstName, middleName, lastName, birthDate } = dto || {};
     try {
       await this.prismaService.agent.update({
@@ -37,6 +47,7 @@ export class AgentService {
           middleName,
           lastName,
           birthDate,
+          updatedBy: user?.id,
         },
       });
 
@@ -134,19 +145,64 @@ export class AgentService {
     }
   }
 
-  async deleteAgent(id: string) {
+  async deleteAgent(id: string, user?: UserFullDetailsProps) {
     try {
-      await this.prismaService.agent.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "DELETED",
-        },
+      await this.prismaService.$transaction(async prisma => {
+        const checkAgentStatus = await prisma.agent.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+          include: {
+            agentCommission: {
+              where: {
+                status: { notIn: ["CONTRACT_FORFEITED", "DELETED"] },
+              },
+            },
+            contract: {
+              where: {
+                status: { notIn: ["DELETED", "FORFEITED"] },
+              },
+            },
+          },
+        });
+
+        if (!checkAgentStatus) {
+          this.exceptionService.throw("Agent not found", "NOT_FOUND");
+          return;
+        }
+
+        if (
+          !!checkAgentStatus.agentCommission.length ||
+          !!checkAgentStatus.contract.length
+        ) {
+          this.exceptionService.throw(
+            "Cannot delete agent with active commissions or contracts",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        await prisma.agent.update({
+          where: {
+            id,
+          },
+          data: {
+            status: "DELETED",
+            deletedBy: user?.id,
+          },
+        });
       });
 
       return "Agent deleted successfully";
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
