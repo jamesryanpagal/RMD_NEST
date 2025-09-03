@@ -10,7 +10,7 @@ import { ReservationModule } from "./reservation/reservation.module";
 import { AgentModule } from "./agent/agent.module";
 import { AgentCommissionModule } from "./agent-commission/agent-commission.module";
 import { FileModule } from "./file/file.module";
-import { CronModule } from "./cron/cron.module";
+// import { CronModule } from "./cron/cron.module";
 import { EmailModule } from "./email/email.module";
 import { RequestModule } from "./request/request.module";
 import { AuditModule } from "./audit/audit.module";
@@ -31,7 +31,7 @@ import { AuditModule } from "./audit/audit.module";
     EmailModule,
     RequestModule,
     AuditModule,
-    CronModule,
+    // CronModule,
   ],
 })
 export class AppModule {}

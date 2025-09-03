@@ -22,6 +22,13 @@ export type PaymentReceiptProps = {
   receiptNumber?: string | null;
 };
 
+export type PaymentReminderProps = Pick<PaymentReceiptProps, "email"> & {
+  dueDate: number;
+  amount: string;
+  penalty?: string;
+  weeksPassed?: number;
+};
+
 @Injectable()
 export class MessagingService {
   constructor(
@@ -146,6 +153,170 @@ export class MessagingService {
                 </div>
               </div>
             </div>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        this.exceptionService.throw(
+          `Failed to send email ${error?.message}`,
+          "BAD_REQUEST",
+        );
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onSendPaymentReminderInDueDate({
+    email,
+    dueDate,
+    amount,
+  }: PaymentReminderProps) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `RMD Land Support <${config.email_from}${config.domain}>`,
+        to: email,
+        subject: "Monthly Payment Reminder - RMD Land",
+        replyTo: `${config.email_reply_to}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body>
+            <p>This is a friendly reminder that your upcoming monthly installment of <strong>${amount}</strong> is due in <strong>${dueDate} day(s)</strong>. We recommend preparing your payment in advance to ensure a smooth and timely transaction.</p>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        this.exceptionService.throw(
+          `Failed to send email ${error?.message}`,
+          "BAD_REQUEST",
+        );
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onSendPaymentReminderTodayDueDate({
+    email,
+    amount,
+  }: Omit<PaymentReminderProps, "dueDate">) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `RMD Land Support <${config.email_from}${config.domain}>`,
+        to: email,
+        subject: "Monthly Payment Reminder - RMD Land",
+        replyTo: `${config.email_reply_to}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body>
+            <p>This is a friendly reminder that your monthly installment of <strong>${amount}</strong> is due <strong>today</strong>. We recommend settling your payment as soon as possible to ensure a smooth and timely transaction.</p>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        this.exceptionService.throw(
+          `Failed to send email ${error?.message}`,
+          "BAD_REQUEST",
+        );
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onSendPaymentReminderOverDueDate({
+    email,
+    amount,
+    penalty,
+  }: Omit<PaymentReminderProps, "dueDate">) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `RMD Land Support <${config.email_from}${config.domain}>`,
+        to: email,
+        subject: "Monthly Payment Reminder - RMD Land",
+        replyTo: `${config.email_reply_to}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body>
+            <p>Your monthly installment payment of <strong>${amount}</strong> is currently <strong>overdue</strong>. If payment is not made within one week, a penalty of <strong>${penalty}</strong> will be applied. An additional <strong>${penalty}</strong> will be added for every week the payment remains unsettled. We strongly encourage you to settle your balance as soon as possible to avoid accumulating further charges.</p>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        this.exceptionService.throw(
+          `Failed to send email ${error?.message}`,
+          "BAD_REQUEST",
+        );
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onSendPaymentReminderOverDueDateWeekPast({
+    email,
+    amount,
+    penalty,
+    weeksPassed,
+  }: Omit<PaymentReminderProps, "dueDate">) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `RMD Land Support <${config.email_from}${config.domain}>`,
+        to: email,
+        subject: "Monthly Payment Reminder - RMD Land",
+        replyTo: `${config.email_reply_to}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body>
+            <p>Your monthly installment payment has been overdue for over <strong>${weeksPassed} weeks</strong>. A penalty of <strong>${penalty}</strong> has been applied, bringing your total due to <strong>${amount}</strong>. We strongly encourage you to settle this as soon as possible to prevent further charges.</p>
           </body>
           </html>
         `,
