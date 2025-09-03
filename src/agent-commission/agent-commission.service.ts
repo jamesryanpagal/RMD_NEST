@@ -7,6 +7,7 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import { StartAgentCommissionDto } from "./dto";
 import { QuerySearchDto } from "src/dto";
 import { Prisma } from "generated/prisma";
+import { UserFullDetailsProps } from "src/type";
 
 @Injectable()
 export class AgentCommissionService {
@@ -294,7 +295,11 @@ export class AgentCommissionService {
     }
   }
 
-  async startAgentCommission(id: string, dto: StartAgentCommissionDto) {
+  async startAgentCommission(
+    id: string,
+    dto: StartAgentCommissionDto,
+    user?: UserFullDetailsProps,
+  ) {
     const { terms, releaseStartDate } = dto;
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -305,7 +310,7 @@ export class AgentCommissionService {
                 id,
               },
               {
-                status: { not: "DELETED" },
+                status: { notIn: ["DELETED", "CONTRACT_FORFEITED"] },
               },
             ],
           },
@@ -314,6 +319,14 @@ export class AgentCommissionService {
             contract: true,
           },
         });
+
+        if (!agentCommissionResponse) {
+          this.exceptionService.throw(
+            "Agent commission not found, it is either deleted or contract has been forfeited.",
+            "NOT_FOUND",
+          );
+          return;
+        }
 
         const { contract } = agentCommissionResponse || {};
         const { agentCommissionTotal } = contract || {};
@@ -363,6 +376,7 @@ export class AgentCommissionService {
               ((agentCommissionTotal || 0) / terms).toFixed(2),
             ),
             status: "ON_GOING",
+            updatedBy: user?.id,
           },
         });
       });
@@ -373,7 +387,7 @@ export class AgentCommissionService {
     }
   }
 
-  async deleteAgentCommission(id: string) {
+  async deleteAgentCommission(id: string, user?: UserFullDetailsProps) {
     try {
       await this.prismaService.agentCommission.update({
         where: {
@@ -381,6 +395,7 @@ export class AgentCommissionService {
         },
         data: {
           status: "DELETED",
+          deletedBy: user?.id,
         },
       });
 

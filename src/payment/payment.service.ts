@@ -61,14 +61,17 @@ export class PaymentService {
                 id: contractId,
               },
               {
-                status: { not: "DELETED" },
+                status: { notIn: ["DELETED", "FORFEITED"] },
               },
             ],
           },
         });
 
         if (!contractResponse) {
-          this.exceptionService.throw("Contract not found", "NOT_FOUND");
+          this.exceptionService.throw(
+            "Contract not found, it is either deleted or forfeited.",
+            "NOT_FOUND",
+          );
           return;
         }
 
@@ -1312,7 +1315,7 @@ export class PaymentService {
                 id: agentCommissionId,
               },
               {
-                status: { not: "DELETED" },
+                status: { notIn: ["DELETED", "CONTRACT_FORFEITED"] },
               },
             ],
           },
@@ -1320,7 +1323,7 @@ export class PaymentService {
 
         if (!agentCommissionResponse) {
           this.exceptionService.throw(
-            "Agent commission not found",
+            "Agent commission not found, it is either deleted or contract has been forfeited.",
             "NOT_FOUND",
           );
           return;

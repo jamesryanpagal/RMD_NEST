@@ -70,6 +70,11 @@ export class ContractController {
     );
   }
 
+  @Patch("forfeit/:id")
+  onForfeitContract(@Param("id") id: string, @Req() req: Request) {
+    return this.contractService.forfietContract(id, req.user);
+  }
+
   // @Patch("update/:id")
   // onUpdateContract(
   //   @Param("id") id: string,

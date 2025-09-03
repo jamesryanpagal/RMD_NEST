@@ -202,7 +202,6 @@ export class AgentService {
 
       return "Agent deleted successfully";
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

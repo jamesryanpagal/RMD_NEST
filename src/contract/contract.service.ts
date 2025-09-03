@@ -1017,4 +1017,73 @@ export class ContractService {
       throw error;
     }
   }
+
+  async forfietContract(id: string, user?: UserFullDetailsProps) {
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: "ON_GOING",
+              },
+            ],
+          },
+          include: {
+            commissionOfAgent: true,
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw(
+            "Cannot forfeit contract, it is either deleted, forfeited or done.",
+            "NOT_FOUND",
+          );
+          return;
+        }
+
+        const { commissionOfAgent, lotId, downPaymentStatus } =
+          contractResponse || {};
+
+        await prisma.contract.update({
+          where: {
+            id,
+          },
+          data: {
+            ...(downPaymentStatus === "ON_GOING"
+              ? { downPaymentStatus: "FORFEITED", status: "FORFEITED" }
+              : { status: "FORFEITED" }),
+            updatedBy: user?.id,
+          },
+        });
+
+        await prisma.agentCommission.update({
+          where: {
+            id: commissionOfAgent?.id,
+          },
+          data: {
+            status: "CONTRACT_FORFEITED",
+            updatedBy: user?.id,
+          },
+        });
+
+        await prisma.lot.update({
+          where: {
+            id: lotId,
+          },
+          data: {
+            status: "OPEN",
+            updatedBy: user?.id,
+          },
+        });
+      });
+
+      return "Contract forfeited successfully.";
+    } catch (error) {
+      throw error;
+    }
+  }
 }
