@@ -6,6 +6,10 @@ import { FormatterService } from "src/services/formatter/formatter.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { MessagingService } from "src/services/messaging/messaging.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
+import { ReservationService } from "src/reservation/reservation.service";
+import { PaymentService } from "src/payment/payment.service";
+import { UploadService } from "src/services/upload/upload.service";
+import { FileService } from "src/file/file.service";
 
 @Module({
   imports: [ScheduleModule.forRoot()],
@@ -16,6 +20,10 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
     FormatterService,
     MessagingService,
     ExceptionService,
+    ReservationService,
+    PaymentService,
+    UploadService,
+    FileService,
   ],
 })
 export class CronModule {}

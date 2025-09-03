@@ -299,21 +299,24 @@ export class ReservationService {
 
         const validatedResponse = await Promise.all(
           reservationList.map(async props => {
-            const { id, validity, status, payment } = props || {};
+            const { status, payment } = props || {};
             const { files } = payment || {};
-            const validityExpired = this.mtzService
-              .mtz(validity)
-              .isBefore(this.mtzService.mtz());
 
-            if (validityExpired && status === "ACTIVE") {
-              const updatedResponse = await prisma.reservation.update({
-                where: { id },
-                data: {
+            if (status === "ACTIVE") {
+              const { expired } = await this.onValidateReservationValidity(
+                props as any,
+                prisma,
+              );
+              if (expired) {
+                return {
+                  ...props,
+                  payment: {
+                    ...payment,
+                    files: this.fileService.onFormatPaymentFilesResponse(files),
+                  },
                   status: "FORFEITED",
-                },
-              });
-
-              return { ...props, payment, status: updatedResponse.status };
+                };
+              }
             }
 
             return {
@@ -337,7 +340,7 @@ export class ReservationService {
 
   async getReservation(id: string) {
     try {
-      let respose: any | null = null;
+      let response: any | null = null;
       await this.prismaService.$transaction(async prisma => {
         const reservationResponse = await prisma.reservation.findFirst({
           where: {
@@ -420,35 +423,28 @@ export class ReservationService {
           },
         });
 
-        const {
-          id: responseId,
-          validity,
-          status,
-          payment,
-        } = reservationResponse || {};
+        const { status, payment } = reservationResponse || {};
         const { files } = payment || {};
 
-        const validityExpired = this.mtzService
-          .mtz(validity)
-          .isBefore(this.mtzService.mtz());
-
-        if (validityExpired && status === "ACTIVE") {
-          const updatedResponse = await prisma.reservation.update({
-            where: { id: responseId },
-            data: {
+        if (status === "ACTIVE") {
+          const { expired } = await this.onValidateReservationValidity(
+            reservationResponse as any,
+            prisma,
+          );
+          if (expired) {
+            response = {
+              ...reservationResponse,
+              payment: {
+                ...payment,
+                files: this.fileService.onFormatPaymentFilesResponse(files),
+              },
               status: "FORFEITED",
-            },
-          });
-
-          respose = {
-            ...reservationResponse,
-            payment,
-            status: updatedResponse.status,
-          };
-          return;
+            };
+            return;
+          }
         }
 
-        respose = {
+        response = {
           ...reservationResponse,
           payment: {
             ...payment,
@@ -457,7 +453,7 @@ export class ReservationService {
         };
       });
 
-      return respose;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -612,6 +608,52 @@ export class ReservationService {
       });
 
       return "Reservation updated successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onValidateReservationValidity(
+    data: Prisma.ReservationGetPayload<{}>,
+    prisma?: Prisma.TransactionClient,
+  ) {
+    const transaction = prisma || this.prismaService;
+    let response: { expired: boolean } = { expired: false };
+    try {
+      const { id, lotId, validity } = data || {};
+
+      const formattedDateToday = this.mtzService
+        .mtz()
+        .format(this.mtzService.dateFormat.defaultformat);
+      const formattedDateValidity = this.mtzService
+        .mtz(validity, "dateTimeUTCZ")
+        .format(this.mtzService.dateFormat.defaultformat);
+      const validityExpired = this.mtzService
+        .mtz(formattedDateToday)
+        .isAfter(formattedDateValidity);
+
+      if (validityExpired) {
+        await transaction.reservation.update({
+          where: {
+            id,
+          },
+          data: {
+            status: "FORFEITED",
+          },
+        });
+
+        await transaction.lot.update({
+          where: {
+            id: lotId,
+          },
+          data: {
+            status: "OPEN",
+          },
+        });
+        response.expired = true;
+      }
+
+      return response;
     } catch (error) {
       throw error;
     }

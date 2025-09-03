@@ -7,6 +7,7 @@ import { CreateUpdateContractDto, UpdatePaymentStartDateDto } from "./dto";
 import { UserFullDetailsProps } from "src/type";
 import { QuerySearchDto } from "src/dto";
 import { Prisma } from "generated/prisma";
+import { ReservationService } from "src/reservation/reservation.service";
 
 @Injectable()
 export class ContractService {
@@ -14,6 +15,7 @@ export class ContractService {
     private prismaService: PrismaService,
     private mtzService: MtzService,
     private exceptionService: ExceptionService,
+    private reservationService: ReservationService,
   ) {}
 
   async createContract(
@@ -97,23 +99,24 @@ export class ContractService {
           return;
         }
 
+        const { expired } =
+          await this.reservationService.onValidateReservationValidity(
+            reservationFee,
+          );
+
+        if (expired) {
+          this.exceptionService.throw(
+            "Reservation fee validity expired. Please create a new reservation.",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
         const {
           id: reservationId,
           validity,
           payment: reservationPayment,
         } = reservationFee || {};
-
-        const reservationFeeValidityExpired = this.mtzService
-          .mtz(validity)
-          .isBefore(this.mtzService.mtz());
-
-        if (reservationFeeValidityExpired) {
-          this.exceptionService.throw(
-            "Reservation fee validity expired",
-            "BAD_REQUEST",
-          );
-          return;
-        }
 
         await prisma.reservation.update({
           where: {
