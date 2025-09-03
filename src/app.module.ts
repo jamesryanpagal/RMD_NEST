@@ -14,7 +14,6 @@ import { CronModule } from "./cron/cron.module";
 import { EmailModule } from "./email/email.module";
 import { RequestModule } from "./request/request.module";
 import { AuditModule } from "./audit/audit.module";
-import { PaymentService } from "./payment/payment.service";
 
 @Module({
   imports: [
