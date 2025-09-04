@@ -232,6 +232,9 @@ export class ReservationService {
             dateUpdated: true,
             dateDeleted: true,
           },
+          orderBy: {
+            dateCreated: "desc",
+          },
           include: {
             lot: {
               omit: {
