@@ -1193,7 +1193,11 @@ export class PaymentService {
                 dueDate,
                 amount: totalMonthly - (isLastPaymentDate ? excessPayment : 0),
                 paidAmount: paymentInDate?.amount || 0,
-                remainingBalance: remainingBalance - totalMonthly,
+                remainingBalance: Number(
+                  Math.floor(Math.abs(remainingBalance - totalMonthly)).toFixed(
+                    2,
+                  ),
+                ),
                 transactionType: "MONTHLY_PAYMENT",
                 paid: !!paymentInDate,
                 files: this.fileService.onFormatPaymentFilesResponse(
@@ -1278,7 +1282,11 @@ export class PaymentService {
             dueDate,
             amount: totalCashPayment || 0,
             paidAmount: paymentInDate?.amount || 0,
-            remainingBalance: remainingBalance - (totalCashPayment || 0),
+            remainingBalance: Number(
+              Math.floor(
+                Math.abs(remainingBalance - (totalCashPayment || 0)),
+              ).toFixed(2),
+            ),
             transactionType: "TCP_FULL_PAYMENT",
             paid: !!paymentInDate,
             files: this.fileService.onFormatPaymentFilesResponse(

@@ -432,6 +432,9 @@ export class ContractService {
           dateUpdated: true,
           dateDeleted: true,
         },
+        orderBy: {
+          dateCreated: "desc",
+        },
         include: {
           lot: {
             include: {
