@@ -75,11 +75,6 @@ export class ContractController {
     return this.contractService.forfietContract(id, req.user);
   }
 
-  @Patch("waive/penalty/:id")
-  onWaiveContractPenalty(@Param("id") id: string, @Req() req: Request) {
-    return this.contractService.waiveContractPenalty(id, req.user);
-  }
-
   // @Patch("update/:id")
   // onUpdateContract(
   //   @Param("id") id: string,

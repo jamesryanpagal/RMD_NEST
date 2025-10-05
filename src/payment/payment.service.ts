@@ -49,6 +49,7 @@ export class PaymentService {
       referenceNumber,
       transactionType,
       sendReceipt,
+      waivePenalty,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -122,7 +123,8 @@ export class PaymentService {
             totalMonthlyDown &&
             totalDownPaymentBalance
           ) {
-            const totalPayment = totalMonthlyDown + penaltyAmount;
+            const totalPayment =
+              totalMonthlyDown + (waivePenalty ? 0 : penaltyAmount);
 
             if (amount < totalPayment) {
               this.exceptionService.throw(
@@ -174,10 +176,11 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
-                ...(!!penaltyAmount && {
-                  penalized: true,
-                  penaltyAmount,
-                }),
+                ...(!!penaltyAmount &&
+                  !waivePenalty && {
+                    penalized: true,
+                    penaltyAmount,
+                  }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
@@ -393,8 +396,10 @@ export class PaymentService {
               parsedNextPaymentDate === parsedLastPaymentDate;
 
             const computedAmount = isLastPaymentDate
-              ? totalMonthly + penaltyAmount - excessPayment
-              : totalMonthly + penaltyAmount;
+              ? totalMonthly +
+                (waivePenalty ? 0 : penaltyAmount) -
+                excessPayment
+              : totalMonthly + (waivePenalty ? 0 : penaltyAmount);
 
             if (amount < computedAmount) {
               this.exceptionService.throw(
@@ -436,10 +441,11 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
-                ...(!!penaltyAmount && {
-                  penalized: true,
-                  penaltyAmount,
-                }),
+                ...(!!penaltyAmount &&
+                  !waivePenalty && {
+                    penalized: true,
+                    penaltyAmount,
+                  }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
