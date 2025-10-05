@@ -12,7 +12,9 @@ export class ReservationDto {
   paymentDate: string;
 
   @IsNotEmpty()
-  @Transform(({ value }) => (value ? Number(value) : null))
+  @Transform(({ value }) =>
+    value !== null && value !== undefined ? Number(value) : null,
+  )
   amount: number;
 
   @IsOptional()
