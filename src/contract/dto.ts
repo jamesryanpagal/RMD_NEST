@@ -23,7 +23,9 @@ export class CreateUpdateContractDto {
   miscellaneous: $Enums.MISCELLANEOUS;
 
   @IsNotEmpty()
-  @Transform(({ value }) => (value ? Number(value) : null))
+  @Transform(({ value }) =>
+    value !== null || value !== undefined ? Number(value) : null,
+  )
   miscellaneousTotal: number;
 
   @IsNotEmpty()
