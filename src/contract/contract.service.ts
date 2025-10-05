@@ -1116,4 +1116,22 @@ export class ContractService {
       throw error;
     }
   }
+
+  async waiveContractPenalty(id: string, user?: UserFullDetailsProps) {
+    try {
+      await this.prismaService.contract.update({
+        where: {
+          id,
+        },
+        data: {
+          penaltyCount: 0,
+          penaltyAmount: 0,
+        },
+      });
+
+      return "Contract penalty waived successfully.";
+    } catch (error) {
+      throw error;
+    }
+  }
 }
