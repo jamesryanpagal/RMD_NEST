@@ -114,6 +114,7 @@ export class PaymentService {
           client,
           lot,
           agent,
+          installmentType,
         } = contractResponse || {};
 
         if (paymentType === "INSTALLMENT") {
@@ -373,7 +374,8 @@ export class PaymentService {
               });
             }
           } else if (
-            downPaymentStatus === "DONE" &&
+            (downPaymentStatus === "DONE" ||
+              installmentType === "STRAIGHT_MONTHLY_PAYMENT") &&
             status === "ON_GOING" &&
             totalMonthly
           ) {
@@ -431,7 +433,7 @@ export class PaymentService {
               this.mtzService.dateFormat.dateTimeUTCZ,
             );
 
-            const computedBalance = balance - computedAmount;
+            const computedBalance = balance - totalMonthly;
             const totalBalanceAfterAmount =
               computedBalance <= 0 || isLastPaymentDate ? 0 : computedBalance;
 
@@ -1045,12 +1047,9 @@ export class PaymentService {
             .format(this.mtzService.dateFormat.defaultformat);
         }
 
-        if (paymentType === "INSTALLMENT") {
+        if (paymentType !== "CASH") {
           if (
-            (downPaymentType === "PARTIAL_DOWN_PAYMENT" ||
-              downPaymentType === "FULL_DOWN_PAYMENT") &&
             terms &&
-            totalMonthlyDown &&
             totalMonthly &&
             paymentStartedDate &&
             recurringPaymentDay
@@ -1087,6 +1086,7 @@ export class PaymentService {
 
             if (
               downPaymentType === "PARTIAL_DOWN_PAYMENT" &&
+              totalMonthlyDown &&
               !!downPaymentTerms
             ) {
               for (let i = 0; i < downPaymentTerms; i++) {
@@ -1130,7 +1130,10 @@ export class PaymentService {
                   ),
                 });
               }
-            } else {
+            } else if (
+              downPaymentType === "FULL_DOWN_PAYMENT" &&
+              totalMonthlyDown
+            ) {
               const { remainingBalance } = downPaymentBreakdown[0] || {};
 
               const dueDate = this.mtzService
@@ -1171,17 +1174,24 @@ export class PaymentService {
               i < downPaymentBreakdown.length - 1 + terms;
               i++
             ) {
-              const { dueDate: previousDueDate, remainingBalance } =
-                totalPaymentBreakdown[i] || {};
+              const {
+                dueDate: previousDueDate,
+                transactionType: previousTransactionType,
+                remainingBalance,
+              } = totalPaymentBreakdown[i] || {};
 
               const isLastPaymentDate =
                 i === downPaymentBreakdown.length - 1 + terms - 1;
 
-              const dueDate = this.mtzService
-                .mtz(previousDueDate, "dateAbbrev")
-                .add(1, "month")
-                .set("date", recurringPaymentDay)
-                .format(this.mtzService.dateFormat.dateAbbrev);
+              const dueDate =
+                previousTransactionType === "RESERVATION_FEE"
+                  ? this.mtzService
+                      .mtz(parsedPaymentStartedDate, "dateAbbrev")
+                      .format(this.mtzService.dateFormat.dateAbbrev)
+                  : this.mtzService
+                      .mtz(previousDueDate, "dateAbbrev")
+                      .add(1, "month")
+                      .format(this.mtzService.dateFormat.dateAbbrev);
 
               const paymentInDate = payment.find(paymentObj => {
                 const formattedPaymentDate = this.mtzService

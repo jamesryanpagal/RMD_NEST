@@ -66,6 +66,17 @@ export class CreateUpdateContractDto {
   @IsString()
   @Transform(({ value }) => value || null)
   paymentStartDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== undefined && value !== null ? Number(value) : null,
+  )
+  interest?: number;
+
+  @IsOptional()
+  @IsEnum($Enums.INSTALLMENT_TYPE)
+  installmentType?: $Enums.INSTALLMENT_TYPE;
 }
 
 export class UpdatePaymentStartDateDto {

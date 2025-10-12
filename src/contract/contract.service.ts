@@ -39,6 +39,8 @@ export class ContractService {
       paymentType,
       totalLotPrice,
       paymentStartDate,
+      interest,
+      installmentType,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -143,29 +145,72 @@ export class ContractService {
         const baseDate = this.mtzService.mtz(baseDateValue, "dateTimeUTCZ");
 
         if (paymentType === "INSTALLMENT") {
-          if (downPayment && terms) {
+          const hasInterest =
+            interest !== null &&
+            interest !== undefined &&
+            installmentType === "STRAIGHT_MONTHLY_PAYMENT";
+
+          let initialTerms = terms || 0;
+
+          const nextPaymentDate = baseDate.clone();
+          const recurringPaymentDay = baseDate.toDate().getDate();
+
+          const formattedNextPaymentDate = nextPaymentDate.format(
+            this.mtzService.dateFormat.dateTimeUTCZ,
+          );
+
+          if (hasInterest) {
+            const computedTlp = totalLotPrice + miscellaneousTotal;
+            const interestTotal = computedTlp * (interest / 100);
+
+            const totalTcp = computedTlp + interestTotal;
+            const balance = totalTcp - (reservationPayment?.amount || 0);
+
+            const lastPaymentDate = this.mtzService.onCalculateLastDate(
+              baseDate.clone(),
+              initialTerms,
+              recurringPaymentDay,
+            );
+            const formattedLastPaymentDate = lastPaymentDate.format(
+              this.mtzService.dateFormat.dateTimeUTCZ,
+            );
+
+            await prisma.contract.update({
+              where: {
+                id: contractResponse.id,
+              },
+              data: {
+                balance,
+                nextPaymentDate: formattedNextPaymentDate,
+                recurringPaymentDay,
+                paymentStartedDate: formattedNextPaymentDate,
+                paymentLastDate: formattedLastPaymentDate,
+                terms,
+                installmentType,
+                interest,
+                interestTotal,
+                totalMonthly: Number((balance / initialTerms).toFixed(2)),
+                createdBy: user?.id,
+              },
+            });
+          } else if (downPayment && terms) {
             const totalDownPayment = tcp * (downPayment / 100);
             const totalDownPaymentAfterReservation =
               totalDownPayment - (reservationPayment?.amount || 0);
             const balance = tcp - totalDownPayment;
 
             const computedTerms =
-              terms +
+              initialTerms +
               (downPaymentType === "FULL_DOWN_PAYMENT"
                 ? 1
                 : downPaymentTerms || 0);
 
-            const nextPaymentDate = baseDate.clone();
-            const recurringPaymentDay = baseDate.toDate().getDate();
             const lastPaymentDate = this.mtzService.onCalculateLastDate(
               baseDate.clone(),
               computedTerms,
               recurringPaymentDay,
             );
 
-            const formattedNextPaymentDate = nextPaymentDate.format(
-              this.mtzService.dateFormat.dateTimeUTCZ,
-            );
             const formattedLastPaymentDate = lastPaymentDate.format(
               this.mtzService.dateFormat.dateTimeUTCZ,
             );
