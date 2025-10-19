@@ -994,6 +994,7 @@ export class PaymentService {
           totalCashPayment,
           recurringPaymentDay,
           agent,
+          interest,
         } = contractResponse || {};
 
         const projectResponse = lot?.block.phase.project || {};
@@ -1246,6 +1247,7 @@ export class PaymentService {
               rfValidityStartDate,
               rfValidityEndDate,
               agent,
+              interest,
               paymentBreakdown: formattedPaymentBreakdown,
             };
           }
@@ -1333,6 +1335,7 @@ export class PaymentService {
             rfValidityStartDate,
             rfValidityEndDate,
             agent,
+            interest,
             paymentBreakdown: formattedPaymentBreakdown,
           };
         }
