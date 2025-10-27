@@ -1,4 +1,4 @@
-#!/bin/bash#!/bin/bash
+#!/bin/bash
 
 CONTAINER_NAME=rmdland-server-container
 IMAGE_NAME=rmdland-server
