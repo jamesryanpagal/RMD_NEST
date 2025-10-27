@@ -13,6 +13,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     try {
       await this.$connect();
     } catch (error) {
+      console.log({ error });
       throw new InternalServerErrorException();
     }
   }
