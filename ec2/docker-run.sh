@@ -1,5 +1,4 @@
 #!/bin/bash#!/bin/bash
-cd "$(dirname "$0")/.."
 
 CONTAINER_NAME=rmdland-server-container
 IMAGE_NAME=rmdland-server
