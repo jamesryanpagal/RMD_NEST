@@ -199,11 +199,6 @@ BEFORE UPDATE ON "Payment"
 FOR EACH ROW
 EXECUTE FUNCTION set_deleted_date();
 
-CREATE TRIGGER set_receipt_number_trigger
-BEFORE INSERT ON "Payment"
-FOR EACH ROW
-EXECUTE FUNCTION set_receipt_number();
-
 CREATE OR REPLACE TRIGGER set_deleted_date_trigger
 BEFORE UPDATE ON "PaymentAudit"
 FOR EACH ROW
