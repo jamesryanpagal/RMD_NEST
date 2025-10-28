@@ -1,4 +1,4 @@
-CREATE FUNCTION set_receipt_number_trigger() RETURNS trigger
+CREATE OR REPLACE FUNCTION set_receipt_number_trigger() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -10,3 +10,9 @@ BEGIN
 	RETURN NEW;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION generate_receipt_number() RETURNS text
+    LANGUAGE plpgsql
+    AS $$BEGIN
+	RETURN 'RCP-' || to_char(NOW(), 'YYYYMMDDHH24MISSUS');
+END;$$;
