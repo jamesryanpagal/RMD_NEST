@@ -15,6 +15,7 @@ import { EmailModule } from "./email/email.module";
 import { RequestModule } from "./request/request.module";
 import { AuditModule } from "./audit/audit.module";
 import { CronModule } from "./cron/cron.module";
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CronModule } from "./cron/cron.module";
     RequestModule,
     AuditModule,
     CronModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
