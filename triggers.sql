@@ -1753,14 +1753,3 @@ CREATE OR REPLACE TRIGGER contract_request_audit_trigger
 AFTER INSERT OR UPDATE ON "ContractRequest"
 FOR EACH ROW
 EXECUTE FUNCTION set_contract_request_audit();
-
--- ! Only run the query below when setting up project for the first time or migrate reset was done.
-
--- DECLARE
--- 	receipt_no VARCHAR(220);
--- BEGIN
-
--- 	receipt_no := generate_receipt_number();
--- 	NEW."receiptNo" := receipt_no;
--- 	RETURN NEW;
--- END;
