@@ -14,7 +14,6 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "docker-start": "./docker-start.sh",
     "start-docker-compose-up-dev": "docker compose --profile dev up -d && docker logs -f rmd_nest_dev",
     "start-docker-compose-down-dev": "docker compose --profile dev down",
     "start-docker-compose-up-prod": "docker compose --profile prod up -d && docker logs -f rmd_nest_prod",
