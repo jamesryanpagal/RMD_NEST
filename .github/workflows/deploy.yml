@@ -13,34 +13,55 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v3
 
-            - name: Deploy via SSH to EC2
-              uses: appleboy/ssh-action@v1.0.0
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
               with:
-                  host: ${{ secrets.EC2_HOST }}
-                  username: ${{ secrets.EC2_USER }}
-                  key: ${{ secrets.EC2_SSH_KEY }}
-                  script: |
-                      set -e
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ap-southeast-1
 
-                      echo "→ Pulling latest code from Git..." 
-                      cd /home/ubuntu/RMD_NEST
-                      git pull
+            - name: Deploy using SSM with rollback
+              run: |
+                  # Send remote deployment commands to EC2 via SSM
+                  COMMAND_ID=$(aws ssm send-command \
+                    --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+                    --document-name "AWS-RunShellScript" \
+                    --comment "Deploy NestJS App" \
+                    --parameters commands='[
+                      "set -e",
+                      "echo ✅ Starting deployment...",
+                      "cd /home/ubuntu/RMD_NEST",
 
-                      echo "→ Stopping existing containers..."
-                      docker compose down --remove-orphans || true
+                      "echo → Stashing local changes (just in case)...",
+                      "git reset --hard",
 
-                      echo "→ Building and starting new containers..."
-                      if docker compose up --build -d; then
-                        echo "✅ Deployment successful!"
+                      "echo → Pulling latest version from Git...",
+                      "git pull origin master",
 
-                        echo "→ Cleaning unused Docker images..."
-                        docker image prune -f
-                      else
-                        echo "❌ Deployment failed. Rolling back..."
+                      "echo → Stopping containers...",
+                      "docker compose down --remove-orphans || true",
 
-                        echo "→ Resetting to previous stable commit..."
-                        git reset --hard HEAD~1
+                      "echo → Building and starting containers...",
+                      "if docker compose up -d --build; then",
+                      "  echo ✅ Deployment success!",
+                      "else",
+                      "  echo ❌ Deployment failed! Rolling back…",
 
-                        echo "→ Rebuilding using previous version..."
-                        docker compose up --build -d
-                      fi
+                      "  echo → Resetting to previous commit...",
+                      "  git reset --hard HEAD~1",
+
+                      "  echo → Rebuilding old version...",
+                      "  docker compose up -d --build || true",
+
+                      "  exit 1",
+                      "fi",
+
+                      "echo → Cleaning unused images...",
+                      "docker image prune -f",
+
+                      "echo ✅ Deployment finished."
+                    ]' \
+                    --query "Command.CommandId" \
+                    --output text)
+
+                  echo "SSM command sent with ID: $COMMAND_ID"
