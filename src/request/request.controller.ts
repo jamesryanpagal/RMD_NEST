@@ -62,6 +62,6 @@ export class RequestController {
     @Req() req: Request,
     @Query() query: QuerySearchDto,
   ) {
-    return this.requestService.getRequestList(module, query, req.user);
+    return this.requestService.getRequestList(module, query);
   }
 }
