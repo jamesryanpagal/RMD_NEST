@@ -1,9 +1,9 @@
-name: Test React App
+name: Test NestJs App
 
 on:
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   test:
