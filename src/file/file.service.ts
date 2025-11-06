@@ -272,8 +272,8 @@ export class FileService {
     return files.map(({ path, ...rest }) => {
       return {
         ...rest,
-        path: !!path
-          ? `${config.file_prefix}${UploadConfig.prefix}${path?.replace(/\\/g,'/')?.split("/").slice(1).join("/")}`
+        path: path
+          ? `${config.file_prefix}${UploadConfig.prefix}${path?.replace(/\\/g, "/")?.split("/").slice(1).join("/")}`
           : null,
       };
     });

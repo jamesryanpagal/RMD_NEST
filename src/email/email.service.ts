@@ -4,7 +4,7 @@ import { Injectable } from "@nestjs/common";
 export class EmailService {
   constructor() {}
 
-  async sendEmail() {
+  sendEmail() {
     try {
       return "Success";
     } catch (error) {

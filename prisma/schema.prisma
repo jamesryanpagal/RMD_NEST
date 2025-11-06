@@ -12,7 +12,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_PROD")
+  url      = env("DATABASE_URL_DEV")
 }
 
 enum ROLE {
@@ -254,9 +254,10 @@ model UserAudit {
 }
 
 model AuthSession {
-  id         String  @id @default(uuid())
-  userId     String
-  token_hash String?
+  id          String  @id @default(uuid())
+  userId      String
+  accessToken String?
+  token_hash  String?
 
   user User @relation(fields: [userId], references: [id])
 

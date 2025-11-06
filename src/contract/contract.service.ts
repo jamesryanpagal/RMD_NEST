@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-catch */
 import { Injectable } from "@nestjs/common";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
@@ -134,7 +133,7 @@ export class ContractService {
           "dateTimeUTCZ",
         );
 
-        const baseDateValue = !!paymentStartDate
+        const baseDateValue = paymentStartDate
           ? this.mtzService
               .mtz(paymentStartDate, "defaultformat")
               .format(this.mtzService.dateFormat.dateTimeUTCZ)
@@ -150,7 +149,7 @@ export class ContractService {
             interest !== undefined &&
             installmentType === "STRAIGHT_MONTHLY_PAYMENT";
 
-          let initialTerms = terms || 0;
+          const initialTerms = terms || 0;
 
           const nextPaymentDate = baseDate.clone();
           const recurringPaymentDay = baseDate.toDate().getDate();

@@ -37,7 +37,7 @@ export class JwtAuthService {
       secure: false,
       sameSite: "lax",
       ...(type === "set" && {
-        maxAge: this.mtzService.generateDateMilliseconds(7),
+        maxAge: this.convertToMilliseconds(config.refresh_jwt_expiration),
       }),
     };
 
@@ -45,6 +45,29 @@ export class JwtAuthService {
       res.cookie(key, token, options);
     } else {
       res.clearCookie(key, options);
+    }
+  }
+
+  private convertToMilliseconds(duration: string): number {
+    const match = duration.match(/^(\d+)([dhms])$/);
+    if (!match) {
+      throw new Error(`Invalid duration format: ${duration}`);
+    }
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    switch (unit) {
+      case "s":
+        return value * 1000;
+      case "m":
+        return value * 60 * 1000;
+      case "h":
+        return value * 60 * 60 * 1000;
+      case "d":
+        return value * 24 * 60 * 60 * 1000;
+      default:
+        throw new Error(`Unsupported time unit: ${unit}`);
     }
   }
 }

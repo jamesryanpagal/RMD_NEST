@@ -35,7 +35,7 @@ export class LoginMiddleware implements NestMiddleware {
         return;
       }
 
-      const { password: hashPassword, id } = user;
+      const { password: hashPassword } = user;
 
       const verifyPassword = await this.argonService.verifyHash(
         hashPassword,
@@ -47,7 +47,7 @@ export class LoginMiddleware implements NestMiddleware {
         return;
       }
 
-      req.id = id;
+      req.user = user as any;
 
       next();
     } catch (error) {
@@ -70,7 +70,7 @@ export class SignupMiddleware implements NestMiddleware {
         where: { AND: [{ email }, { status: "ACTIVE" }] },
       });
 
-      if (!!user) {
+      if (user) {
         this.exceptionService.throw("Email already exists", "BAD_REQUEST");
         return;
       }

@@ -63,7 +63,7 @@ export class ReservationService {
           },
         });
 
-        if (!!checkReservation) {
+        if (checkReservation) {
           this.exceptionService.throw(
             "Lot unavailable for reservation",
             "BAD_REQUEST",
@@ -621,7 +621,7 @@ export class ReservationService {
     prisma?: Prisma.TransactionClient,
   ) {
     const transaction = prisma || this.prismaService;
-    let response: { expired: boolean } = { expired: false };
+    const response: { expired: boolean } = { expired: false };
     try {
       const { id, lotId, validity } = data || {};
 

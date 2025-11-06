@@ -80,7 +80,7 @@ export class EmailExistsGuard implements CanActivate {
       },
     });
 
-    if (!!existingUser) {
+    if (existingUser) {
       this.exceptionService.throw(
         "User with this email already exists",
         "BAD_REQUEST",

@@ -51,6 +51,7 @@ export class UploadService {
       } catch (accessError) {
         this.logger.warn(
           `File path of ${path} does not exist in current "upload" directory. Ignoring rollback`,
+          accessError,
         );
       }
     } catch (error) {
@@ -117,7 +118,7 @@ export class UploadService {
       }
     };
 
-    if (!!props.multiple) {
+    if (props.multiple) {
       const { maxCount = UploadConfig.maxFilesCount } = props;
       return FilesInterceptor(key, maxCount, {
         storage: diskStorage({

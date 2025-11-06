@@ -9,6 +9,8 @@ import {
   UpdateBlockDto,
   UpdateLotDto,
   UpdatePhaseDto,
+  UpdateProjectAddressDetails,
+  UpdateProjectNameAndDescription,
 } from "./dto";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
@@ -110,6 +112,107 @@ export class ProjectService {
       });
 
       return "Project created successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateProjectNameAndDescription(
+    id: string,
+    dto: UpdateProjectNameAndDescription,
+    user?: UserFullDetailsProps,
+  ) {
+    const { projectName, description } = dto || {};
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        const projectResponse = await prisma.project.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!projectResponse) {
+          this.exceptionService.throw("Project not found", "NOT_FOUND");
+          return;
+        }
+
+        await prisma.project.update({
+          where: {
+            id: projectResponse.id,
+          },
+          data: {
+            projectName,
+            description,
+            updatedBy: user?.id,
+          },
+        });
+      });
+      return "Project name and description updated successfully.";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateProjectAddressDetails(
+    id: string,
+    dto: UpdateProjectAddressDetails,
+    user?: UserFullDetailsProps,
+  ) {
+    const {
+      houseNumber,
+      street,
+      barangay,
+      subdivision,
+      city,
+      province,
+      region,
+      zip,
+    } = dto || {};
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        const projectResponse = await prisma.project.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+        });
+
+        if (!projectResponse) {
+          this.exceptionService.throw("Project not found", "NOT_FOUND");
+          return;
+        }
+
+        await prisma.project.update({
+          where: {
+            id: projectResponse.id,
+          },
+          data: {
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+            updatedBy: user?.id,
+          },
+        });
+      });
+      return "Project address details updated successfully.";
     } catch (error) {
       throw error;
     }
@@ -329,7 +432,7 @@ export class ProjectService {
                 include: {
                   lot: {
                     orderBy: {
-                      title: "asc",
+                      order: "asc",
                     },
                     where: {
                       status: { not: "DELETED" },

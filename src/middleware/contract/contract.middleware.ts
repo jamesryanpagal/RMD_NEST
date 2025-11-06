@@ -33,7 +33,7 @@ export class ContractMiddleware implements NestMiddleware {
       },
     });
 
-    if (!!checkExistingContract) {
+    if (checkExistingContract) {
       this.exceptionService.throw(
         "Contract already exists for this client and lot",
         "BAD_REQUEST",

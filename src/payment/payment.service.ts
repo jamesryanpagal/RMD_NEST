@@ -1039,7 +1039,7 @@ export class PaymentService {
         let rfValidityStartDate: string | null = null;
         let rfValidityEndDate: string | null = null;
 
-        if (!!reservationFee) {
+        if (reservationFee) {
           rfValidityStartDate = this.mtzService
             .mtz(reservationFee.dateCreated, "dateTimeUTCZ")
             .format(this.mtzService.dateFormat.defaultformat);
@@ -1549,7 +1549,7 @@ export class PaymentService {
           "dateTimeUTCZ",
         );
 
-        const releaseNextDate = !!recurringReleaseDate
+        const releaseNextDate = recurringReleaseDate
           ? parsedNextReleaseDate
               .clone()
               .add(1, "month")
@@ -1681,7 +1681,7 @@ export class PaymentService {
         });
 
         const formattedPaymentResponse = await Promise.all(
-          payments.map(async ({ files, ...rest }) => {
+          payments.map(({ files, ...rest }) => {
             const formattedFiles =
               this.fileService.onFormatPaymentFilesResponse(files);
             return {
@@ -1738,7 +1738,7 @@ export class PaymentService {
         });
 
       const formattedResponse = await Promise.all(
-        paymentCommissionResponse.map(async ({ files, ...rest }) => {
+        paymentCommissionResponse.map(({ files, ...rest }) => {
           const formattedFiles =
             this.fileService.onFormatPaymentFilesResponse(files);
           return {
@@ -1786,7 +1786,7 @@ export class PaymentService {
           unpaidDate = dueDate;
         }
 
-        if (!!unpaidDate) {
+        if (unpaidDate) {
           const formattedUnpaidDate = this.mtzService.mtz(
             unpaidDate,
             "dateAbbrev",
@@ -1805,7 +1805,7 @@ export class PaymentService {
           const paymentPenaltyAmount =
             PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
 
-          if (!!penaltyDiffCount) {
+          if (penaltyDiffCount) {
             penaltyObj.penalized = true;
             penaltyObj.penaltyAmount = paymentPenaltyAmount;
             await this.applyPenaltyPayment(
@@ -1876,7 +1876,7 @@ export class PaymentService {
 
       if (!files || !files.length) {
         response = "No files to upload";
-      } else if (!!transactionClient) {
+      } else if (transactionClient) {
         await this.onCreatePaymentFiles(
           paymentId,
           files,

@@ -19,7 +19,9 @@ import {
   UpdateBlockDto,
   UpdateLotDto,
   UpdatePhaseDto,
+  UpdateProjectAddressDetails,
   UpdateProjectDto,
+  UpdateProjectNameAndDescription,
 } from "./dto";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
@@ -44,6 +46,30 @@ export class ProjectController {
   @Post("create")
   onCreateProject(@Body() dto: CreateProjectDto, @Req() req: Request) {
     return this.projectService.createProject(dto, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN)
+  @Patch("update/name/and/description/:id")
+  onUpdateProjectNameAndDescription(
+    @Param("id") id: string,
+    @Body() dto: UpdateProjectNameAndDescription,
+    @Req() req: Request,
+  ) {
+    return this.projectService.updateProjectNameAndDescription(
+      id,
+      dto,
+      req.user,
+    );
+  }
+
+  @Roles($Enums.ROLE.ADMIN)
+  @Patch("update/address/details/:id")
+  onUpdateProjectAddressDetails(
+    @Param("id") id: string,
+    @Body() dto: UpdateProjectAddressDetails,
+    @Req() req: Request,
+  ) {
+    return this.projectService.updateProjectAddressDetails(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)

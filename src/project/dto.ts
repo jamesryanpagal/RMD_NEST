@@ -77,6 +77,50 @@ export class CreateProjectDto {
   phase: CreatePhaseDto[];
 }
 
+export class UpdateProjectNameAndDescription {
+  @IsNotEmpty()
+  @IsString()
+  projectName: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
+export class UpdateProjectAddressDetails {
+  @IsOptional()
+  @IsString()
+  houseNumber?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  street: string;
+
+  @IsString()
+  @IsNotEmpty()
+  barangay: string;
+
+  @IsString()
+  @IsOptional()
+  subdivision?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city: string;
+
+  @IsString()
+  @IsOptional()
+  province?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  region: string;
+
+  @IsString()
+  @IsOptional()
+  zip?: string;
+}
+
 export class UpdateProjectDto {
   @IsNotEmpty()
   @IsString()
@@ -173,6 +217,8 @@ export class UpdateLotDto {
 
   @IsNotEmpty()
   @IsNumber()
-  @Transform(({ value }) => value || null)
+  @Transform(({ value }) => {
+    return Number(value);
+  })
   sqm: number;
 }

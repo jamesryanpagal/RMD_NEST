@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-catch */
 import { Injectable } from "@nestjs/common";
 import { Moment } from "moment-timezone";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";

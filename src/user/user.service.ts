@@ -92,7 +92,29 @@ export class UserService {
   async getUserDetails(user?: UserFullDetailsProps) {
     const { id } = user || {};
     try {
-      return await this.prismaService.user.findFirst({
+      const authSessionResponse =
+        await this.prismaService.authSession.findFirst({
+          where: {
+            AND: [
+              {
+                userId: id,
+              },
+              {
+                accessToken: { not: null },
+              },
+              {
+                token_hash: { not: null },
+              },
+            ],
+          },
+        });
+
+      if (!authSessionResponse) {
+        this.exceptionService.throw("Auth session not found", "UNAUTHORIZED");
+        return;
+      }
+
+      const response = await this.prismaService.user.findFirst({
         where: {
           AND: [
             {
@@ -111,13 +133,8 @@ export class UserService {
           secretary: true,
         },
       });
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  async getUser(id: string) {
-    try {
+      return { ...response, accessToken: authSessionResponse.accessToken };
     } catch (error) {
       throw error;
     }

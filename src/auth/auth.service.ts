@@ -8,11 +8,6 @@ import { MtzService } from "src/services/mtz/mtz.service";
 import { Request, Response } from "express";
 import { UserFullDetailsProps } from "src/type";
 
-export type TokenProps = {
-  accessToken: string;
-  refreshToken: string;
-};
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,12 +18,14 @@ export class AuthService {
     private mtzService: MtzService,
   ) {}
 
-  async login(res: Response, id?: string) {
+  async login(res: Response, user?: UserFullDetailsProps) {
     try {
-      if (!id) {
+      if (!user) {
         this.exceptionService.throw("Invalid email or password", "NOT_FOUND");
         return;
       }
+
+      const { id, role } = user;
 
       const tokenPayload = { id };
 
@@ -48,6 +45,7 @@ export class AuthService {
       if (!checkAuthSession) {
         await this.prismaService.authSession.create({
           data: {
+            accessToken,
             token_hash,
             expiration: this.mtzService
               .mtz(undefined, "dateTimeUTCZ")
@@ -79,6 +77,7 @@ export class AuthService {
             id: userAuthSession.id,
           },
           data: {
+            accessToken,
             token_hash,
             expiration: this.mtzService
               .mtz(undefined, "dateTimeUTCZ")
@@ -95,7 +94,7 @@ export class AuthService {
         refreshToken,
       );
 
-      return { accessToken, refreshToken };
+      return { accessToken, role };
     } catch (error) {
       throw error;
     }
@@ -186,6 +185,7 @@ export class AuthService {
         await prisma.authSession.update({
           where: { id: auth_session_id },
           data: {
+            accessToken: null,
             token_hash: null,
           },
         });
@@ -201,7 +201,7 @@ export class AuthService {
 
   async regenerateRefreshToken(req: Request, res: Response) {
     const user = req.user || {};
-    let response: TokenProps | null = null;
+    let response: { accessToken: string; refreshToken: string } | null = null;
     try {
       if (!user) {
         this.exceptionService.throw("User not found", "UNAUTHORIZED");
@@ -233,6 +233,7 @@ export class AuthService {
         await prisma.authSession.update({
           where: { id: userAuthSession.id },
           data: {
+            accessToken,
             token_hash,
             expiration: this.mtzService
               .mtz(undefined, "dateTimeUTCZ")
@@ -241,10 +242,7 @@ export class AuthService {
           },
         });
 
-        response = {
-          accessToken,
-          refreshToken,
-        };
+        response = { accessToken, refreshToken };
       });
 
       if (!response) {
@@ -259,10 +257,10 @@ export class AuthService {
         "set",
         COOKIE_KEY.REFRESH_TOKEN,
         res,
-        (response as TokenProps).refreshToken,
+        (response as any).refreshToken,
       );
 
-      return response;
+      return (response as any).accessToken;
     } catch (error) {
       throw error;
     }

@@ -69,10 +69,4 @@ export class UserController {
   onDeleteUser(@Param("id") id: string, @Req() req: Request) {
     return this.userService.deleteUser(id, req.user);
   }
-
-  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
-  @Get(":id")
-  onGetUser(@Param("id") id: string) {
-    return this.userService.getUser(id);
-  }
 }

@@ -34,10 +34,6 @@ export class MtzService {
       .tz(this.dateFormat.timezone);
   }
 
-  generateDateMilliseconds(days: number) {
-    return days * 24 * 60 * 60 * 1000;
-  }
-
   onCalculateLastDate(
     startDate: moment.Moment | string,
     count: number,
@@ -47,7 +43,7 @@ export class MtzService {
       typeof startDate === "string" ? this.mtz(startDate) : startDate;
 
     for (let index = 1; index < count; index++) {
-      if (!!day) {
+      if (day) {
         parsedStartDate.add(1, "month").set("date", day);
       } else {
         parsedStartDate.add(1, "month");

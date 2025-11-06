@@ -3,7 +3,7 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import { UserFullDetailsProps } from "src/type";
 import { ApproveRequestDto, RejectDeleteRequestDto } from "./dto";
-import { $Enums, Prisma } from "generated/prisma";
+import { $Enums } from "generated/prisma";
 import { CreateUpdateClientDto } from "src/client/dto";
 import { QuerySearchDto } from "src/dto";
 
@@ -534,11 +534,7 @@ export class RequestService {
     }
   }
 
-  async getRequestList(
-    module: $Enums.REQUEST_MODULE,
-    query: QuerySearchDto,
-    _user?: UserFullDetailsProps,
-  ) {
+  async getRequestList(module: $Enums.REQUEST_MODULE, query: QuerySearchDto) {
     let response = [];
     try {
       const { search } = query || {};

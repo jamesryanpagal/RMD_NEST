@@ -347,9 +347,7 @@ export class AuditService {
   private onFormatResponse(type: $Enums.MODULES, data: any[]) {
     switch (type) {
       case "RESERVATION":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["RESERVATION"][]
-        ).map(({ reservation, ...rest }) => {
+        return data.map(({ reservation, ...rest }) => {
           const { lot, client, payment } = reservation || {};
           const { block, sqm, title: lotTitle } = lot || {};
           const { phase, title: blockTitle } = block || {};
@@ -395,9 +393,7 @@ export class AuditService {
           };
         });
       case "PROJECT":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["PROJECT"][]
-        ).map(({ project, ...rest }) => {
+        return data.map(({ project, ...rest }) => {
           const { phase } = project || {};
           return {
             ...rest,
@@ -406,10 +402,23 @@ export class AuditService {
           };
         });
       case "PHASE":
-        return (data as (typeof this.targetModuleIncludesModel)["PHASE"][]).map(
-          ({ phase, ...rest }) => {
-            const { project, block } = phase || {};
-            const {
+        return data.map(({ phase, ...rest }) => {
+          const { project, block } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            project: {
               projectName,
               description,
               houseNumber,
@@ -420,32 +429,40 @@ export class AuditService {
               province,
               region,
               zip,
-            } = project || {};
-            return {
-              ...rest,
-              project: {
-                projectName,
-                description,
-                houseNumber,
-                street,
-                barangay,
-                subdivision,
-                city,
-                province,
-                region,
-                zip,
-              },
-              block,
-            };
-          },
-        );
+            },
+            block,
+          };
+        });
       case "LOT":
-        return (data as (typeof this.targetModuleIncludesModel)["LOT"][]).map(
-          ({ lot, ...rest }) => {
-            const { block, title: lotTitle, sqm } = lot || {};
-            const { phase, title: blockTitle } = block || {};
-            const { project, title: phaseTitle } = phase || {};
-            const {
+        return data.map(({ lot, ...rest }) => {
+          const { block, title: lotTitle, sqm } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project, title: phaseTitle } = phase || {};
+          const {
+            projectName,
+            description,
+            houseNumber,
+            street,
+            barangay,
+            subdivision,
+            city,
+            province,
+            region,
+            zip,
+          } = project || {};
+          return {
+            ...rest,
+            lot: {
+              title: lotTitle,
+              sqm,
+            },
+            block: {
+              title: blockTitle,
+            },
+            phase: {
+              title: phaseTitle,
+            },
+            project: {
               projectName,
               description,
               houseNumber,
@@ -456,38 +473,11 @@ export class AuditService {
               province,
               region,
               zip,
-            } = project || {};
-            return {
-              ...rest,
-              lot: {
-                title: lotTitle,
-                sqm,
-              },
-              block: {
-                title: blockTitle,
-              },
-              phase: {
-                title: phaseTitle,
-              },
-              project: {
-                projectName,
-                description,
-                houseNumber,
-                street,
-                barangay,
-                subdivision,
-                city,
-                province,
-                region,
-                zip,
-              },
-            };
-          },
-        );
+            },
+          };
+        });
       case "CONTRACT":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["CONTRACT"][]
-        ).map(({ contract, ...rest }) => {
+        return data.map(({ contract, ...rest }) => {
           const { client, lot, agent, commissionOfAgent } = contract || {};
           const { block, title: lotTitle, sqm } = lot || {};
           const { phase, title: blockTitle } = block || {};
@@ -534,9 +524,7 @@ export class AuditService {
           };
         });
       case "PAYMENT":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["PAYMENT"][]
-        ).map(({ payment, ...rest }) => {
+        return data.map(({ payment, ...rest }) => {
           const { contract, agentCommission, reservation } = payment || {};
           const { lot: reservationLot, ...restReservation } = reservation || {};
           const {
@@ -663,9 +651,7 @@ export class AuditService {
           };
         });
       case "AGENT_COMMISSION":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["AGENT_COMMISSION"][]
-        ).map(({ agentCommission, ...rest }) => {
+        return data.map(({ agentCommission, ...rest }) => {
           const { contract, agent } = agentCommission || {};
           return {
             ...rest,
@@ -674,18 +660,14 @@ export class AuditService {
           };
         });
       case "CLIENT_REQUEST":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["CLIENT_REQUEST"][]
-        ).map(({ clientRequest, ...rest }) => {
+        return data.map(({ clientRequest, ...rest }) => {
           return {
             ...rest,
             clientRequest,
           };
         });
       case "RESERVATION_REQUEST":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["RESERVATION_REQUEST"][]
-        ).map(({ reservationRequest, ...rest }) => {
+        return data.map(({ reservationRequest, ...rest }) => {
           const { payment, status, ...restReservationRequest } =
             reservationRequest || {};
           const { reservation, ...restPayment } = payment || {};
@@ -736,9 +718,7 @@ export class AuditService {
           };
         });
       case "CONTRACT_REQUEST":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["CONTRACT_REQUEST"][]
-        ).map(({ contractRequest, ...rest }) => {
+        return data.map(({ contractRequest, ...rest }) => {
           const { contract, status } = contractRequest || {};
           const {
             lot,
@@ -842,9 +822,7 @@ export class AuditService {
           };
         });
       case "PAYMENT_REQUEST":
-        return (
-          data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
-        ).map(({ paymentRequest, ...rest }) => {
+        return data.map(({ paymentRequest, ...rest }) => {
           const { payment, status } = paymentRequest || {};
           const { contract, agentCommission, reservation } = payment || {};
           const { lot: reservationLot } = reservation || {};
@@ -981,9 +959,7 @@ export class AuditService {
       case "FILES_REQUEST":
         const formattedFilesRequestResponse =
           this.fileService.onFormatPaymentFilesResponse(
-            (
-              data as (typeof this.targetModuleIncludesModel)["PAYMENT_REQUEST"][]
-            ).map(({ fileRequest, ...rest }) => {
+            data.map(({ fileRequest, ...rest }) => {
               const { file, status } = fileRequest || {};
               return {
                 ...rest,
