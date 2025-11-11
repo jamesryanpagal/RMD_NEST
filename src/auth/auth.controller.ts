@@ -12,9 +12,9 @@ import { Request, Response } from "express";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { AuthService } from "./auth.service";
 import { CreateAccountDto } from "./dto";
-// import { RolesGuard } from "src/services/guard/guard.service";
-// import { Roles } from "src/decorator";
-// import { $Enums } from "generated/prisma";
+import { RolesGuard } from "src/services/guard/guard.service";
+import { Roles } from "src/decorator";
+import { $Enums } from "generated/prisma";
 
 @Controller("auth")
 export class AuthController {
@@ -37,8 +37,8 @@ export class AuthController {
     return this.authService.regenerateRefreshToken(req, res);
   }
 
-  // @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
-  // @Roles($Enums.ROLE.ADMIN)
+  @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
+  @Roles($Enums.ROLE.ADMIN)
   @Post("create/account")
   onCreateAccount(@Body() dto: CreateAccountDto, @Req() req: Request) {
     return this.authService.createAccount(dto, req.user);
