@@ -51,9 +51,6 @@ jobs:
               "CONTAINER_HEALTH=$(docker inspect --format=\"{{.State.Health.Status}}\" rmdland-server-container 2>/dev/null || echo \"no-healthcheck\")",
               "echo Health status: $CONTAINER_HEALTH",
 
-              "echo → Testing API endpoint...",
-              "curl -f http://localhost:4000/health || echo \"Health check endpoint not ready\"",
-
               "echo → Cleaning up Docker resources...",
               "docker system prune -f --volumes",
 
