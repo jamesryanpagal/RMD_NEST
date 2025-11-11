@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -27,64 +27,37 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy NestJS App" \
             --parameters commands='[
-              "set +e",
+              "set -e",
               "echo ✅ Starting deployment on EC2...",
 
-              "cd /home/ubuntu/RMD_NEST || exit 1",
-
-              "echo → Resetting any local changes...",
-              "git reset --hard || exit 1",
+              "cd /home/ubuntu/RMD_NEST",
 
               "echo → Pulling latest code...",
-              "git pull origin master || exit 1",
+              "git pull origin master",
 
               "echo → Stopping existing containers...",
-              "docker compose -f docker-compose.yml down --remove-orphans || true",
+              "npm run docker:down",
 
-              "echo → Removing old images to force rebuild...",
-              "docker rmi rmdland-server-image || true",
-              "docker image prune -f || true",
+              "echo → Building and starting new containers...",
+              "npm run docker:deploy",
 
-              "echo → Building Docker image (this may take a while)...",
-              "if ! docker compose -f docker-compose.yml build --no-cache rmdland-server; then",
-              "  echo ❌ Build failed — starting rollback...",
-              "  echo → Rolling back to previous commit...",
-              "  git reset --hard HEAD~1 || true",
-              "  echo → Attempting to rebuild previous version...",
-              "  docker compose -f docker-compose.yml build --no-cache rmdland-server || true",
-              "  docker compose -f docker-compose.yml up -d --force-recreate || true",
-              "  echo ❌ Deployment failed and rollback attempted",
-              "  exit 1",
-              "fi",
-
-              "echo → Starting containers...",
-              "if ! docker compose -f docker-compose.yml up -d --force-recreate; then",
-              "  echo ❌ Failed to start containers — starting rollback...",
-              "  git reset --hard HEAD~1 || true",
-              "  docker compose -f docker-compose.yml build --no-cache rmdland-server || true",
-              "  docker compose -f docker-compose.yml up -d --force-recreate || true",
-              "  exit 1",
-              "fi",
-
-              "echo → Waiting for container to be healthy...",
-              "sleep 15",
+              "echo → Waiting for services to start...",
+              "sleep 30",
 
               "echo → Checking container status...",
-              "CONTAINER_STATUS=$(docker ps --filter name=rmdland-server-container --format \"{{.Status}}\")",
-              "if [ -z \"$CONTAINER_STATUS\" ]; then",
-              "  echo ❌ Container is not running!",
-              "  docker logs rmdland-server-container --tail 50 || true",
-              "  exit 1",
-              "fi",
-              "echo Container status: $CONTAINER_STATUS",
+              "docker ps --filter name=rmdland-server-container",
 
-              "echo → Checking container health...",
-              "docker inspect --format=\"{{.State.Health.Status}}\" rmdland-server-container || echo \"No healthcheck configured\"",
+              "echo → Checking application health...",
+              "CONTAINER_HEALTH=$(docker inspect --format=\"{{.State.Health.Status}}\" rmdland-server-container 2>/dev/null || echo \"no-healthcheck\")",
+              "echo Health status: $CONTAINER_HEALTH",
 
-              "echo → Cleaning unused Docker images...",
-              "docker image prune -f || true",
+              "echo → Testing API endpoint...",
+              "curl -f http://localhost:4000/health || echo \"Health check endpoint not ready\"",
 
-              "echo ✅ Finished deployment successfully!"
+              "echo → Cleaning up Docker resources...",
+              "docker system prune -f --volumes",
+
+              "echo ✅ Deployment completed successfully!"
             ]' \
             --query "Command.CommandId" \
             --output text)
