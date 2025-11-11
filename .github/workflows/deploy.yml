@@ -1,67 +1,92 @@
 name: Deploy to EC2
 
 on:
-    push:
-        branches:
-            - master
+  push:
+    branches:
+      - master
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-            - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ap-southeast-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
 
-            - name: Deploy using SSM
-              run: |
-                  COMMAND_ID=$(aws ssm send-command \
-                    --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
-                    --document-name "AWS-RunShellScript" \
-                    --comment "Deploy NestJS App" \
-                    --parameters commands='[
-                      "set -e",
-                      "echo ✅ Starting deployment on EC2...",
+      - name: Deploy using SSM
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy NestJS App" \
+            --parameters commands='[
+              "set +e",
+              "echo ✅ Starting deployment on EC2...",
 
-                      "cd /home/ubuntu/RMD_NEST",
+              "cd /home/ubuntu/RMD_NEST || exit 1",
 
-                      "echo → Resetting any local changes...",
-                      "git reset --hard",
+              "echo → Resetting any local changes...",
+              "git reset --hard || exit 1",
 
-                      "echo → Pulling latest code...",
-                      "git pull origin master",
+              "echo → Pulling latest code...",
+              "git pull origin master || exit 1",
 
-                      "echo → Installing dependencies (if updated)...",
-                      "npm install --legacy-peer-deps || true",
+              "echo → Stopping existing containers...",
+              "docker compose -f docker-compose.yml down --remove-orphans || true",
 
-                      "echo → Running Docker deploy script...",
-                      "if npm run docker:deploy; then",
-                      "  echo ✅ Deployment successful!",
-                      "else",
-                      "  echo ❌ Deployment failed — starting rollback...",
+              "echo → Removing old images to force rebuild...",
+              "docker rmi rmdland-server-image || true",
+              "docker image prune -f || true",
 
-                      "  echo → Rolling back to previous commit...",
-                      "  git reset --hard HEAD~1",
+              "echo → Building Docker image (this may take a while)...",
+              "if ! docker compose -f docker-compose.yml build --no-cache rmdland-server; then",
+              "  echo ❌ Build failed — starting rollback...",
+              "  echo → Rolling back to previous commit...",
+              "  git reset --hard HEAD~1 || true",
+              "  echo → Attempting to rebuild previous version...",
+              "  docker compose -f docker-compose.yml build --no-cache rmdland-server || true",
+              "  docker compose -f docker-compose.yml up -d --force-recreate || true",
+              "  echo ❌ Deployment failed and rollback attempted",
+              "  exit 1",
+              "fi",
 
-                      "  echo → Re-running Docker deploy for rollback version...",
-                      "  npm run docker:deploy || true",
+              "echo → Starting containers...",
+              "if ! docker compose -f docker-compose.yml up -d --force-recreate; then",
+              "  echo ❌ Failed to start containers — starting rollback...",
+              "  git reset --hard HEAD~1 || true",
+              "  docker compose -f docker-compose.yml build --no-cache rmdland-server || true",
+              "  docker compose -f docker-compose.yml up -d --force-recreate || true",
+              "  exit 1",
+              "fi",
 
-                      "  exit 1",
-                      "fi",
+              "echo → Waiting for container to be healthy...",
+              "sleep 15",
 
-                      "echo → Cleaning unused Docker images...",
-                      "docker image prune -f",
+              "echo → Checking container status...",
+              "CONTAINER_STATUS=$(docker ps --filter name=rmdland-server-container --format \"{{.Status}}\")",
+              "if [ -z \"$CONTAINER_STATUS\" ]; then",
+              "  echo ❌ Container is not running!",
+              "  docker logs rmdland-server-container --tail 50 || true",
+              "  exit 1",
+              "fi",
+              "echo Container status: $CONTAINER_STATUS",
 
-                      "echo ✅ Finished deployment."
-                    ]' \
-                    --query "Command.CommandId" \
-                    --output text)
+              "echo → Checking container health...",
+              "docker inspect --format=\"{{.State.Health.Status}}\" rmdland-server-container || echo \"No healthcheck configured\"",
 
-                  echo "SSM command sent with ID: $COMMAND_ID"
+              "echo → Cleaning unused Docker images...",
+              "docker image prune -f || true",
+
+              "echo ✅ Finished deployment successfully!"
+            ]' \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command sent with ID: $COMMAND_ID"

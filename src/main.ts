@@ -21,6 +21,7 @@ async function bootstrap() {
   app.useGlobalPipes(GlobalValidationPipes);
   app.useGlobalInterceptors(new ResponseService());
   app.useGlobalFilters(new ExceptionService());
-  await app.listen(config.port);
+  // ? change port in ec2 to be "0.0.0.0"
+  await app.listen(config.port, "0.0.0.0");
 }
 bootstrap();
