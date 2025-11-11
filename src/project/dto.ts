@@ -164,10 +164,9 @@ export class UpdateProjectDto {
 }
 
 export class LotDto {
-  @IsNotEmpty()
-  @IsNumber()
-  @Transform(({ value }) => value || null)
-  title: number;
+  @IsNotEmpty({ message: "Title is required" })
+  @IsString()
+  title: string;
 
   @IsNotEmpty()
   @IsNumber()

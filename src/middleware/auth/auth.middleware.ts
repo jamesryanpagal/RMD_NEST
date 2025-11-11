@@ -47,6 +47,34 @@ export class LoginMiddleware implements NestMiddleware {
         return;
       }
 
+      const checkSession = await this.prismaService.authSession.findFirst({
+        where: {
+          AND: [
+            {
+              userId: user.id,
+            },
+            {
+              OR: [
+                {
+                  token_hash: { not: null },
+                },
+                {
+                  accessToken: { not: null },
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      if (!!checkSession) {
+        this.exceptionService.throw(
+          "This user is currenly logged-in to another machine/device.",
+          "NOT_FOUND",
+        );
+        return;
+      }
+
       req.user = user as any;
 
       next();

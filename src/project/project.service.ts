@@ -575,7 +575,7 @@ export class ProjectService {
     try {
       await this.prismaService.lot.create({
         data: {
-          title: title.toString(),
+          title,
           sqm,
           block: {
             connect: {
