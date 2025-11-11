@@ -12,7 +12,6 @@ const enum ENVIRONMENT {
 type EnvBaseConfigKey = {
   db: string;
   port: string;
-  client: string;
   email_from: string;
   file_prefix: string;
   database_port: string;
@@ -36,6 +35,9 @@ type StandAlongConfigKey = {
   resend_api_key: string;
   domain: string;
   email_reply_to: string;
+  cors_prod_full: string;
+  cors_prod: string;
+  cors_local: string;
 };
 
 const loadEnvbaseConfig = (key: string, environment: ENVIRONMENT) => {
@@ -57,11 +59,13 @@ export const standAloneConfig: StandAlongConfigKey = {
   resend_api_key: loadConfig("RESEND_API_KEY"),
   domain: loadConfig("DOMAIN"),
   email_reply_to: loadConfig("EMAIL_REPLY_TO"),
+  cors_prod_full: loadConfig("CORS_PROD_FULL"),
+  cors_prod: loadConfig("CORS_PROD"),
+  cors_local: loadConfig("CORS_LOCAL"),
 };
 
 const envBaseConfig: Record<ENVIRONMENT, EnvBaseConfigKey> = {
   [ENVIRONMENT.DEV]: {
-    client: loadEnvbaseConfig("CLIENT", ENVIRONMENT.DEV),
     db: loadEnvbaseConfig("DATABASE_URL", ENVIRONMENT.DEV),
     port: loadEnvbaseConfig("PORT", ENVIRONMENT.DEV),
     file_prefix: loadEnvbaseConfig("FILE_PREFIX", ENVIRONMENT.DEV),
@@ -82,7 +86,6 @@ const envBaseConfig: Record<ENVIRONMENT, EnvBaseConfigKey> = {
     ),
   },
   [ENVIRONMENT.PROD]: {
-    client: loadEnvbaseConfig("CLIENT", ENVIRONMENT.PROD),
     db: loadEnvbaseConfig("DATABASE_URL", ENVIRONMENT.PROD),
     port: loadEnvbaseConfig("PORT", ENVIRONMENT.PROD),
     file_prefix: loadEnvbaseConfig("FILE_PREFIX", ENVIRONMENT.PROD),

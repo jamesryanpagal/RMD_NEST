@@ -13,7 +13,10 @@ import { UploadConfig } from "./services/upload/upload.service";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(cookieParser());
-  app.enableCors({ origin: config.client, credentials: true });
+  app.enableCors({
+    origin: [config.cors_prod_full, config.cors_prod, config.cors_local],
+    credentials: true,
+  });
   app.useStaticAssets(join(__dirname, "..", UploadConfig.root), {
     prefix: UploadConfig.prefix,
   });
