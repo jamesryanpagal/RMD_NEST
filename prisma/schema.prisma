@@ -205,6 +205,7 @@ model User {
   secretary   Secretary?
   authSession AuthSession[]
   userAudit   UserAudit[]
+  settings    Settings?
 
   status STATUS @default(ACTIVE)
 
@@ -1336,6 +1337,19 @@ model FileRequestAudit {
   createdBy String?
   updatedBy String?
   deletedBy String?
+
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+}
+
+model Settings {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  theme String
+
+  user User @relation(fields: [userId], references: [id])
 
   dateCreated DateTime  @default(now())
   dateUpdated DateTime  @updatedAt

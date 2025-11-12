@@ -131,6 +131,7 @@ export class UserService {
         include: {
           admin: true,
           secretary: true,
+          settings: true,
         },
       });
 

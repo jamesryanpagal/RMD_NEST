@@ -10,12 +10,12 @@ import { ReservationModule } from "./reservation/reservation.module";
 import { AgentModule } from "./agent/agent.module";
 import { AgentCommissionModule } from "./agent-commission/agent-commission.module";
 import { FileModule } from "./file/file.module";
-// import { CronModule } from "./cron/cron.module";
 import { EmailModule } from "./email/email.module";
 import { RequestModule } from "./request/request.module";
 import { AuditModule } from "./audit/audit.module";
-import { CronModule } from "./cron/cron.module";
+// import { CronModule } from "./cron/cron.module";
 import { HealthModule } from "./health/health.module";
+import { SettingsModule } from "./settings/settings.module";
 
 @Module({
   imports: [
@@ -33,8 +33,9 @@ import { HealthModule } from "./health/health.module";
     EmailModule,
     RequestModule,
     AuditModule,
-    CronModule,
+    // CronModule,
     HealthModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}
