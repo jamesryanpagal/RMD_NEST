@@ -67,7 +67,7 @@ export class LoginMiddleware implements NestMiddleware {
         },
       });
 
-      if (!!checkSession) {
+      if (checkSession) {
         this.exceptionService.throw(
           "This user is currenly logged-in to another machine/device.",
           "NOT_FOUND",
