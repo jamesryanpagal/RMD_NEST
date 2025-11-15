@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { config } from "src/config";
 import { ExceptionService } from "../interceptor/interceptor.service";
 import { MtzService } from "../mtz/mtz.service";
+import { ROLE } from "generated/prisma";
 
 export type PaymentReceiptProps = {
   clientName: string;
@@ -331,6 +332,50 @@ export class MessagingService {
       }
 
       return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async onSendUserCredentials(
+    name: string,
+    email: string,
+    password: string,
+    role: ROLE,
+  ) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `RMD Land Support <${config.email_from}${config.domain}>`,
+        to: email,
+        subject: `${role} Credentials - RMD Land`,
+        replyTo: `${config.email_reply_to}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            </style>
+          </head>
+          <body>
+            <p>Welcome to RMD Land <strong>${name}</strong>,</p>
+            <p>Your credentials are as follows:</p>
+            <p>Email: <strong>${email}</strong></p>
+            <p>Password: <strong>${password}</strong></p>
+            <p>Please use these credentials to login to your account.</p>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        this.exceptionService.throw(
+          `Failed to send email ${error?.message}`,
+          "BAD_REQUEST",
+        );
+        return;
+      }
     } catch (error) {
       throw error;
     }

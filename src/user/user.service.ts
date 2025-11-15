@@ -6,6 +6,8 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { ArgonService } from "src/services/argon/argon.service";
 import { QuerySearchDto } from "src/dto";
 import { Prisma } from "generated/prisma";
+import { Request } from "express";
+import { AuthService } from "src/auth/auth.service";
 
 @Injectable()
 export class UserService {
@@ -13,14 +15,16 @@ export class UserService {
     private prismaService: PrismaService,
     private exceptionService: ExceptionService,
     private argonService: ArgonService,
+    private authService: AuthService,
   ) {}
 
-  async getUsers(query: QuerySearchDto) {
+  async getUsers(query: QuerySearchDto, user?: UserFullDetailsProps) {
     try {
       const { search } = query || {};
       const searchArr = search?.split(" ") || [];
       const whereQuery: Prisma.UserWhereInput = {
         status: { not: "DELETED" },
+        id: { not: user?.id },
         ...(search && {
           OR: [
             {
@@ -89,8 +93,36 @@ export class UserService {
     }
   }
 
-  async getUserDetails(user?: UserFullDetailsProps) {
-    const { id } = user || {};
+  async getUser(id: string) {
+    try {
+      return await this.prismaService.user.findFirst({
+        where: {
+          AND: [
+            {
+              id,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+        omit: {
+          password: true,
+        },
+        include: {
+          admin: true,
+          secretary: true,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getUserDetails(req: Request) {
+    const { id } = req.user || {};
+    const clientIp = this.authService.getClientIp(req);
+    const userAgent = this.authService.getUserAgent(req);
     try {
       const authSessionResponse =
         await this.prismaService.authSession.findFirst({
@@ -98,6 +130,12 @@ export class UserService {
             AND: [
               {
                 userId: id,
+              },
+              {
+                clientIp,
+              },
+              {
+                userAgent,
               },
               {
                 accessToken: { not: null },

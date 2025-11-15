@@ -19,6 +19,8 @@ import {
   JwtStrategyService,
   RefreshJwtStrategyService,
 } from "src/services/strategy/strategy.service";
+import { GeneratorService } from "src/services/generator/generator.service";
+import { MessagingService } from "src/services/messaging/messaging.service";
 
 @Module({
   controllers: [AuthController],
@@ -31,6 +33,8 @@ import {
     MtzService,
     JwtStrategyService,
     RefreshJwtStrategyService,
+    GeneratorService,
+    MessagingService,
   ],
 })
 export class AuthModule implements NestModule {

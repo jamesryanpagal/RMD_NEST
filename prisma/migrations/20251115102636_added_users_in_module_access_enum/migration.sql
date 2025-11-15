@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "public"."MODULE_ACCESS" ADD VALUE 'USERS';

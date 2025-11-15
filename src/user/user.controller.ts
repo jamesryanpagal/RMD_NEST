@@ -26,14 +26,14 @@ export class UserController {
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get()
-  onGetUsers(@Query() query: QuerySearchDto) {
-    return this.userService.getUsers(query);
+  onGetUsers(@Query() query: QuerySearchDto, @Req() req: Request) {
+    return this.userService.getUsers(query, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get("details")
   onGetUserDetails(@Req() req: Request) {
-    return this.userService.getUserDetails(req.user);
+    return this.userService.getUserDetails(req);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
@@ -68,5 +68,11 @@ export class UserController {
   @Delete("delete/:id")
   onDeleteUser(@Param("id") id: string, @Req() req: Request) {
     return this.userService.deleteUser(id, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Get(":id")
+  onGetUser(@Param("id") id: string) {
+    return this.userService.getUser(id);
   }
 }

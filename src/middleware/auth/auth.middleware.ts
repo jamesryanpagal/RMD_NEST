@@ -1,5 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
+import { AuthService } from "src/auth/auth.service";
 import { CreateAccountDto, LoginDto } from "src/auth/dto";
 import { ArgonService } from "src/services/argon/argon.service";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
@@ -11,6 +12,7 @@ export class LoginMiddleware implements NestMiddleware {
     private prismaService: PrismaService,
     private exceptionService: ExceptionService,
     private argonService: ArgonService,
+    private authService: AuthService,
   ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
@@ -27,6 +29,11 @@ export class LoginMiddleware implements NestMiddleware {
               status: "ACTIVE",
             },
           ],
+        },
+        include: {
+          admin: true,
+          secretary: true,
+          settings: true,
         },
       });
 
@@ -47,11 +54,20 @@ export class LoginMiddleware implements NestMiddleware {
         return;
       }
 
+      const clientIp = this.authService.getClientIp(req);
+      const userAgent = this.authService.getUserAgent(req);
+
       const checkSession = await this.prismaService.authSession.findFirst({
         where: {
           AND: [
             {
               userId: user.id,
+            },
+            {
+              clientIp,
+            },
+            {
+              userAgent,
             },
             {
               OR: [

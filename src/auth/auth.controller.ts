@@ -22,7 +22,7 @@ export class AuthController {
 
   @Post("login")
   onLogin(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    return this.authService.login(res, req.user);
+    return this.authService.login(res, req);
   }
 
   @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT))

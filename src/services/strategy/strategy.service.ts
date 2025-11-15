@@ -72,7 +72,7 @@ export class RefreshJwtStrategyService extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, { id }: any) {
+  async validate(req: Request, { id, clientIp, userAgent }: any) {
     try {
       const refreshToken = req.cookies?.["refresh-token"];
 
@@ -95,7 +95,22 @@ export class RefreshJwtStrategyService extends PassportStrategy(
         return;
       }
 
-      const userAuthSession = user.authSession.find(as => as.userId === id);
+      // const userAuthSession = user.authSession.find(as => as.userId === id);
+      const userAuthSession = await this.prismaService.authSession.findFirst({
+        where: {
+          AND: [
+            {
+              userId: id,
+            },
+            {
+              clientIp,
+            },
+            {
+              userAgent,
+            },
+          ],
+        },
+      });
 
       if (!userAuthSession) {
         this.exceptionService.throw("Auth session not found", "UNAUTHORIZED");

@@ -1,5 +1,11 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional } from "class-validator";
+import {
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+} from "class-validator";
 import { $Enums, Prisma } from "generated/prisma";
 
 export type LoginServiceDto = Pick<
@@ -30,9 +36,6 @@ export class CreateAccountDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @IsNotEmpty()
-  password: string;
 
   @IsOptional()
   @Transform(({ value }) => value || null)
@@ -71,4 +74,8 @@ export class CreateAccountDto {
 
   @IsEnum($Enums.ROLE)
   role: $Enums.ROLE;
+
+  @IsArray()
+  @IsEnum($Enums.MODULE_ACCESS, { each: true })
+  moduleAccess?: $Enums.MODULE_ACCESS[];
 }

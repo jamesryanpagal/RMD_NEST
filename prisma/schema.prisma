@@ -180,6 +180,20 @@ enum INSTALLMENT_TYPE {
   STRAIGHT_MONTHLY_PAYMENT
 }
 
+enum MODULE_ACCESS {
+  PROJECTS
+  PHASE
+  BLOCK
+  LOT
+  RESERVATIONS
+  CLIENTS
+  AGENTS
+  CONTRACTS
+  AUDITTRAIL
+  REQUESTS
+  USERS
+}
+
 model User {
   id         String  @id @default(uuid())
   firstName  String
@@ -259,6 +273,8 @@ model AuthSession {
   userId      String
   accessToken String?
   token_hash  String?
+  clientIp    String?
+  userAgent   String?
 
   user User @relation(fields: [userId], references: [id])
 
@@ -274,10 +290,10 @@ model AuthSession {
 }
 
 model Admin {
-  id           String  @id @default(uuid())
-  userId       String  @unique
-  isSuperAdmin Boolean @default(false)
-  accessLevel  Int[]
+  id           String          @id @default(uuid())
+  userId       String          @unique
+  isSuperAdmin Boolean         @default(false)
+  moduleAccess MODULE_ACCESS[]
 
   user User @relation(fields: [userId], references: [id])
 
@@ -291,9 +307,9 @@ model Admin {
 }
 
 model Secretary {
-  id          String @id @default(uuid())
-  userId      String @unique
-  accessLevel Int[]
+  id           String          @id @default(uuid())
+  userId       String          @unique
+  moduleAccess MODULE_ACCESS[]
 
   user User @relation(fields: [userId], references: [id])
 
