@@ -297,6 +297,8 @@ model Admin {
 
   user User @relation(fields: [userId], references: [id])
 
+  status STATUS @default(ACTIVE)
+
   createdBy String?
   updatedBy String?
   deletedBy String?
@@ -312,6 +314,8 @@ model Secretary {
   moduleAccess MODULE_ACCESS[]
 
   user User @relation(fields: [userId], references: [id])
+
+  status STATUS @default(ACTIVE)
 
   createdBy String?
   updatedBy String?
