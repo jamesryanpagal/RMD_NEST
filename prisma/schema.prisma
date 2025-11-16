@@ -194,6 +194,12 @@ enum MODULE_ACCESS {
   USERS
 }
 
+enum MODULE_FUNCTION {
+  CAN_CREATE_PROJECTS
+  CAN_UPDATE_PROJECTS
+  CAN_DELETE_PROJECTS
+}
+
 model User {
   id         String  @id @default(uuid())
   firstName  String
@@ -290,10 +296,11 @@ model AuthSession {
 }
 
 model Admin {
-  id           String          @id @default(uuid())
-  userId       String          @unique
-  isSuperAdmin Boolean         @default(false)
-  moduleAccess MODULE_ACCESS[]
+  id             String            @id @default(uuid())
+  userId         String            @unique
+  isSuperAdmin   Boolean           @default(false)
+  moduleAccess   MODULE_ACCESS[]
+  moduleFunction MODULE_FUNCTION[]
 
   user User @relation(fields: [userId], references: [id])
 
@@ -309,9 +316,10 @@ model Admin {
 }
 
 model Secretary {
-  id           String          @id @default(uuid())
-  userId       String          @unique
-  moduleAccess MODULE_ACCESS[]
+  id             String            @id @default(uuid())
+  userId         String            @unique
+  moduleAccess   MODULE_ACCESS[]
+  moduleFunction MODULE_FUNCTION[]
 
   user User @relation(fields: [userId], references: [id])
 

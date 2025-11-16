@@ -13,11 +13,16 @@ import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { UserService } from "./user.service";
 import { Request } from "express";
-import { UpdatePasswordDto, UpdateUserDto } from "./dto";
+import {
+  UpdatePasswordDto,
+  UpdateUserAccessFunctionsDto,
+  UpdateUserDto,
+} from "./dto";
 import { EmailExistsGuard, RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
 import { QuerySearchDto } from "src/dto";
+import { UpdateProjectAddressDetails } from "src/project/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Controller("users")
@@ -55,13 +60,29 @@ export class UserController {
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
-  @Patch("change/password/:id")
-  onUpdateUserPassword(
+  @Patch("change/password")
+  onUpdateUserPassword(@Body() dto: UpdatePasswordDto, @Req() req: Request) {
+    return this.userService.updateUserPassword(dto, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Patch("update/access/functions/:id")
+  onUpdateUserAccessFunctions(
     @Param("id") id: string,
-    @Body() dto: UpdatePasswordDto,
+    @Body() dto: UpdateUserAccessFunctionsDto,
     @Req() req: Request,
   ) {
-    return this.userService.updateUserPassword(id, dto, req.user);
+    return this.userService.updateUserAccessFunctions(id, dto, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Patch("update/address/details/:id")
+  onUpdateUserAddressDetails(
+    @Param("id") id: string,
+    @Body() dto: UpdateProjectAddressDetails,
+    @Req() req: Request,
+  ) {
+    return this.userService.updateUserAddressDetails(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)

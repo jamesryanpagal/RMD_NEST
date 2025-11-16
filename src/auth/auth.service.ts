@@ -133,6 +133,7 @@ export class AuthService {
       zip,
       role,
       moduleAccess,
+      moduleFunction,
     }: CreateAccountDto,
     user?: UserFullDetailsProps,
   ) {
@@ -164,6 +165,7 @@ export class AuthService {
                 create: {
                   createdBy: user?.id,
                   moduleAccess,
+                  moduleFunction,
                 },
               },
             }),
@@ -172,6 +174,7 @@ export class AuthService {
                 create: {
                   createdBy: user?.id,
                   moduleAccess,
+                  moduleFunction,
                 },
               },
             }),

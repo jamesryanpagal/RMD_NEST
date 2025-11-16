@@ -78,4 +78,8 @@ export class CreateAccountDto {
   @IsArray()
   @IsEnum($Enums.MODULE_ACCESS, { each: true })
   moduleAccess?: $Enums.MODULE_ACCESS[];
+
+  @IsArray()
+  @IsEnum($Enums.MODULE_FUNCTION, { each: true })
+  moduleFunction: $Enums.MODULE_FUNCTION[];
 }

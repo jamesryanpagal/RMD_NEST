@@ -1,5 +1,13 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from "class-validator";
+import { $Enums } from "generated/prisma";
 
 export class UpdateUserDto {
   @IsNotEmpty()
@@ -55,5 +63,19 @@ export class UpdateUserDto {
 export class UpdatePasswordDto {
   @IsNotEmpty()
   @IsString()
-  password: string;
+  currentPassword: string;
+
+  @IsNotEmpty()
+  @IsString()
+  newPassword: string;
+}
+
+export class UpdateUserAccessFunctionsDto {
+  @IsArray()
+  @IsEnum($Enums.MODULE_ACCESS, { each: true })
+  moduleAccess: $Enums.MODULE_ACCESS[];
+
+  @IsArray()
+  @IsEnum($Enums.MODULE_FUNCTION, { each: true })
+  moduleFunction: $Enums.MODULE_FUNCTION[];
 }
