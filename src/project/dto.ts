@@ -2,6 +2,7 @@ import { Transform, Type } from "class-transformer";
 import {
   ArrayNotEmpty,
   IsArray,
+  IsEmail,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -85,6 +86,32 @@ export class UpdateProjectNameAndDescription {
   @IsOptional()
   @IsString()
   description?: string;
+}
+
+export class UpdateUserPersonalDetails {
+  @IsNotEmpty()
+  @IsString()
+  firstName: string;
+
+  @IsOptional()
+  @IsString()
+  middleName?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  lastName: string;
+
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 export class UpdateProjectAddressDetails {

@@ -34,7 +34,7 @@ export class JwtAuthService {
   ) {
     const options: CookieOptions = {
       httpOnly: true,
-      secure: config.environment === ENVIRONMENT.PROD,
+      secure: config.environment === "PROD",
       sameSite: "lax",
       path: "/",
       ...(type === "set" && {

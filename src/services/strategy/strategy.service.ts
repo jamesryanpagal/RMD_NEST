@@ -82,7 +82,16 @@ export class RefreshJwtStrategyService extends PassportStrategy(
       }
 
       const user = await this.prismaService.user.findFirst({
-        where: { id },
+        where: {
+          AND: [
+            {
+              id,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
         include: {
           admin: true,
           secretary: true,

@@ -12,7 +12,10 @@ import { QuerySearchDto } from "src/dto";
 import { Prisma } from "generated/prisma";
 import { Request } from "express";
 import { AuthService } from "src/auth/auth.service";
-import { UpdateProjectAddressDetails } from "src/project/dto";
+import {
+  UpdateProjectAddressDetails,
+  UpdateUserPersonalDetails,
+} from "src/project/dto";
 
 @Injectable()
 export class UserService {
@@ -469,6 +472,49 @@ export class UserService {
           },
         });
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUserPersonalDetails(
+    id: string,
+    dto: UpdateUserPersonalDetails,
+    user?: UserFullDetailsProps,
+  ) {
+    try {
+      const { firstName, middleName, lastName, email, mobile, phone } =
+        dto || {};
+
+      await this.prismaService.$transaction(async prisma => {
+        const userResponse = await prisma.user.findFirst({
+          where: {
+            id,
+          },
+        });
+
+        if (!userResponse) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        await prisma.user.update({
+          where: {
+            id,
+          },
+          data: {
+            firstName,
+            middleName,
+            lastName,
+            email,
+            mobile,
+            phone,
+            updatedBy: user?.id,
+          },
+        });
+      });
+
+      return "User personal details updated successfully";
     } catch (error) {
       throw error;
     }

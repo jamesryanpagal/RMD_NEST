@@ -22,7 +22,10 @@ import { EmailExistsGuard, RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
 import { QuerySearchDto } from "src/dto";
-import { UpdateProjectAddressDetails } from "src/project/dto";
+import {
+  UpdateProjectAddressDetails,
+  UpdateUserPersonalDetails,
+} from "src/project/dto";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
 @Controller("users")
@@ -83,6 +86,16 @@ export class UserController {
     @Req() req: Request,
   ) {
     return this.userService.updateUserAddressDetails(id, dto, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Patch("update/personal/details/:id")
+  onUpdateUserPersonalDetails(
+    @Param("id") id: string,
+    @Body() dto: UpdateUserPersonalDetails,
+    @Req() req: Request,
+  ) {
+    return this.userService.updateUserPersonalDetails(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)
