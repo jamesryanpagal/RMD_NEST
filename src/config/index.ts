@@ -4,7 +4,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const enum ENVIRONMENT {
+export const enum ENVIRONMENT {
   DEV = "DEV",
   PROD = "PROD",
 }

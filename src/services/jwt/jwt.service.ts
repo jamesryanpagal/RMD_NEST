@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { CookieOptions, Response } from "express";
-import { config } from "src/config";
+import { config, ENVIRONMENT } from "src/config";
 import { MtzService } from "../mtz/mtz.service";
 
 export const enum COOKIE_KEY {
@@ -34,8 +34,9 @@ export class JwtAuthService {
   ) {
     const options: CookieOptions = {
       httpOnly: true,
-      secure: false,
+      secure: config.environment === ENVIRONMENT.PROD,
       sameSite: "lax",
+      path: "/",
       ...(type === "set" && {
         maxAge: this.convertToMilliseconds(config.refresh_jwt_expiration),
       }),
