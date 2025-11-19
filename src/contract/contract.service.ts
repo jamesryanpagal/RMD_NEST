@@ -331,6 +331,36 @@ export class ContractService {
               dateUpdated: true,
               dateDeleted: true,
             },
+            include: {
+              block: {
+                omit: {
+                  status: true,
+                  dateCreated: true,
+                  dateUpdated: true,
+                  dateDeleted: true,
+                },
+                include: {
+                  phase: {
+                    omit: {
+                      status: true,
+                      dateCreated: true,
+                      dateUpdated: true,
+                      dateDeleted: true,
+                    },
+                    include: {
+                      project: {
+                        omit: {
+                          status: true,
+                          dateCreated: true,
+                          dateUpdated: true,
+                          dateDeleted: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           client: {
             omit: {

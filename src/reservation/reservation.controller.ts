@@ -73,6 +73,14 @@ export class ReservationController {
     return this.reservationService.deleteReservation(id, req.user);
   }
 
+  @Get("client/lot/:clientId/:lotId")
+  onGetClientLotReservation(
+    @Param("clientId") clientId: string,
+    @Param("lotId") lotId: string,
+  ) {
+    return this.reservationService.getClientLotReservation(clientId, lotId);
+  }
+
   @Get(":id")
   onGetReservation(@Param("id") id: string) {
     return this.reservationService.getReservation(id);

@@ -541,6 +541,28 @@ export class ReservationService {
     }
   }
 
+  async getClientLotReservation(clientId: string, lotId: string) {
+    try {
+      return await this.prismaService.reservation.findFirst({
+        where: {
+          AND: [
+            {
+              clientId,
+            },
+            {
+              lotId,
+            },
+          ],
+        },
+        include: {
+          payment: true,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateReservation(
     id: string,
     dto: ReservationDto,
