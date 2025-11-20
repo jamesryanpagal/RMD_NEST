@@ -396,6 +396,9 @@ export class ContractService {
               clientId: contractResponse?.clientId,
             },
             {
+              lotId: contractResponse?.lotId,
+            },
+            {
               status: { in: ["ACTIVE", "DONE"] },
             },
           ],
