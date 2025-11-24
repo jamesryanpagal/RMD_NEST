@@ -1,6 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma/prisma.service";
-import { CreateUpdatePaymentDto, PaymentBreakdownType } from "./dto";
+import {
+  ApplyPenaltyPaymentDto,
+  CreateUpdatePaymentDto,
+  PaymentBreakdownType,
+} from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
 import { FormatterService } from "src/services/formatter/formatter.service";
@@ -10,7 +14,7 @@ import { FileService } from "src/file/file.service";
 import { UserFullDetailsProps } from "src/type";
 import { MessagingService } from "src/services/messaging/messaging.service";
 
-export const PAYMENT_PENALTY_AMOUNT = 200;
+export const PAYMENT_PENALTY_AMOUNT = 0.5;
 
 @Injectable()
 export class PaymentService {
@@ -23,6 +27,10 @@ export class PaymentService {
     private fileService: FileService,
     private messagingService: MessagingService,
   ) {}
+
+  private readonly logger = new Logger(PaymentService.name, {
+    timestamp: true,
+  });
 
   async getPayments() {
     try {
@@ -50,6 +58,7 @@ export class PaymentService {
       transactionType,
       sendReceipt,
       waivePenalty,
+      waivedReason,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -111,6 +120,7 @@ export class PaymentService {
           recurringPaymentDay,
           excessPayment,
           penaltyAmount,
+          penaltyCount,
           client,
           lot,
           agent,
@@ -177,11 +187,15 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
-                ...(!!penaltyAmount &&
-                  !waivePenalty && {
-                    penalized: true,
-                    penaltyAmount,
-                  }),
+                ...(!!penaltyAmount && {
+                  penalized: true,
+                  penaltyAmount,
+                  penaltyCount,
+                }),
+                ...(!!waivePenalty && {
+                  waivedPenalty: true,
+                  waivedReason,
+                }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
@@ -443,11 +457,15 @@ export class PaymentService {
                 paymentDate,
                 amount,
                 referenceNumber,
-                ...(!!penaltyAmount &&
-                  !waivePenalty && {
-                    penalized: true,
-                    penaltyAmount,
-                  }),
+                ...(!!penaltyAmount && {
+                  penalized: true,
+                  penaltyAmount,
+                  penaltyCount,
+                }),
+                ...(!!waivePenalty && {
+                  waivedPenalty: true,
+                  waivedReason,
+                }),
                 targetDueDate: nextPaymentDate,
                 transactionType,
                 contract: {
@@ -820,7 +838,7 @@ export class PaymentService {
 
   async getPayment(id: string) {
     try {
-      return await this.prismaService.payment.findFirst({
+      const paymentResponse = await this.prismaService.payment.findFirst({
         where: {
           AND: [
             {
@@ -831,57 +849,130 @@ export class PaymentService {
             },
           ],
         },
+        include: {
+          files: true,
+        },
       });
+
+      const { files, ...rest } = paymentResponse || {};
+
+      return {
+        ...rest,
+        files: this.fileService.onFormatPaymentFilesResponse(files),
+      };
     } catch (error) {
       throw error;
     }
   }
 
   async applyPenaltyPayment(
-    contractId: string,
-    penaltyAmount: number,
-    penaltyCount: number,
-    transaction: Prisma.TransactionClient,
+    id: string,
+    dto: ApplyPenaltyPaymentDto,
+    user?: UserFullDetailsProps,
   ) {
-    const transactionService = transaction || this.prismaService;
+    const { penaltyAmount, penaltyCount } = dto || {};
     try {
-      const contractResponse = await transactionService.contract.findFirst({
-        where: {
-          AND: [
-            {
-              id: contractId,
-            },
-            {
-              status: { not: "DELETED" },
-            },
-          ],
-        },
+      await this.prismaService.$transaction(async prisma => {
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: { notIn: ["DELETED", "FORFEITED"] },
+              },
+            ],
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw(
+            "Contract not found, it is either deleted or forfeited.",
+            "NOT_FOUND",
+          );
+          return;
+        }
+
+        const {
+          penaltyAmount: currentPenaltyAmount,
+          penaltyCount: currentPenaltyCount,
+        } = contractResponse || {};
+
+        if (
+          currentPenaltyAmount === penaltyAmount &&
+          currentPenaltyCount === penaltyCount
+        ) {
+          this.exceptionService.throw(
+            "Penalty amount and penalty count are already applied.",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        await prisma.contract.update({
+          where: {
+            id,
+          },
+          data: {
+            penaltyAmount,
+            penaltyCount,
+            updatedBy: user?.id,
+          },
+        });
       });
 
-      if (!contractResponse) {
-        this.exceptionService.throw("Contract not found", "NOT_FOUND");
-        return;
-      }
-
-      if (
-        contractResponse.penaltyAmount === penaltyAmount &&
-        contractResponse.penaltyCount === penaltyCount
-      )
-        return;
-
-      await transactionService.contract.update({
-        where: {
-          id: contractId,
-        },
-        data: {
-          penaltyAmount,
-          penaltyCount,
-        },
-      });
+      return "Penalty payment applied successfully";
     } catch (error) {
       throw error;
     }
   }
+
+  // async applyPenaltyPayment(
+  //   contractId: string,
+  //   penaltyAmount: number,
+  //   penaltyCount: number,
+  //   transaction: Prisma.TransactionClient,
+  // ) {
+  //   const transactionService = transaction || this.prismaService;
+  //   try {
+  //     const contractResponse = await transactionService.contract.findFirst({
+  //       where: {
+  //         AND: [
+  //           {
+  //             id: contractId,
+  //           },
+  //           {
+  //             status: { not: "DELETED" },
+  //           },
+  //         ],
+  //       },
+  //     });
+
+  //     if (!contractResponse) {
+  //       this.exceptionService.throw("Contract not found", "NOT_FOUND");
+  //       return;
+  //     }
+
+  //     if (
+  //       contractResponse.penaltyAmount === penaltyAmount &&
+  //       contractResponse.penaltyCount === penaltyCount
+  //     )
+  //       return;
+
+  //     await transactionService.contract.update({
+  //       where: {
+  //         id: contractId,
+  //       },
+  //       data: {
+  //         penaltyAmount,
+  //         penaltyCount,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   async getPaymentBreakdown(contractId: string) {
     let response: any | null = null;
@@ -1069,6 +1160,7 @@ export class PaymentService {
                 .format(this.mtzService.dateFormat.dateAbbrev);
 
               downPaymentBreakdown.push({
+                id: reservationPayment.id,
                 referenceNumber: reservationPayment.referenceNumber,
                 modeOfPayment: reservationPayment.modeOfPayment,
                 paymentDate: reservationPayment.paymentDate,
@@ -1116,6 +1208,7 @@ export class PaymentService {
                 });
 
                 downPaymentBreakdown.push({
+                  id: paymentInDate?.id,
                   referenceNumber: paymentInDate?.referenceNumber,
                   modeOfPayment: paymentInDate?.modeOfPayment,
                   paymentDate: paymentInDate?.paymentDate,
@@ -1150,6 +1243,7 @@ export class PaymentService {
               });
 
               downPaymentBreakdown.push({
+                id: paymentInDate?.id,
                 referenceNumber: paymentInDate?.referenceNumber,
                 modeOfPayment: paymentInDate?.modeOfPayment,
                 paymentDate: paymentInDate?.paymentDate,
@@ -1203,6 +1297,7 @@ export class PaymentService {
               });
 
               totalPaymentBreakdown.push({
+                id: paymentInDate?.id,
                 referenceNumber: paymentInDate?.referenceNumber,
                 modeOfPayment: paymentInDate?.modeOfPayment,
                 paymentDate: paymentInDate?.paymentDate,
@@ -1262,6 +1357,7 @@ export class PaymentService {
               .format(this.mtzService.dateFormat.dateAbbrev);
 
             totalPaymentBreakdown.push({
+              id: reservationPayment.id,
               referenceNumber: reservationPayment.referenceNumber,
               modeOfPayment: reservationPayment.modeOfPayment,
               paymentDate: reservationPayment.paymentDate,
@@ -1293,6 +1389,7 @@ export class PaymentService {
           });
 
           totalPaymentBreakdown.push({
+            id: paymentInDate?.id,
             referenceNumber: paymentInDate?.referenceNumber,
             modeOfPayment: paymentInDate?.modeOfPayment,
             paymentDate: paymentInDate?.paymentDate,
@@ -1427,6 +1524,7 @@ export class PaymentService {
           .format(this.mtzService.dateFormat.dateAbbrev);
 
         releaseBreakdown.push({
+          id: onGetPaidInDate(startingDueDate)?.id,
           dueDate: startingDueDate,
           transactionType: "AGENT_COMMISSION_RELEASE",
           amount: monthlyReleaseAmount,
@@ -1448,6 +1546,7 @@ export class PaymentService {
             .format(this.mtzService.dateFormat.dateAbbrev);
 
           releaseBreakdown.push({
+            id: onGetPaidInDate(dueDate)?.id,
             dueDate,
             transactionType: "AGENT_COMMISSION_RELEASE",
             amount: monthlyReleaseAmount,
@@ -1771,66 +1870,114 @@ export class PaymentService {
     contractId: string,
     prisma: Prisma.TransactionClient,
   ) {
-    let unpaidDate: string | null = null;
-    return await Promise.all(
-      data.map(async ({ remainingBalance, dueDate, paid, ...rest }) => {
-        const penaltyObj: Pick<
-          PaymentBreakdownType,
-          "penalized" | "penaltyAmount"
-        > = {
-          penalized: false,
-          penaltyAmount: 0,
-        };
+    const formattedList = await Promise.all(
+      data.map(
+        async ({ remainingBalance, dueDate, paid, amount, id, ...rest }) => {
+          const penaltyObj: Pick<
+            PaymentBreakdownType,
+            "penalized" | "penaltyAmount" | "penaltyCount" | "waivedPenalty"
+          > = {
+            penalized: false,
+            penaltyAmount: 0,
+            penaltyCount: 0,
+            waivedPenalty: null,
+          };
 
-        if (!unpaidDate && !paid) {
-          unpaidDate = dueDate;
-        }
+          const weeksPassedFromDueDate = this.mtzService
+            .mtz()
+            .diff(this.mtzService.mtz(dueDate, "dateAbbrev"), "weeks");
 
-        if (unpaidDate) {
-          const formattedUnpaidDate = this.mtzService.mtz(
-            unpaidDate,
-            "dateAbbrev",
-          );
-          const currentDate = this.mtzService.mtz();
-          const paymentDateDiffToDueDate = currentDate.diff(
-            formattedUnpaidDate,
-            "days",
-          );
+          if (!paid && weeksPassedFromDueDate > 0) {
+            const additionalCharge = amount * PAYMENT_PENALTY_AMOUNT;
+            const totalAdditionalCharge =
+              additionalCharge * weeksPassedFromDueDate;
 
-          const penaltyDiffCount =
-            paymentDateDiffToDueDate > 0
-              ? Math.trunc(paymentDateDiffToDueDate / 7)
-              : 0;
-
-          const paymentPenaltyAmount =
-            PAYMENT_PENALTY_AMOUNT * penaltyDiffCount;
-
-          if (penaltyDiffCount) {
             penaltyObj.penalized = true;
-            penaltyObj.penaltyAmount = paymentPenaltyAmount;
-            await this.applyPenaltyPayment(
-              contractId,
-              paymentPenaltyAmount,
-              penaltyDiffCount,
-              prisma,
-            );
+            penaltyObj.penaltyAmount = totalAdditionalCharge;
+            penaltyObj.penaltyCount = weeksPassedFromDueDate;
+          } else {
+            const paymentResponse = await prisma.payment.findFirst({
+              where: {
+                AND: [
+                  {
+                    id,
+                  },
+                  {
+                    status: { not: "DELETED" },
+                  },
+                ],
+              },
+            });
+            if (!!paymentResponse) {
+              const { penalized, penaltyAmount, waivedPenalty, penaltyCount } =
+                paymentResponse || {};
+              penaltyObj.penalized = penalized;
+              penaltyObj.penaltyAmount = penaltyAmount;
+              penaltyObj.waivedPenalty = waivedPenalty;
+              penaltyObj.penaltyCount = penaltyCount;
+            }
           }
-        }
 
-        return {
-          ...rest,
-          dueDate,
-          paid,
-          ...(unpaidDate &&
-            unpaidDate === dueDate &&
-            Object.values(penaltyObj).every(val => !!val) &&
-            penaltyObj),
-          remainingBalance: this.formatterService.onParseToPhp(
-            this.formatterService.onTruncateNumber(remainingBalance),
-          ),
-        };
-      }),
+          return {
+            ...rest,
+            id,
+            amount,
+            dueDate,
+            paid,
+            ...penaltyObj,
+            remainingBalance: this.formatterService.onParseToPhp(
+              this.formatterService.onTruncateNumber(remainingBalance),
+            ),
+          };
+        },
+      ),
     );
+
+    const nextPenaltyPayment = formattedList.filter(
+      ({ paid, penalized }) => !paid && penalized,
+    )?.[0];
+
+    if (nextPenaltyPayment) {
+      const { penaltyAmount, penaltyCount } = nextPenaltyPayment || {};
+      const contractResponse = await prisma.contract.findFirst({
+        where: {
+          AND: [
+            {
+              id: contractId,
+            },
+            {
+              status: { notIn: ["DELETED", "FORFEITED"] },
+            },
+          ],
+        },
+      });
+
+      const {
+        penaltyAmount: currentPenaltyAmount,
+        penaltyCount: currentPenaltyCount,
+      } = contractResponse || {};
+
+      if (
+        penaltyAmount !== currentPenaltyAmount &&
+        penaltyCount !== currentPenaltyCount
+      ) {
+        await prisma.contract.update({
+          where: {
+            id: contractId,
+          },
+          data: {
+            penaltyAmount,
+            penaltyCount,
+          },
+        });
+      } else {
+        this.logger.log(
+          "Penalty amount and penalty count are already applied.",
+        );
+      }
+    }
+
+    return formattedList;
   }
 
   async onCreatePaymentFiles(

@@ -903,8 +903,11 @@ model Payment {
   payment      PaymentRequest[]
   paymentAudit PaymentAudit[]
 
-  penalized     Boolean @default(false)
-  penaltyAmount Float   @default(0)
+  penalized     Boolean  @default(false)
+  penaltyAmount Float    @default(0)
+  penaltyCount  Int      @default(0)
+  waivedPenalty Boolean?
+  waivedReason  String?
 
   receiptNo String?
 

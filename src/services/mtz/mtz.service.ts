@@ -8,7 +8,6 @@ export class MtzService {
   public dateFormat = {
     timezone: "Asia/Manila",
     defaultformat: "YYYY-MM-DD",
-    dateAbrev: "ddd",
     monthAbrev: "MMM",
     monthIndex: "M",
     yearMonth: "YYYY-MM",

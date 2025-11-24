@@ -1,4 +1,4 @@
-import { Transform } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   IsBoolean,
   IsEnum,
@@ -18,6 +18,7 @@ export type PaymentFiles = {
 };
 
 export type PaymentBreakdownType = {
+  id?: string;
   modeOfPayment?: $Enums.MODE_OF_PAYMENT;
   paymentDate?: string;
   receiptNo?: string | null;
@@ -28,7 +29,9 @@ export type PaymentBreakdownType = {
   transactionType: $Enums.TRANSACTION_TYPE;
   paidAmount: number;
   penaltyAmount?: number;
+  penaltyCount?: number;
   penalized?: boolean;
+  waivedPenalty?: boolean | null;
   paid: boolean;
   files?: PaymentFiles[];
 };
@@ -74,12 +77,43 @@ export class CreateUpdatePaymentDto {
 
   @IsOptional()
   @IsBoolean()
+  @Type(() => String)
   @Transform(({ value }) => {
+    if (value === undefined || value === null || value === "") {
+      return false;
+    }
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+
     if (typeof value === "string") {
-      return value.toLowerCase() === "true";
+      const lowercased = value.toLowerCase().trim();
+      return lowercased === "true" || lowercased === "1";
     }
 
     return Boolean(value);
   })
   waivePenalty?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value || null)
+  waivedReason?: string;
+}
+
+export class ApplyPenaltyPaymentDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== null || value !== undefined ? Number(value) : null,
+  )
+  penaltyAmount: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== null || value !== undefined ? Number(value) : null,
+  )
+  penaltyCount: number;
 }

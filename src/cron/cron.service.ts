@@ -92,7 +92,9 @@ export class CronService {
             } else if (isOverDue) {
               const weeksPassed = Math.trunc(Math.abs(daysDiff) / 7);
               const computedPenaltyAmount =
-                weeksPassed * PAYMENT_PENALTY_AMOUNT;
+                (totalMonthlyPaymentAmount || 0) *
+                PAYMENT_PENALTY_AMOUNT *
+                weeksPassed;
               const computedTotalMonthlyPaymentAmount =
                 (totalMonthlyPaymentAmount || 0) + computedPenaltyAmount;
 
@@ -101,7 +103,7 @@ export class CronService {
                   computedTotalMonthlyPaymentAmount,
                 );
               const formattedPenaltyAmount = this.formatterService.onParseToPhp(
-                PAYMENT_PENALTY_AMOUNT,
+                computedPenaltyAmount,
               );
               const formattedComputedPenaltyAmount =
                 this.formatterService.onParseToPhp(computedPenaltyAmount);
