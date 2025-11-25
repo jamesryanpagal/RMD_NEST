@@ -726,6 +726,7 @@ export class ContractService {
           nextPaymentDate,
           recurringPaymentDay,
           paymentLastDate,
+          lotId,
         } = contractResponse || {};
 
         if (role === "SECRETARY") {
@@ -777,6 +778,39 @@ export class ContractService {
             data: {
               status: "DELETED",
               deletedBy: user?.id,
+            },
+          });
+
+          await prisma.lot.update({
+            where: {
+              id: lotId,
+            },
+            data: {
+              status: "OPEN",
+              updatedBy: user.id,
+            },
+          });
+
+          const reservationResponse = await prisma.reservation.findFirst({
+            where: {
+              AND: [
+                {
+                  lotId,
+                },
+                {
+                  status: { in: ["ACTIVE", "DONE"] },
+                },
+              ],
+            },
+          });
+
+          await prisma.reservation.update({
+            where: {
+              id: reservationResponse?.id,
+            },
+            data: {
+              status: "CONTRACT_DELETED",
+              updatedBy: user.id,
             },
           });
         }
