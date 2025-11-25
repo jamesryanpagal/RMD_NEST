@@ -19,6 +19,7 @@ export type PaymentFiles = {
 
 export type PaymentBreakdownType = {
   id?: string;
+  reservationId?: string | null;
   modeOfPayment?: $Enums.MODE_OF_PAYMENT;
   paymentDate?: string;
   receiptNo?: string | null;
@@ -116,4 +117,10 @@ export class ApplyPenaltyPaymentDto {
     value !== null || value !== undefined ? Number(value) : null,
   )
   penaltyCount: number;
+}
+
+export class AdjustReservationValidityDto {
+  @IsNotEmpty()
+  @IsString()
+  validity: string;
 }

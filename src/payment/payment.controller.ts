@@ -14,7 +14,11 @@ import {
 import { PaymentService } from "./payment.service";
 import { AuthGuard } from "@nestjs/passport";
 import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
-import { ApplyPenaltyPaymentDto, CreateUpdatePaymentDto } from "./dto";
+import {
+  AdjustReservationValidityDto,
+  ApplyPenaltyPaymentDto,
+  CreateUpdatePaymentDto,
+} from "./dto";
 import { UploadService } from "src/services/upload/upload.service";
 import { RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
@@ -111,6 +115,15 @@ export class PaymentController {
     @Req() req: Request,
   ) {
     return this.paymentService.applyPenaltyPayment(id, dto, req.user);
+  }
+
+  @Patch("adjust/reservation/validity/:id")
+  onAdjustReservationValidity(
+    @Param("id") id: string,
+    @Body() dto: AdjustReservationValidityDto,
+    @Req() req: Request,
+  ) {
+    return this.paymentService.adjustReservationValidity(id, dto, req.user);
   }
 
   @Delete("delete/:id")

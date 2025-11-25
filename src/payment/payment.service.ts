@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma/prisma.service";
 import {
+  AdjustReservationValidityDto,
   ApplyPenaltyPaymentDto,
   CreateUpdatePaymentDto,
   PaymentBreakdownType,
@@ -928,6 +929,53 @@ export class PaymentService {
     }
   }
 
+  async adjustReservationValidity(
+    id: string,
+    dto: AdjustReservationValidityDto,
+    user?: UserFullDetailsProps,
+  ) {
+    const { validity } = dto || {};
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        const reservationResponse = await prisma.reservation.findFirst({
+          where: {
+            AND: [
+              {
+                id,
+              },
+              {
+                status: "FORFEITED",
+              },
+            ],
+          },
+        });
+
+        if (!reservationResponse) {
+          this.exceptionService.throw("Reservation not found", "NOT_FOUND");
+          return;
+        }
+
+        const newValidity = this.mtzService
+          .mtz(validity, "defaultformat")
+          .toDate();
+
+        await prisma.reservation.update({
+          where: {
+            id,
+          },
+          data: {
+            status: "ACTIVE",
+            validity: newValidity,
+            updatedBy: user?.id,
+          },
+        });
+      });
+      return "Reservation validity adjusted successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // async applyPenaltyPayment(
   //   contractId: string,
   //   penaltyAmount: number,
@@ -1072,12 +1120,16 @@ export class PaymentService {
           tcp,
           downPaymentType,
           paymentType,
+          installmentType,
           paymentStartedDate,
+          agentCommission,
+          agentCommissionTotal,
           terms,
           payment,
           lot,
           client,
           sqmPrice,
+          totalLotPrice,
           totalDownPayment,
           miscellaneous,
           miscellaneousTotal,
@@ -1086,6 +1138,7 @@ export class PaymentService {
           recurringPaymentDay,
           agent,
           interest,
+          status,
         } = contractResponse || {};
 
         const projectResponse = lot?.block.phase.project || {};
@@ -1161,6 +1214,7 @@ export class PaymentService {
 
               downPaymentBreakdown.push({
                 id: reservationPayment.id,
+                reservationId: reservationPayment.reservationId,
                 referenceNumber: reservationPayment.referenceNumber,
                 modeOfPayment: reservationPayment.modeOfPayment,
                 paymentDate: reservationPayment.paymentDate,
@@ -1327,12 +1381,16 @@ export class PaymentService {
 
             response = {
               paymentType,
+              installmentType,
               client,
               project: projectResponse,
               phase: phaseResponse,
               block: blockResponse,
               lot: lotResponse,
               sqm: lot?.sqm,
+              totalLotPrice,
+              downPaymentTerms,
+              terms,
               sqmPrice,
               miscellaneous,
               miscellaneousTotal,
@@ -1342,7 +1400,10 @@ export class PaymentService {
               rfValidityStartDate,
               rfValidityEndDate,
               agent,
+              agentCommission,
+              agentCommissionTotal,
               interest,
+              status,
               paymentBreakdown: formattedPaymentBreakdown,
             };
           }
@@ -1417,6 +1478,7 @@ export class PaymentService {
 
           response = {
             paymentType,
+            installmentType,
             client,
             project: projectResponse,
             phase: phaseResponse,
@@ -1424,6 +1486,9 @@ export class PaymentService {
             lot: lotResponse,
             sqm: lot?.sqm,
             sqmPrice,
+            totalLotPrice,
+            downPaymentTerms,
+            terms,
             miscellaneous,
             miscellaneousTotal,
             totalDownPayment,
@@ -1432,7 +1497,10 @@ export class PaymentService {
             rfValidityStartDate,
             rfValidityEndDate,
             agent,
+            agentCommission,
+            agentCommissionTotal,
             interest,
+            status,
             paymentBreakdown: formattedPaymentBreakdown,
           };
         }
@@ -1908,7 +1976,7 @@ export class PaymentService {
                 ],
               },
             });
-            if (!!paymentResponse) {
+            if (paymentResponse) {
               const { penalized, penaltyAmount, waivedPenalty, penaltyCount } =
                 paymentResponse || {};
               penaltyObj.penalized = penalized;
