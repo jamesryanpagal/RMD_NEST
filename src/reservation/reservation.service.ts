@@ -153,7 +153,7 @@ export class ReservationService {
         const { search } = query || {};
         const searchArr = search?.split(" ") || [];
         const whereQuery: Prisma.ReservationWhereInput = {
-          status: { not: "DELETED" },
+          status: { notIn: ["DELETED", "CONTRACT_DELETED"] },
           ...(search && {
             OR: [
               {
@@ -479,7 +479,7 @@ export class ReservationService {
                 id,
               },
               {
-                status: { not: "DELETED" },
+                status: { notIn: ["DELETED", "CONTRACT_DELETED", "DONE"] },
               },
             ],
           },
@@ -489,7 +489,10 @@ export class ReservationService {
         });
 
         if (!reservationResponse || !reservationResponse.payment) {
-          this.exceptionService.throw("Reservation not found", "NOT_FOUND");
+          this.exceptionService.throw(
+            "Reservation cannot be deleted. It is either deleted, or its already linked to a contract.",
+            "NOT_FOUND",
+          );
           return;
         }
 
@@ -523,12 +526,12 @@ export class ReservationService {
             },
           });
 
-          await prisma.payment.update({
+          await prisma.lot.update({
             where: {
-              id: reservationResponse.payment.id,
+              id: reservationResponse.lotId,
             },
             data: {
-              status: "DELETED",
+              status: "OPEN",
               updatedBy: user.id,
             },
           });
