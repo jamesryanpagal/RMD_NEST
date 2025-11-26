@@ -555,6 +555,9 @@ export class ReservationService {
             {
               lotId,
             },
+            {
+              status: "ACTIVE",
+            },
           ],
         },
         include: {
