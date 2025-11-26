@@ -1251,6 +1251,7 @@ export class PaymentService {
                     : this.mtzService
                         .mtz(previousDueDate, "dateAbbrev")
                         .add(1, "month")
+                        .set("date", recurringPaymentDay)
                         .format(this.mtzService.dateFormat.dateAbbrev);
 
                 const paymentInDate = payment.find(paymentObj => {
@@ -1340,6 +1341,7 @@ export class PaymentService {
                   : this.mtzService
                       .mtz(previousDueDate, "dateAbbrev")
                       .add(1, "month")
+                      .set("date", recurringPaymentDay)
                       .format(this.mtzService.dateFormat.dateAbbrev);
 
               const paymentInDate = payment.find(paymentObj => {
