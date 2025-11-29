@@ -1940,6 +1940,39 @@ export class PaymentService {
     contractId: string,
     prisma: Prisma.TransactionClient,
   ) {
+    const contractResponse = await prisma.contract.findFirst({
+      where: {
+        AND: [
+          {
+            id: contractId,
+          },
+          {
+            status: { notIn: ["DELETED", "FORFEITED"] },
+          },
+        ],
+      },
+    });
+
+    if (!contractResponse) {
+      return [];
+    }
+
+    const {
+      penaltyAmount: currentPenaltyAmount,
+      penaltyCount: currentPenaltyCount,
+      nextPaymentDate,
+      paymentLastDate,
+    } = contractResponse || {};
+
+    const parsedNextPaymentDate = this.mtzService
+      .mtz(nextPaymentDate, "dateTimeUTCZ")
+      .format(this.mtzService.dateFormat.dateAbbrev);
+    const parsedPaymentLastDate = this.mtzService
+      .mtz(paymentLastDate, "dateTimeUTCZ")
+      .format(this.mtzService.dateFormat.dateAbbrev);
+
+    const isLastPaymentDate = parsedNextPaymentDate === parsedPaymentLastDate;
+
     const formattedList = await Promise.all(
       data.map(
         async ({ remainingBalance, dueDate, paid, amount, id, ...rest }) => {
@@ -1996,7 +2029,9 @@ export class PaymentService {
             paid,
             ...penaltyObj,
             remainingBalance: this.formatterService.onParseToPhp(
-              this.formatterService.onTruncateNumber(remainingBalance),
+              this.formatterService.onTruncateNumber(
+                isLastPaymentDate ? 0 : remainingBalance,
+              ),
             ),
           };
         },
@@ -2009,23 +2044,6 @@ export class PaymentService {
 
     if (nextPenaltyPayment) {
       const { penaltyAmount, penaltyCount } = nextPenaltyPayment || {};
-      const contractResponse = await prisma.contract.findFirst({
-        where: {
-          AND: [
-            {
-              id: contractId,
-            },
-            {
-              status: { notIn: ["DELETED", "FORFEITED"] },
-            },
-          ],
-        },
-      });
-
-      const {
-        penaltyAmount: currentPenaltyAmount,
-        penaltyCount: currentPenaltyCount,
-      } = contractResponse || {};
 
       if (
         penaltyAmount !== currentPenaltyAmount &&
