@@ -1,0 +1,57 @@
+-- ? Used to correct the penalty amount and penalty count in the Payment table.
+
+-- WITH calc AS (
+-- 	SELECT
+-- 	  q.*,
+-- 	  (q."baseAmount" * 0.005) * q."monthsDelayed" AS "totalPenaltyAmount"
+-- 	FROM (
+-- 	  SELECT 
+-- 	    p.id,
+-- 	    p."penalized",
+-- 	    p."targetDueDate",
+-- 		p."dateCreated" AS "paymentDate",
+-- 	    p."transactionType",
+-- 	    c."totalMonthlyDown",
+-- 	    c."totalDownPayment",
+-- 	    c."totalMonthly",
+-- 	    CASE
+-- 	      WHEN p."transactionType" = 'PARTIAL_DOWN_PAYMENT'
+-- 	        THEN COALESCE(c."totalMonthlyDown", 0)
+-- 	      WHEN p."transactionType" = 'FULL_DOWN_PAYMENT'
+-- 	        THEN COALESCE(c."totalDownPayment", 0)
+-- 	      WHEN p."transactionType" = 'MONTHLY_PAYMENT'
+-- 	        THEN COALESCE(c."totalMonthly", 0)
+-- 	      ELSE 0
+-- 	    END AS "baseAmount",
+-- 	    GREATEST(
+-- 	      0,
+-- 	      (
+-- 	        EXTRACT(
+-- 	          YEAR FROM age(
+-- 	            p."dateCreated"::date,
+-- 	            p."targetDueDate"::date
+-- 	          )
+-- 	        ) * 12
+-- 	        +
+-- 	        EXTRACT(
+-- 	          MONTH FROM age(
+-- 	            p."dateCreated"::date,
+-- 	            p."targetDueDate"::date
+-- 	          )
+-- 	        )
+-- 	      )
+-- 	    )::int AS "monthsDelayed"
+-- 	  FROM "Payment" p
+-- 	  INNER JOIN "Contract" c ON c."id" = p."contractId"
+-- 	  WHERE p."penalized" = true
+-- 	  ORDER BY p."dateCreated" DESC
+-- 	) AS q
+-- )
+-- UPDATE "Payment" p
+-- SET 
+-- 	"penaltyAmount" = calc."totalPenaltyAmount",
+-- 	"penaltyCount" = calc."monthsDelayed"
+-- FROM calc
+-- WHERE p.id = calc.id;
+
+-- ? ==================================================

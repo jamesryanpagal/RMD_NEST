@@ -15,7 +15,7 @@ import { FileService } from "src/file/file.service";
 import { UserFullDetailsProps } from "src/type";
 import { MessagingService } from "src/services/messaging/messaging.service";
 
-export const PAYMENT_PENALTY_AMOUNT = 0.5;
+export const PAYMENT_PENALTY_AMOUNT = 0.5 / 100;
 
 @Injectable()
 export class PaymentService {
@@ -1953,18 +1953,18 @@ export class PaymentService {
             waivedPenalty: null,
           };
 
-          const weeksPassedFromDueDate = this.mtzService
+          const monthsPassedFromDueDate = this.mtzService
             .mtz()
-            .diff(this.mtzService.mtz(dueDate, "dateAbbrev"), "weeks");
+            .diff(this.mtzService.mtz(dueDate, "dateAbbrev"), "months");
 
-          if (!paid && weeksPassedFromDueDate > 0) {
+          if (!paid && monthsPassedFromDueDate > 0) {
             const additionalCharge = amount * PAYMENT_PENALTY_AMOUNT;
             const totalAdditionalCharge =
-              additionalCharge * weeksPassedFromDueDate;
+              additionalCharge * monthsPassedFromDueDate;
 
             penaltyObj.penalized = true;
             penaltyObj.penaltyAmount = totalAdditionalCharge;
-            penaltyObj.penaltyCount = weeksPassedFromDueDate;
+            penaltyObj.penaltyCount = monthsPassedFromDueDate;
           } else {
             const paymentResponse = await prisma.payment.findFirst({
               where: {
