@@ -125,6 +125,11 @@ export class ContractService {
           },
           data: {
             status: "DONE",
+            contract: {
+              connect: {
+                id: contractResponse.id,
+              },
+            },
           },
         });
 
@@ -687,6 +692,9 @@ export class ContractService {
               },
             ],
           },
+          include: {
+            reservation: true,
+          },
         });
 
         if (!contractResponse) {
@@ -727,6 +735,7 @@ export class ContractService {
           recurringPaymentDay,
           paymentLastDate,
           lotId,
+          reservation,
         } = contractResponse || {};
 
         if (role === "SECRETARY") {
@@ -791,28 +800,39 @@ export class ContractService {
             },
           });
 
-          const reservationResponse = await prisma.reservation.findFirst({
-            where: {
-              AND: [
-                {
-                  lotId,
-                },
-                {
-                  status: { in: ["ACTIVE", "DONE"] },
-                },
-              ],
-            },
-          });
+          if (reservation) {
+            await prisma.reservation.update({
+              where: {
+                id: reservation.id,
+              },
+              data: {
+                status: "CONTRACT_DELETED",
+                contractId: null,
+                updatedBy: user.id,
+              },
+            });
 
-          await prisma.reservation.update({
-            where: {
-              id: reservationResponse?.id,
-            },
-            data: {
-              status: "CONTRACT_DELETED",
-              updatedBy: user.id,
-            },
-          });
+            const paymentResponse = await prisma.payment.findFirst({
+              where: {
+                AND: [
+                  {
+                    reservationId: reservation.id,
+                  },
+                ],
+              },
+            });
+
+            if (paymentResponse) {
+              await prisma.payment.update({
+                where: {
+                  id: paymentResponse.id,
+                },
+                data: {
+                  status: "DELETED",
+                },
+              });
+            }
+          }
         }
       });
 

@@ -17,7 +17,8 @@ import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import {
   AdjustReservationValidityDto,
   ApplyPenaltyPaymentDto,
-  CreateUpdatePaymentDto,
+  CreatePaymentDto,
+  UpdatePaymentDto,
 } from "./dto";
 import { UploadService } from "src/services/upload/upload.service";
 import { RolesGuard } from "src/services/guard/guard.service";
@@ -48,7 +49,7 @@ export class PaymentController {
   onCreatePayment(
     @Param("contractId") contractId: string,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() dto: CreateUpdatePaymentDto,
+    @Body() dto: CreatePaymentDto,
     @Req() req: Request,
   ) {
     return this.paymentService.createContractPayment(
@@ -71,7 +72,7 @@ export class PaymentController {
   onReleaseAgentCommission(
     @Param("agentCommissionId") agentCommissionId: string,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() dto: CreateUpdatePaymentDto,
+    @Body() dto: CreatePaymentDto,
     @Req() req: Request,
   ) {
     return this.paymentService.releaseAgentCommission(
@@ -102,7 +103,7 @@ export class PaymentController {
   @Patch("update/:id")
   onUpdatePayment(
     @Param("id") id: string,
-    @Body() dto: CreateUpdatePaymentDto,
+    @Body() dto: UpdatePaymentDto,
     @Req() req: Request,
   ) {
     return this.paymentService.updatePayment(id, dto, req.user);

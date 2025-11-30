@@ -43,7 +43,22 @@ export class PaymentHistoryQueryDto {
   contractId?: string;
 }
 
-export class CreateUpdatePaymentDto {
+export class UpdatePaymentDto {
+  @IsNotEmpty()
+  @IsString()
+  paymentDate: string;
+
+  @IsNotEmpty()
+  @IsEnum($Enums.MODE_OF_PAYMENT)
+  modeOfPayment: $Enums.MODE_OF_PAYMENT;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value || null)
+  referenceNumber?: string;
+}
+
+export class CreatePaymentDto {
   @IsNotEmpty()
   @IsEnum($Enums.TRANSACTION_TYPE)
   transactionType: $Enums.TRANSACTION_TYPE;

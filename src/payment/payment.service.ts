@@ -3,8 +3,9 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import {
   AdjustReservationValidityDto,
   ApplyPenaltyPaymentDto,
-  CreateUpdatePaymentDto,
+  CreatePaymentDto,
   PaymentBreakdownType,
+  UpdatePaymentDto,
 } from "./dto";
 import { ExceptionService } from "src/services/interceptor/interceptor.service";
 import { MtzService } from "src/services/mtz/mtz.service";
@@ -48,7 +49,7 @@ export class PaymentService {
   async createContractPayment(
     contractId: string,
     files: Express.Multer.File[],
-    dto: CreateUpdatePaymentDto,
+    dto: CreatePaymentDto,
     user?: UserFullDetailsProps,
   ) {
     const {
@@ -667,10 +668,10 @@ export class PaymentService {
 
   async updatePayment(
     id: string,
-    dto: CreateUpdatePaymentDto,
+    dto: UpdatePaymentDto,
     user?: UserFullDetailsProps,
   ) {
-    const { modeOfPayment, paymentDate, amount, referenceNumber } = dto || {};
+    const { modeOfPayment, paymentDate, referenceNumber } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
         if (!user) {
@@ -698,23 +699,16 @@ export class PaymentService {
           return;
         }
 
-        if (paymentResponse.amount > amount) {
-          this.exceptionService.throw(
-            `Amount must be greater than or equal to ${paymentResponse.amount}`,
-            "BAD_REQUEST",
-          );
-          return;
-        }
+        const {
+          transactionType,
+          targetDueDate,
+          penalized,
+          penaltyAmount,
+          receiptNo,
+          amount,
+        } = paymentResponse || {};
 
         if (role === "SECRETARY") {
-          const {
-            transactionType,
-            targetDueDate,
-            penalized,
-            penaltyAmount,
-            receiptNo,
-          } = paymentResponse || {};
-
           await prisma.paymentRequest.create({
             data: {
               transactionType,
@@ -1640,7 +1634,7 @@ export class PaymentService {
 
   async releaseAgentCommission(
     agentCommissionId: string,
-    dto: CreateUpdatePaymentDto,
+    dto: CreatePaymentDto,
     files: Express.Multer.File[],
     user?: UserFullDetailsProps,
   ) {
@@ -1960,18 +1954,12 @@ export class PaymentService {
     const {
       penaltyAmount: currentPenaltyAmount,
       penaltyCount: currentPenaltyCount,
-      nextPaymentDate,
       paymentLastDate,
     } = contractResponse || {};
 
-    const parsedNextPaymentDate = this.mtzService
-      .mtz(nextPaymentDate, "dateTimeUTCZ")
-      .format(this.mtzService.dateFormat.dateAbbrev);
     const parsedPaymentLastDate = this.mtzService
       .mtz(paymentLastDate, "dateTimeUTCZ")
       .format(this.mtzService.dateFormat.dateAbbrev);
-
-    const isLastPaymentDate = parsedNextPaymentDate === parsedPaymentLastDate;
 
     const formattedList = await Promise.all(
       data.map(
@@ -1985,6 +1973,8 @@ export class PaymentService {
             penaltyCount: 0,
             waivedPenalty: null,
           };
+
+          const isLastPaymentDate = parsedPaymentLastDate === dueDate;
 
           const monthsPassedFromDueDate = this.mtzService
             .mtz()

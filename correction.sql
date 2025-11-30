@@ -55,3 +55,34 @@
 -- WHERE p.id = calc.id;
 
 -- ? ==================================================
+
+-- ? Used to connect reservation to contract
+
+-- WITH ucrf AS (
+-- 	SELECT 
+-- 		p."id",
+-- 		p."reservationId",
+-- 		c."id" as "connectedContractId"
+-- 	FROM "Payment" p
+-- 	INNER JOIN "Reservation" r ON r."id" = p."reservationId"
+-- 	INNER JOIN "Contract" c ON c."lotId" = r."lotId" AND c."clientId" = r."clientId"
+-- 	WHERE 
+-- 		p."transactionType" = 'RESERVATION_FEE' AND
+-- 		p."contractId" IS NULL AND
+-- 		p."status" = 'ACTIVE' AND
+-- 		r."status" = 'DONE'
+-- )
+
+-- UPDATE "Payment" p
+-- SET
+-- 	"contractId" = ucrf."connectedContractId"
+-- FROM ucrf
+-- WHERE p."id" = ucrf."id";
+
+-- UPDATE "Reservation" r
+-- SET
+-- 	"contractId" = ucrf."connectedContractId"
+-- FROM ucrf
+-- WHERE r."id" = ucrf."reservationId"
+
+-- ? ==================================================
