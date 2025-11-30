@@ -585,6 +585,7 @@ model Contract {
   lot               Lot?              @relation(fields: [lotId], references: [id])
   agent             Agent             @relation(fields: [agentId], references: [id])
   commissionOfAgent AgentCommission?
+  reservation       Reservation?
   payment           Payment[]
   contractRequest   ContractRequest[]
   contractAudit     ContractAudit[]
@@ -1015,14 +1016,16 @@ model PaymentRequestAudit {
 }
 
 model Reservation {
-  id       String @id @default(uuid())
-  lotId    String
-  clientId String
+  id         String  @id @default(uuid())
+  lotId      String
+  clientId   String
+  contractId String? @unique
 
   validity DateTime
 
   lot              Lot                @relation(fields: [lotId], references: [id])
   client           Client             @relation(fields: [clientId], references: [id])
+  contract         Contract?          @relation(fields: [contractId], references: [id])
   payment          Payment?
   reservationAudit ReservationAudit[]
 
