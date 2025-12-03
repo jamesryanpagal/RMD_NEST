@@ -139,13 +139,13 @@ export class PaymentService {
             const totalPayment =
               totalMonthlyDown + (waivePenalty ? 0 : penaltyAmount);
 
-            if (amount < totalPayment) {
-              this.exceptionService.throw(
-                `Amount must be greater than or equal to ${totalPayment}`,
-                "BAD_REQUEST",
-              );
-              return;
-            }
+            // if (amount < totalPayment) {
+            //   this.exceptionService.throw(
+            //     `Amount must be greater than or equal to ${totalPayment}`,
+            //     "BAD_REQUEST",
+            //   );
+            //   return;
+            // }
 
             if (transactionType !== "PARTIAL_DOWN_PAYMENT") {
               this.exceptionService.throw(
@@ -274,13 +274,13 @@ export class PaymentService {
             downPaymentStatus === "ON_GOING" &&
             totalDownPaymentBalance
           ) {
-            if (amount < totalDownPaymentBalance) {
-              this.exceptionService.throw(
-                `Amount must be greater than or equal to ${totalDownPaymentBalance}`,
-                "BAD_REQUEST",
-              );
-              return;
-            }
+            // if (amount < totalDownPaymentBalance) {
+            //   this.exceptionService.throw(
+            //     `Amount must be greater than or equal to ${totalDownPaymentBalance}`,
+            //     "BAD_REQUEST",
+            //   );
+            //   return;
+            // }
 
             if (transactionType !== "FULL_DOWN_PAYMENT") {
               this.exceptionService.throw(
@@ -419,13 +419,13 @@ export class PaymentService {
                 excessPayment
               : totalMonthly + (waivePenalty ? 0 : penaltyAmount);
 
-            if (amount < computedAmount) {
-              this.exceptionService.throw(
-                `Amount must be greater than or equal to ${computedAmount}`,
-                "BAD_REQUEST",
-              );
-              return;
-            }
+            // if (amount < computedAmount) {
+            //   this.exceptionService.throw(
+            //     `Amount must be greater than or equal to ${computedAmount}`,
+            //     "BAD_REQUEST",
+            //   );
+            //   return;
+            // }
 
             const hasExcessPayment = amount > computedAmount;
 
@@ -572,13 +572,13 @@ export class PaymentService {
             return;
           }
 
-          if (amount < balance) {
-            this.exceptionService.throw(
-              `Amount must be greater than or equal to ${balance}`,
-              "BAD_REQUEST",
-            );
-            return;
-          }
+          // if (amount < balance) {
+          //   this.exceptionService.throw(
+          //     `Amount must be greater than or equal to ${balance}`,
+          //     "BAD_REQUEST",
+          //   );
+          //   return;
+          // }
 
           const paymentResponse = await prisma.payment.create({
             data: {
@@ -1698,13 +1698,13 @@ export class PaymentService {
           return;
         }
 
-        if (amount < (monthlyReleaseAmount || 0)) {
-          this.exceptionService.throw(
-            `Amount must be greater than or equal to ${monthlyReleaseAmount}`,
-            "BAD_REQUEST",
-          );
-          return;
-        }
+        // if (amount < (monthlyReleaseAmount || 0)) {
+        //   this.exceptionService.throw(
+        //     `Amount must be greater than or equal to ${monthlyReleaseAmount}`,
+        //     "BAD_REQUEST",
+        //   );
+        //   return;
+        // }
 
         const computedBalance = balance - (monthlyReleaseAmount || 0);
         const parsedNextReleaseDate = this.mtzService.mtz(
