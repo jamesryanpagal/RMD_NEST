@@ -17,11 +17,6 @@ import { Request } from "express";
 export class AgentCommissionController {
   constructor(private agentCommissionService: AgentCommissionService) {}
 
-  @Get()
-  onGetAgentCommissions(@Query() query: QuerySearchDto) {
-    return this.agentCommissionService.agentCommissions(query);
-  }
-
   @Patch("start/:id")
   onStartAgentCommission(
     @Param("id") id: string,
@@ -34,6 +29,14 @@ export class AgentCommissionController {
   @Delete("delete/:id")
   onDeleteAgentCommission(@Param("id") id: string, @Req() req: Request) {
     return this.agentCommissionService.deleteAgentCommission(id, req.user);
+  }
+
+  @Get("agents/:agentId")
+  onGetAgentCommissions(
+    @Query() query: QuerySearchDto,
+    @Param("agentId") agentId: string,
+  ) {
+    return this.agentCommissionService.agentCommissions(query, agentId);
   }
 
   @Get(":id")

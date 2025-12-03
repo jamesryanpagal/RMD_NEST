@@ -16,14 +16,19 @@ export class AgentCommissionService {
     private exceptionService: ExceptionService,
   ) {}
 
-  async agentCommissions(query: QuerySearchDto) {
+  async agentCommissions(query: QuerySearchDto, agentId: string) {
     try {
       const { search } = query || {};
       const searchArr = search?.split(" ") || [];
       const whereQuery: Prisma.AgentCommissionWhereInput = {
-        status: {
-          not: "DELETED",
-        },
+        AND: [
+          {
+            status: { not: "DELETED" },
+          },
+          {
+            agentId,
+          },
+        ],
         ...(search && {
           OR: [
             {
@@ -100,42 +105,24 @@ export class AgentCommissionService {
       const agentCommissionResponse =
         await this.prismaService.agentCommission.findMany({
           where: whereQuery,
+          orderBy: {
+            dateCreated: "desc",
+          },
           omit: {
             dateCreated: true,
             dateDeleted: true,
             dateUpdated: true,
           },
           include: {
-            agent: {
+            contract: {
               include: {
-                contract: {
-                  select: {
-                    id: true,
-                    agentCommission: true,
-                    agentCommissionTotal: true,
-                    paymentStartedDate: true,
-                    paymentLastDate: true,
-                    lot: {
-                      select: {
-                        id: true,
-                        title: true,
-                        sqm: true,
-                        block: {
-                          select: {
-                            id: true,
-                            title: true,
-                            phase: {
-                              select: {
-                                id: true,
-                                title: true,
-                                project: {
-                                  select: {
-                                    id: true,
-                                    projectName: true,
-                                  },
-                                },
-                              },
-                            },
+                lot: {
+                  include: {
+                    block: {
+                      include: {
+                        phase: {
+                          include: {
+                            project: true,
                           },
                         },
                       },
@@ -143,6 +130,54 @@ export class AgentCommissionService {
                   },
                 },
               },
+            },
+            agent: {
+              // include: {
+              //   contract: {
+              //     where: {
+              //       AND: [
+              //         {
+              //           status: { not: "DELETED" },
+              //         },
+              //         {
+              //           agentId,
+              //         },
+              //       ],
+              //     },
+              //     select: {
+              //       id: true,
+              //       agentCommission: true,
+              //       agentCommissionTotal: true,
+              //       paymentStartedDate: true,
+              //       paymentLastDate: true,
+              //       lot: {
+              //         select: {
+              //           id: true,
+              //           title: true,
+              //           sqm: true,
+              //           block: {
+              //             select: {
+              //               id: true,
+              //               title: true,
+              //               phase: {
+              //                 select: {
+              //                   id: true,
+              //                   title: true,
+              //                   project: {
+              //                     select: {
+              //                       id: true,
+              //                       projectName: true,
+              //                     },
+              //                   },
+              //                 },
+              //               },
+              //             },
+              //           },
+              //         },
+              //       },
+              //     },
+              //   },
+              // },
               omit: {
                 dateCreated: true,
                 dateDeleted: true,
@@ -158,9 +193,10 @@ export class AgentCommissionService {
           releaseStartDate,
           nextReleaseDate,
           agent,
+          contract,
           ...rest
         }) => {
-          const { contract, firstName, lastName } = agent || {};
+          const { firstName, lastName } = agent || {};
           const onFormatDate = (
             originalFormat: keyof typeof this.mtzService.dateFormat,
             date: string | null,
@@ -171,10 +207,6 @@ export class AgentCommissionService {
                   .mtz(date, originalFormat)
                   .format(this.mtzService.dateFormat.dateAbbrev);
           };
-          const findContract =
-            contract.find(
-              (contract: { id: string }) => contract?.id === rest.contractId,
-            ) || {};
           return {
             ...rest,
             firstName,
@@ -182,7 +214,7 @@ export class AgentCommissionService {
             releaseEndDate: onFormatDate("dateTimeUTCZ", releaseEndDate),
             releaseStartDate: onFormatDate("dateTimeUTCZ", releaseStartDate),
             nextReleaseDate: onFormatDate("dateTimeUTCZ", nextReleaseDate),
-            contract: findContract || {},
+            contract,
           };
         },
       );

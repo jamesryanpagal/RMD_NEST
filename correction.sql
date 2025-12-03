@@ -86,3 +86,47 @@
 -- WHERE r."id" = ucrf."reservationId"
 
 -- ? ==================================================
+
+-- ? Used to correct the agent commission total
+
+-- BEGIN;
+
+-- WITH calc AS (
+-- 	SELECT
+-- 		q.*,
+-- 		ROUND(((q."agentCommissionPercentage"::numeric / 100) * q."tcp")::numeric, 2) AS "agentCommissionNewTotal"
+-- 	FROM (
+-- 		SELECT 
+-- 			ac.*,
+-- 			c."agentCommission",
+-- 			CASE
+-- 				WHEN c."agentCommission" = 'FIVE'
+-- 					THEN 5
+-- 				WHEN c."agentCommission" = 'SEVEN'
+-- 					THEN 7
+-- 				WHEN c."agentCommission" = 'TEN'
+-- 					THEN 10
+-- 				WHEN c."agentCommission" = 'TWELVE'
+-- 					THEN 12
+-- 				WHEN c."agentCommission" = 'FIFTEEN'
+-- 					THEN 15
+-- 				ELSE 0
+-- 			END AS "agentCommissionPercentage",
+-- 			c."agentCommissionTotal",
+-- 			c."tcp"
+-- 		FROM "AgentCommission" ac
+-- 		INNER JOIN "Contract" c ON c."id" = ac."contractId"
+-- 		WHERE 
+-- 			ac."status" = 'PENDING'
+-- 	) AS q
+-- )
+
+-- UPDATE "Contract" c
+-- SET
+-- 	"agentCommissionTotal" = calc."agentCommissionNewTotal"
+-- FROM calc
+-- WHERE c."id" = calc."contractId";
+
+-- COMMIT;
+
+-- ? ==================================================

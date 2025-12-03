@@ -1594,7 +1594,10 @@ export class PaymentService {
           amount: monthlyReleaseAmount,
           paidAmount: onGetPaidInDate(startingDueDate)?.amount || 0,
           paid: !!onGetPaidInDate(startingDueDate),
-          remainingBalance: agentCommissionTotal - monthlyReleaseAmount,
+          remainingBalance:
+            agentCommissionTotal - monthlyReleaseAmount <= 0
+              ? 0
+              : agentCommissionTotal - monthlyReleaseAmount,
           files: this.fileService.onFormatPaymentFilesResponse(
             onGetPaidInDate(startingDueDate)?.files,
           ),
@@ -1616,7 +1619,10 @@ export class PaymentService {
             amount: monthlyReleaseAmount,
             paidAmount: onGetPaidInDate(dueDate)?.amount || 0,
             paid: !!onGetPaidInDate(dueDate),
-            remainingBalance: remainingBalance - monthlyReleaseAmount,
+            remainingBalance:
+              remainingBalance - monthlyReleaseAmount <= 0
+                ? 0
+                : remainingBalance - monthlyReleaseAmount,
             files: this.fileService.onFormatPaymentFilesResponse(
               onGetPaidInDate(dueDate)?.files,
             ),
