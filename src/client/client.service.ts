@@ -344,6 +344,52 @@ export class ClientService {
           dateUpdated: true,
           dateDeleted: true,
         },
+        include: {
+          contract: {
+            where: {
+              status: { not: "DELETED" },
+            },
+            include: {
+              lot: {
+                include: {
+                  block: {
+                    include: {
+                      phase: {
+                        include: {
+                          project: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              payment: true,
+              client: true,
+            },
+          },
+          reservation: {
+            where: {
+              status: { notIn: ["DELETED", "CONTRACT_DELETED"] },
+            },
+            include: {
+              lot: {
+                include: {
+                  block: {
+                    include: {
+                      phase: {
+                        include: {
+                          project: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              payment: true,
+              client: true,
+            },
+          },
+        },
       });
     } catch (error) {
       throw error;
