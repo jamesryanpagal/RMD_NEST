@@ -45,6 +45,13 @@ export class PaymentHistoryQueryDto {
 
 export class UpdatePaymentDto {
   @IsNotEmpty()
+  @IsNumber()
+  @Transform(({ value }) =>
+    value !== null || value !== undefined ? Number(value) : null,
+  )
+  amount: number;
+
+  @IsNotEmpty()
   @IsString()
   paymentDate: string;
 

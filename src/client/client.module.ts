@@ -14,13 +14,14 @@ import { ExceptionService } from "src/services/interceptor/interceptor.service";
   controllers: [ClientController],
   providers: [ClientService, PrismaService, ExceptionService],
 })
-export class ClientModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(ExistingClientMiddleware)
-      .forRoutes(
-        { path: "clients/create", method: RequestMethod.POST },
-        { path: "clients/update/:id", method: RequestMethod.PATCH },
-      );
-  }
-}
+export class ClientModule {}
+// implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer
+//       .apply(ExistingClientMiddleware)
+//       .forRoutes(
+//         { path: "clients/create", method: RequestMethod.POST },
+//         { path: "clients/update/:id", method: RequestMethod.PATCH },
+//       );
+//   }
+// }

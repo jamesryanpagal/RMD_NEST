@@ -671,7 +671,7 @@ export class PaymentService {
     dto: UpdatePaymentDto,
     user?: UserFullDetailsProps,
   ) {
-    const { modeOfPayment, paymentDate, referenceNumber } = dto || {};
+    const { modeOfPayment, paymentDate, referenceNumber, amount } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
         if (!user) {
@@ -705,7 +705,6 @@ export class PaymentService {
           penalized,
           penaltyAmount,
           receiptNo,
-          amount,
         } = paymentResponse || {};
 
         if (role === "SECRETARY") {

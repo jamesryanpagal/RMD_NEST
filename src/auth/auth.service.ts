@@ -142,8 +142,11 @@ export class AuthService {
         const password = this.generatorService.generatePassword(6);
         const hashPassword = await this.argonService.hash(password);
 
+        const defaultUsername = `${firstName.toLowerCase()}_${lastName.toLowerCase()}@${Math.floor(Math.random() * 900) + 100}`;
+
         await prisma.user.create({
           data: {
+            username: defaultUsername,
             firstName,
             middleName,
             lastName,

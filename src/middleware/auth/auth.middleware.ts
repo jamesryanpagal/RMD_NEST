@@ -16,14 +16,14 @@ export class LoginMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
-    const { email, password } = req.body as LoginDto;
+    const { username, password } = req.body as LoginDto;
 
     try {
       const user = await this.prismaService.user.findFirst({
         where: {
           AND: [
             {
-              email,
+              username,
             },
             {
               status: "ACTIVE",
@@ -38,7 +38,10 @@ export class LoginMiddleware implements NestMiddleware {
       });
 
       if (!user) {
-        this.exceptionService.throw("Invalid email or password", "NOT_FOUND");
+        this.exceptionService.throw(
+          "Invalid username or password",
+          "NOT_FOUND",
+        );
         return;
       }
 
@@ -50,12 +53,15 @@ export class LoginMiddleware implements NestMiddleware {
       );
 
       if (!verifyPassword) {
-        this.exceptionService.throw("Invalid email or password", "NOT_FOUND");
+        this.exceptionService.throw(
+          "Invalid username or password",
+          "NOT_FOUND",
+        );
         return;
       }
 
-      const clientIp = this.authService.getClientIp(req);
-      const userAgent = this.authService.getUserAgent(req);
+      // const clientIp = this.authService.getClientIp(req);
+      // const userAgent = this.authService.getUserAgent(req);
 
       // const checkSession = await this.prismaService.authSession.findFirst({
       //   where: {

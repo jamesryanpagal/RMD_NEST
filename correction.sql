@@ -130,3 +130,26 @@
 -- COMMIT;
 
 -- ? ==================================================
+
+-- ? Used to correct the username in the User table
+
+-- WITH generate AS (
+-- 	SELECT
+-- 		q.*,
+-- 		LOWER("firstName") || '_' || LOWER("lastName") || '@' || FLOOR(RANDOM() * 900) + 100 AS "generatedUsername"
+-- 	FROM (
+-- 		SELECT 
+-- 			u.id, 
+-- 			u."firstName", 
+-- 			u."lastName"
+-- 		FROM "User" u
+-- 	) AS q
+-- )
+
+-- UPDATE "User" u
+-- SET
+-- 	"username" = g."generatedUsername"
+-- FROM generate g
+-- WHERE u.id = g.id
+
+-- ? ==================================================

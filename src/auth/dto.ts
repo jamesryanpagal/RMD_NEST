@@ -16,7 +16,7 @@ export type LoginServiceDto = Pick<
 export class LoginDto {
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  username: string;
 
   @IsNotEmpty()
   password: string;
