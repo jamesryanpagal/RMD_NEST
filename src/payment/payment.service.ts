@@ -1376,6 +1376,7 @@ export class PaymentService {
 
             response = {
               paymentType,
+              downPaymentType,
               installmentType,
               client,
               project: projectResponse,
@@ -1473,6 +1474,7 @@ export class PaymentService {
 
           response = {
             paymentType,
+            downPaymentType,
             installmentType,
             client,
             project: projectResponse,

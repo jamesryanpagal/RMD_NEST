@@ -694,6 +694,7 @@ export class ContractService {
           },
           include: {
             reservation: true,
+            commissionOfAgent: true,
           },
         });
 
@@ -736,6 +737,7 @@ export class ContractService {
           paymentLastDate,
           lotId,
           reservation,
+          commissionOfAgent,
         } = contractResponse || {};
 
         if (role === "SECRETARY") {
@@ -808,7 +810,7 @@ export class ContractService {
               data: {
                 status: "CONTRACT_DELETED",
                 contractId: null,
-                updatedBy: user.id,
+                deletedBy: user.id,
               },
             });
 
@@ -829,9 +831,22 @@ export class ContractService {
                 },
                 data: {
                   status: "DELETED",
+                  deletedBy: user.id,
                 },
               });
             }
+          }
+
+          if (commissionOfAgent) {
+            await prisma.agentCommission.update({
+              where: {
+                id: commissionOfAgent.id,
+              },
+              data: {
+                status: "DELETED",
+                deletedBy: user.id,
+              },
+            });
           }
         }
       });
