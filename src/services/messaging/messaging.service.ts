@@ -340,6 +340,7 @@ export class MessagingService {
   async onSendUserCredentials(
     name: string,
     email: string,
+    username: string,
     password: string,
     role: ROLE,
   ) {
@@ -361,7 +362,7 @@ export class MessagingService {
           <body>
             <p>Welcome to RMD Land <strong>${name}</strong>,</p>
             <p>Your credentials are as follows:</p>
-            <p>Email: <strong>${email}</strong></p>
+            <p>Username: <strong>${username}</strong></p>
             <p>Password: <strong>${password}</strong></p>
             <p>Please use these credentials to login to your account.</p>
           </body>

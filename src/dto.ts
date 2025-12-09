@@ -5,3 +5,9 @@ export class QuerySearchDto {
   @IsString()
   search?: string;
 }
+
+export class QueryIdDto {
+  @IsOptional()
+  @IsString()
+  id: string;
+}

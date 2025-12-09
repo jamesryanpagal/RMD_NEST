@@ -430,12 +430,24 @@ export class ContractService {
     }
   }
 
-  async getContracts(query: QuerySearchDto) {
+  async getContracts(query: QuerySearchDto, user?: UserFullDetailsProps) {
     try {
       const { search } = query || {};
       const searchArr = search?.split(" ") || [];
+
+      const { clientAssigned } = user || {};
+
       const whereQuery: Prisma.ContractWhereInput = {
-        status: { not: "DELETED" },
+        AND: [
+          {
+            status: { not: "DELETED" },
+          },
+          clientAssigned && clientAssigned?.length
+            ? {
+                clientId: { in: clientAssigned },
+              }
+            : {},
+        ],
         ...(search && {
           OR: [
             {

@@ -27,8 +27,8 @@ export class ContractController {
   constructor(private contractService: ContractService) {}
 
   @Get()
-  onGetContracts(@Query() query: QuerySearchDto) {
-    return this.contractService.getContracts(query);
+  onGetContracts(@Query() query: QuerySearchDto, @Req() req: Request) {
+    return this.contractService.getContracts(query, req.user);
   }
 
   @Post("create/:clientId/:lotId/:agentId")

@@ -223,11 +223,12 @@ model User {
 
   role ROLE
 
-  admin       Admin?
-  secretary   Secretary?
-  authSession AuthSession[]
-  userAudit   UserAudit[]
-  settings    Settings?
+  admin          Admin?
+  secretary      Secretary?
+  authSession    AuthSession[]
+  userAudit      UserAudit[]
+  settings       Settings?
+  clientAssigned String[]      @default([])
 
   status STATUS @default(ACTIVE)
 

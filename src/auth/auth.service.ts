@@ -188,6 +188,7 @@ export class AuthService {
         await this.messagingService.onSendUserCredentials(
           `${firstName} ${lastName}`,
           email,
+          defaultUsername,
           password,
           role,
         );

@@ -27,8 +27,8 @@ export class ClientController {
   constructor(private clientService: ClientService) {}
 
   @Get()
-  onGetClients(@Query() queryParams: QuerySearchDto) {
-    return this.clientService.getClients(queryParams);
+  onGetClients(@Query() queryParams: QuerySearchDto, @Req() req: Request) {
+    return this.clientService.getClients(queryParams, req.user);
   }
 
   @Post("create")

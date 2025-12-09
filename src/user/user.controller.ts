@@ -14,6 +14,7 @@ import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import { UserService } from "./user.service";
 import { Request } from "express";
 import {
+  AssignClientDto,
   UpdatePasswordDto,
   UpdateUserAccessFunctionsDto,
   UpdateUserDto,
@@ -21,7 +22,7 @@ import {
 import { EmailExistsGuard, RolesGuard } from "src/services/guard/guard.service";
 import { Roles } from "src/decorator";
 import { $Enums } from "generated/prisma";
-import { QuerySearchDto } from "src/dto";
+import { QueryIdDto, QuerySearchDto } from "src/dto";
 import {
   UpdateProjectAddressDetails,
   UpdateUserPersonalDetails,
@@ -42,6 +43,22 @@ export class UserController {
   @Get("details")
   onGetUserDetails(@Req() req: Request) {
     return this.userService.getUserDetails(req);
+  }
+
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Get("clients")
+  onGetUserClients(@Query() query: QueryIdDto, @Req() req: Request) {
+    return this.userService.getUserClients(query, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN)
+  @Patch("assign/client/:id")
+  onAssignClient(
+    @Param("id") id: string,
+    @Body() dto: AssignClientDto,
+    @Req() req: Request,
+  ) {
+    return this.userService.assignClient(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)

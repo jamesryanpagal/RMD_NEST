@@ -30,8 +30,8 @@ export class ReservationController {
   constructor(private reservationService: ReservationService) {}
 
   @Get()
-  onGetReservations(@Query() query: QuerySearchDto) {
-    return this.reservationService.getReservations(query);
+  onGetReservations(@Query() query: QuerySearchDto, @Req() req: Request) {
+    return this.reservationService.getReservations(query, req.user);
   }
 
   @Post("create/:lotId/:clientId")

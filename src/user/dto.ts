@@ -79,3 +79,10 @@ export class UpdateUserAccessFunctionsDto {
   @IsEnum($Enums.MODULE_FUNCTION, { each: true })
   moduleFunction: $Enums.MODULE_FUNCTION[];
 }
+
+export class AssignClientDto {
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  clientIds: string[];
+}

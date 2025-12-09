@@ -13,13 +13,24 @@ export class ClientService {
     private exceptionService: ExceptionService,
   ) {}
 
-  async getClients(query: QuerySearchDto) {
+  async getClients(query: QuerySearchDto, user?: UserFullDetailsProps) {
     try {
       const { search } = query;
       const searchArr = search?.split(" ") || [];
 
+      const { clientAssigned } = user || {};
+
       const whereQuery: Prisma.ClientWhereInput = {
-        status: { not: "DELETED" },
+        AND: [
+          {
+            status: { not: "DELETED" },
+          },
+          clientAssigned && clientAssigned?.length
+            ? {
+                id: { in: clientAssigned },
+              }
+            : {},
+        ],
         ...(search && {
           OR: [
             {

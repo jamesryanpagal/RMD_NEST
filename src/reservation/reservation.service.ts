@@ -146,14 +146,26 @@ export class ReservationService {
     }
   }
 
-  async getReservations(query: QuerySearchDto) {
+  async getReservations(query: QuerySearchDto, user?: UserFullDetailsProps) {
     try {
       let response: any[] = [];
+
+      const { clientAssigned } = user || {};
+
       await this.prismaService.$transaction(async prisma => {
         const { search } = query || {};
         const searchArr = search?.split(" ") || [];
         const whereQuery: Prisma.ReservationWhereInput = {
-          status: { notIn: ["DELETED", "CONTRACT_DELETED"] },
+          AND: [
+            {
+              status: { notIn: ["DELETED", "CONTRACT_DELETED"] },
+            },
+            clientAssigned && clientAssigned?.length
+              ? {
+                  clientId: { in: clientAssigned },
+                }
+              : {},
+          ],
           ...(search && {
             OR: [
               {
