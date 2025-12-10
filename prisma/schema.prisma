@@ -139,6 +139,7 @@ enum TRANSACTION_TYPE {
   DOWN_PAYMENT
   SURVEY_FEE
   AGENT_COMMISSION_RELEASE
+  FULL_PAYMENT
 }
 
 enum DOWN_PAYMENT_TYPE {
@@ -581,6 +582,7 @@ model Contract {
   interest                Int?
   interestTotal           Float?
 
+  discount      Float @default(0)
   excessPayment Float @default(0)
 
   client            Client?           @relation(fields: [clientId], references: [id])

@@ -3,6 +3,7 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import {
   AdjustReservationValidityDto,
   ApplyPenaltyPaymentDto,
+  CreateFullPaymentDto,
   CreatePaymentDto,
   PaymentBreakdownType,
   UpdatePaymentDto,
@@ -666,6 +667,195 @@ export class PaymentService {
     }
   }
 
+  async createAllRemainingDatesPayment(
+    contractId: string,
+    files: Express.Multer.File[],
+    dto: CreateFullPaymentDto,
+    user?: UserFullDetailsProps,
+  ) {
+    const {
+      modeOfPayment,
+      paymentDate,
+      amount,
+      referenceNumber,
+      transactionType,
+      sendReceipt,
+      waivePenalty,
+      waivedReason,
+      discount,
+      penaltyAmount,
+    } = dto || {};
+    try {
+      await this.prismaService.$transaction(async prisma => {
+        if (!user) {
+          this.exceptionService.throw("User not found", "NOT_FOUND");
+          return;
+        }
+
+        const contractResponse = await prisma.contract.findFirst({
+          where: {
+            AND: [
+              {
+                id: contractId,
+              },
+              {
+                status: { notIn: ["DELETED", "FORFEITED"] },
+              },
+            ],
+          },
+          include: {
+            client: true,
+            lot: {
+              include: {
+                block: {
+                  include: {
+                    phase: {
+                      include: {
+                        project: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            agent: true,
+          },
+        });
+
+        if (!contractResponse) {
+          this.exceptionService.throw(
+            "Contract not found, it is either deleted or forfeited.",
+            "NOT_FOUND",
+          );
+          return;
+        }
+
+        const { paymentType, status, nextPaymentDate, client, lot, agent } =
+          contractResponse || {};
+
+        if (paymentType !== "INSTALLMENT") {
+          this.exceptionService.throw(
+            "Full payment is only available for installment",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        if (status === "DONE") {
+          this.exceptionService.throw(
+            "Contract is already done",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        if (transactionType !== "FULL_PAYMENT") {
+          this.exceptionService.throw(
+            "Transaction type must be FULL_PAYMENT",
+            "BAD_REQUEST",
+          );
+          return;
+        }
+
+        const paymentResponse = await prisma.payment.create({
+          data: {
+            modeOfPayment,
+            paymentDate,
+            amount,
+            referenceNumber,
+            targetDueDate: nextPaymentDate,
+            transactionType,
+            ...(!!penaltyAmount && {
+              penalized: true,
+              penaltyAmount,
+            }),
+            ...(!!waivePenalty && {
+              waivedPenalty: true,
+              waivedReason,
+            }),
+            contract: {
+              connect: {
+                id: contractId,
+              },
+            },
+            createdBy: user.id,
+          },
+        });
+
+        const { id: paymentResponseId, receiptNo } = paymentResponse || {};
+
+        await this.uploadPfp(paymentResponseId, files, user, prisma);
+
+        await prisma.contract.update({
+          where: {
+            id: contractId,
+          },
+          data: {
+            penaltyAmount: 0,
+            penaltyCount: 0,
+            discount,
+            ...(paymentType === "INSTALLMENT" && {
+              totalDownPaymentBalance: 0,
+              downPaymentStatus: "DONE",
+            }),
+            status: "DONE",
+            balance: 0,
+            updatedBy: user.id,
+          },
+        });
+
+        await prisma.lot.update({
+          where: {
+            id: lot?.id,
+          },
+          data: {
+            status: "SOLD",
+            updatedBy: user.id,
+          },
+        });
+
+        if (!!sendReceipt && !!client && !!lot && !!agent) {
+          const {
+            email,
+            firstName,
+            lastName,
+            street,
+            barangay,
+            city,
+            province,
+          } = client || {};
+          const { firstName: agentFirstName, lastName: agentLastName } =
+            agent || {};
+          const { block, title: lotTitle } = lot || {};
+          const { phase, title: blockTitle } = block || {};
+          const { project } = phase || {};
+          const { projectName } = project || {};
+          await this.messagingService.onSendPaymentReceipt({
+            clientName: `${firstName} ${lastName}`,
+            email,
+            street,
+            barangay,
+            city,
+            province,
+            projectName,
+            lot: lotTitle || "",
+            block: blockTitle || "",
+            modeOfPayment,
+            referenceNumber,
+            agent: `${agentFirstName} ${agentLastName}`,
+            totalInWords: this.formatterService.onNumberToWords(amount),
+            total: this.formatterService.onParseToPhp(amount),
+            receiptNumber: receiptNo,
+          });
+        }
+      });
+
+      return "Payment created successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updatePayment(
     id: string,
     dto: UpdatePaymentDto,
@@ -1132,6 +1322,7 @@ export class PaymentService {
           agent,
           interest,
           status,
+          nextPaymentDate,
         } = contractResponse || {};
 
         const projectResponse = lot?.block.phase.project || {};
@@ -1270,6 +1461,7 @@ export class PaymentService {
                   files: this.fileService.onFormatPaymentFilesResponse(
                     paymentInDate?.files,
                   ),
+                  ignored: status === "DONE" && !paymentInDate,
                 });
               }
             } else if (
@@ -1305,6 +1497,7 @@ export class PaymentService {
                 files: this.fileService.onFormatPaymentFilesResponse(
                   paymentInDate?.files,
                 ),
+                ignored: status === "DONE" && !paymentInDate,
               });
             }
 
@@ -1364,6 +1557,7 @@ export class PaymentService {
                 files: this.fileService.onFormatPaymentFilesResponse(
                   paymentInDate?.files,
                 ),
+                ignored: status === "DONE" && !paymentInDate,
               });
             }
 
@@ -1400,6 +1594,7 @@ export class PaymentService {
               agentCommissionTotal,
               interest,
               status,
+              nextPaymentDate,
               paymentBreakdown: formattedPaymentBreakdown,
             };
           }
@@ -1498,6 +1693,7 @@ export class PaymentService {
             agentCommissionTotal,
             interest,
             status,
+            nextPaymentDate,
             paymentBreakdown: formattedPaymentBreakdown,
           };
         }

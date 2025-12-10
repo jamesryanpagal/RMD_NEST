@@ -17,6 +17,7 @@ import { PASSPORT_STRATEGY_KEY } from "src/services/strategy/strategy.service";
 import {
   AdjustReservationValidityDto,
   ApplyPenaltyPaymentDto,
+  CreateFullPaymentDto,
   CreatePaymentDto,
   UpdatePaymentDto,
 } from "./dto";
@@ -53,6 +54,29 @@ export class PaymentController {
     @Req() req: Request,
   ) {
     return this.paymentService.createContractPayment(
+      contractId,
+      files,
+      dto,
+      req.user,
+    );
+  }
+
+  @Post("create/all/remaining/dates/:contractId")
+  @UseInterceptors(
+    UploadService.validate({
+      key: "pfp",
+      path: "payments",
+      multiple: true,
+      accepts: ["png", "jpeg", "jpg"],
+    }),
+  )
+  onCreateAllRemainingDatesPayment(
+    @Param("contractId") contractId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() dto: CreateFullPaymentDto,
+    @Req() req: Request,
+  ) {
+    return this.paymentService.createAllRemainingDatesPayment(
       contractId,
       files,
       dto,
