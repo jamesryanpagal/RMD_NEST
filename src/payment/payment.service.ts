@@ -1149,7 +1149,7 @@ export class PaymentService {
                 lotId,
               },
               {
-                status: { in: ["ACTIVE", "DONE"] },
+                status: { in: ["ACTIVE", "DONE", "CONTRACT_FORFEITED"] },
               },
             ],
           },
@@ -1948,7 +1948,7 @@ export class PaymentService {
             id: contractId,
           },
           {
-            status: { notIn: ["DELETED", "FORFEITED"] },
+            status: { notIn: ["DELETED"] },
           },
         ],
       },

@@ -1244,19 +1244,40 @@ export class ContractService {
           },
         });
 
-        await Promise.all(
-          reservation?.map(async ({ id: reservationId }) => {
-            await prisma.reservation.update({
-              where: {
-                id: reservationId,
+        const reservationResponse = await prisma.reservation.findFirst({
+          where: {
+            AND: [
+              {
+                contractId: id,
               },
-              data: {
-                status: "CONTRACT_FORFEITED",
-                updatedBy: user?.id,
+              {
+                status: {
+                  notIn: [
+                    "DELETED",
+                    "CONTRACT_DELETED",
+                    "CONTRACT_FORFEITED",
+                    "FORFEITED",
+                  ],
+                },
               },
-            });
-          }) || [],
-        );
+            ],
+          },
+        });
+
+        if (!reservationResponse) {
+          this.exceptionService.throw("Reservation not found", "NOT_FOUND");
+          return;
+        }
+
+        await prisma.reservation.update({
+          where: {
+            id: reservationResponse.id,
+          },
+          data: {
+            status: "CONTRACT_FORFEITED",
+            updatedBy: user?.id,
+          },
+        });
 
         await prisma.lot.update({
           where: {
