@@ -553,34 +553,35 @@ model Contract {
   lotId    String
   agentId  String
 
-  sqmPrice                Float
-  downPaymentType         DOWN_PAYMENT_TYPE?
-  downPaymentStatus       DOWN_PAYMENT_STATUS?
-  totalMonthlyDown        Float?
-  totalMonthly            Float?
-  downPayment             Int?
-  totalDownPayment        Float?
-  totalDownPaymentBalance Float?
-  downPaymentTerms        Int?
-  terms                   Int?
-  miscellaneous           MISCELLANEOUS
-  miscellaneousTotal      Float
-  agentCommission         COMMISSION
-  agentCommissionTotal    Float
-  balance                 Float
-  totalLotPrice           Float
-  tcp                     Float
-  paymentType             PAYMENT_TYPE
-  totalCashPayment        Float?
-  recurringPaymentDay     Int?
-  nextPaymentDate         String?
-  paymentStartedDate      String?
-  paymentLastDate         String?
-  penaltyAmount           Float                @default(0)
-  penaltyCount            Int                  @default(0)
-  installmentType         INSTALLMENT_TYPE?
-  interest                Int?
-  interestTotal           Float?
+  sqmPrice                   Float
+  downPaymentType            DOWN_PAYMENT_TYPE?
+  downPaymentStatus          DOWN_PAYMENT_STATUS?
+  totalMonthlyDown           Float?
+  totalMonthly               Float?
+  downPayment                Int?
+  totalDownPayment           Float?
+  totalDownPaymentBalance    Float?
+  downPaymentTerms           Int?
+  terms                      Int?
+  miscellaneous              MISCELLANEOUS
+  miscellaneousTotal         Float
+  miscellaneousAsLastPayment Boolean              @default(false)
+  agentCommission            COMMISSION
+  agentCommissionTotal       Float
+  balance                    Float
+  totalLotPrice              Float
+  tcp                        Float
+  paymentType                PAYMENT_TYPE
+  totalCashPayment           Float?
+  recurringPaymentDay        Int?
+  nextPaymentDate            String?
+  paymentStartedDate         String?
+  paymentLastDate            String?
+  penaltyAmount              Float                @default(0)
+  penaltyCount               Int                  @default(0)
+  installmentType            INSTALLMENT_TYPE?
+  interest                   Int?
+  interestTotal              Float?
 
   discount      Float @default(0)
   excessPayment Float @default(0)

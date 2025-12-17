@@ -1,5 +1,6 @@
-import { Transform } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -77,6 +78,27 @@ export class CreateUpdateContractDto {
   @IsOptional()
   @IsEnum($Enums.INSTALLMENT_TYPE)
   installmentType?: $Enums.INSTALLMENT_TYPE;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => String)
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === "") {
+      return false;
+    }
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const lowercased = value.toLowerCase().trim();
+      return lowercased === "true" || lowercased === "1";
+    }
+
+    return Boolean(value);
+  })
+  miscellaneousAsLastPayment?: boolean;
 }
 
 export class UpdatePaymentStartDateDto {

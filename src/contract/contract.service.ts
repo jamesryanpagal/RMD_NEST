@@ -40,6 +40,7 @@ export class ContractService {
       paymentStartDate,
       interest,
       installmentType,
+      miscellaneousAsLastPayment,
     } = dto || {};
     try {
       await this.prismaService.$transaction(async prisma => {
@@ -48,6 +49,7 @@ export class ContractService {
             sqmPrice,
             miscellaneous,
             miscellaneousTotal,
+            miscellaneousAsLastPayment,
             agent: {
               connect: {
                 id: agentId,
@@ -193,12 +195,22 @@ export class ContractService {
                 installmentType,
                 interest,
                 interestTotal,
-                totalMonthly: Number((balance / initialTerms).toFixed(2)),
+                totalMonthly: Number(
+                  (
+                    (miscellaneousAsLastPayment
+                      ? totalLotPrice +
+                        interestTotal -
+                        (reservationPayment?.amount || 0)
+                      : balance) / initialTerms
+                  ).toFixed(2),
+                ),
                 createdBy: user?.id,
               },
             });
           } else if (downPayment && terms) {
-            const totalDownPayment = tcp * (downPayment / 100);
+            const totalDownPayment =
+              (miscellaneousAsLastPayment ? totalLotPrice : tcp) *
+              (downPayment / 100);
             const totalDownPaymentAfterReservation =
               totalDownPayment - (reservationPayment?.amount || 0);
             const balance = tcp - totalDownPayment;
@@ -252,7 +264,13 @@ export class ContractService {
                       }
                     : {}),
                 downPaymentStatus: "ON_GOING",
-                totalMonthly: Number((balance / terms).toFixed(2)),
+                totalMonthly: Number(
+                  (
+                    (miscellaneousAsLastPayment
+                      ? totalLotPrice - totalDownPayment
+                      : balance) / terms
+                  ).toFixed(2),
+                ),
                 createdBy: user?.id,
               },
             });
