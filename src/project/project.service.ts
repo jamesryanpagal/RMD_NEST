@@ -280,12 +280,24 @@ export class ProjectService {
     }
   }
 
-  async getProjects(query: QuerySearchDto) {
+  async getProjects(query: QuerySearchDto, user?: UserFullDetailsProps) {
     try {
       const { search } = query || {};
       const searchArr = search?.split(" ") || [];
+
+      const { projectAssigned } = user || {};
+
       const whereQuery: Prisma.ProjectWhereInput = {
-        status: { not: "DELETED" },
+        AND: [
+          {
+            status: { not: "DELETED" },
+          },
+          projectAssigned && projectAssigned.length
+            ? {
+                id: { in: projectAssigned },
+              }
+            : {},
+        ],
         ...(search && {
           OR: [
             {

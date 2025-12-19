@@ -38,8 +38,8 @@ export class ProjectController {
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
   @Get()
-  onGetProjects(@Query() query: QuerySearchDto) {
-    return this.projectService.getProjects(query);
+  onGetProjects(@Query() query: QuerySearchDto, @Req() req: Request) {
+    return this.projectService.getProjects(query, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN)

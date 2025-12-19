@@ -15,6 +15,7 @@ import { UserService } from "./user.service";
 import { Request } from "express";
 import {
   AssignClientDto,
+  AssignProjectDto,
   UpdatePasswordDto,
   UpdateUserAccessFunctionsDto,
   UpdateUserDto,
@@ -51,6 +52,12 @@ export class UserController {
     return this.userService.getUserClients(query, req.user);
   }
 
+  @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
+  @Get("projects")
+  onGetUserProjects(@Query() query: QueryIdDto, @Req() req: Request) {
+    return this.userService.getUserProjects(query, req.user);
+  }
+
   @Roles($Enums.ROLE.ADMIN)
   @Patch("assign/client/:id")
   onAssignClient(
@@ -59,6 +66,16 @@ export class UserController {
     @Req() req: Request,
   ) {
     return this.userService.assignClient(id, dto, req.user);
+  }
+
+  @Roles($Enums.ROLE.ADMIN)
+  @Patch("assign/project/:id")
+  onAssignProject(
+    @Param("id") id: string,
+    @Body() dto: AssignProjectDto,
+    @Req() req: Request,
+  ) {
+    return this.userService.assignProject(id, dto, req.user);
   }
 
   @Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)

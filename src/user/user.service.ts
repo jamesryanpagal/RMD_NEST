@@ -3,6 +3,7 @@ import { PrismaService } from "src/services/prisma/prisma.service";
 import { UserFullDetailsProps } from "src/type";
 import {
   AssignClientDto,
+  AssignProjectDto,
   UpdatePasswordDto,
   UpdateUserAccessFunctionsDto,
   UpdateUserDto,
@@ -234,6 +235,52 @@ export class UserService {
     }
   }
 
+  async getUserProjects(query: QueryIdDto, user?: UserFullDetailsProps) {
+    try {
+      let selectedUser: UserFullDetailsProps | undefined = user;
+
+      if (query.id) {
+        const queryUserResponse = await this.prismaService.user.findFirst({
+          where: {
+            AND: [
+              {
+                id: query.id,
+              },
+              {
+                status: { not: "DELETED" },
+              },
+            ],
+          },
+          include: {
+            admin: true,
+            secretary: true,
+          },
+        });
+
+        if (queryUserResponse) {
+          selectedUser = queryUserResponse;
+        }
+      }
+
+      const { projectAssigned } = selectedUser || {};
+
+      return await this.prismaService.project.findMany({
+        where: {
+          AND: [
+            {
+              id: { in: projectAssigned },
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async assignClient(
     id: string,
     dto: AssignClientDto,
@@ -252,6 +299,34 @@ export class UserService {
         },
         data: {
           clientAssigned: clientIds,
+          updatedBy: user.id,
+        },
+      });
+
+      return "Client assigned successfully";
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async assignProject(
+    id: string,
+    dto: AssignProjectDto,
+    user?: UserFullDetailsProps,
+  ) {
+    const { projectIds } = dto;
+    try {
+      if (!user) {
+        this.exceptionService.throw("User not found", "BAD_REQUEST");
+        return;
+      }
+
+      await this.prismaService.user.update({
+        where: {
+          id,
+        },
+        data: {
+          projectAssigned: projectIds,
           updatedBy: user.id,
         },
       });

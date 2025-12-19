@@ -86,3 +86,10 @@ export class AssignClientDto {
   @IsString({ each: true })
   clientIds: string[];
 }
+
+export class AssignProjectDto {
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  projectIds: string[];
+}

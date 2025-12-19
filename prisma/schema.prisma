@@ -230,6 +230,7 @@ model User {
   userAudit      UserAudit[]
   settings       Settings?
   clientAssigned String[]      @default([])
+  projectAssigned String[]      @default([])
 
   status STATUS @default(ACTIVE)
 
