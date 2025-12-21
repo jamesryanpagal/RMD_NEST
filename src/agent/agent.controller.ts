@@ -21,7 +21,7 @@ import { QuerySearchDto } from "src/dto";
 import { Request } from "express";
 
 @UseGuards(AuthGuard(PASSPORT_STRATEGY_KEY.JWT), RolesGuard)
-@Roles($Enums.ROLE.ADMIN)
+@Roles($Enums.ROLE.ADMIN, $Enums.ROLE.SECRETARY)
 @Controller("agents")
 export class AgentController {
   constructor(private agentService: AgentService) {}
