@@ -1458,7 +1458,9 @@ export class PaymentService {
                   dueDate,
                   amount: totalMonthlyDown,
                   paidAmount: paymentInDate?.amount || 0,
-                  remainingBalance: remainingBalance - totalMonthlyDown,
+                  remainingBalance:
+                    remainingBalance -
+                    (paymentInDate?.amount || totalMonthlyDown),
                   transactionType: "PARTIAL_DOWN_PAYMENT",
                   paid: !!paymentInDate,
                   files: this.fileService.onFormatPaymentFilesResponse(
@@ -1494,7 +1496,9 @@ export class PaymentService {
                 dueDate,
                 amount: totalMonthlyDown,
                 paidAmount: paymentInDate?.amount || 0,
-                remainingBalance: remainingBalance - totalMonthlyDown,
+                remainingBalance:
+                  remainingBalance -
+                  (paymentInDate?.amount || totalMonthlyDown),
                 transactionType: "FULL_DOWN_PAYMENT",
                 paid: !!paymentInDate,
                 files: this.fileService.onFormatPaymentFilesResponse(
@@ -1551,9 +1555,12 @@ export class PaymentService {
                 amount: totalMonthly - (isLastPaymentDate ? excessPayment : 0),
                 paidAmount: paymentInDate?.amount || 0,
                 remainingBalance: Number(
-                  Math.floor(Math.abs(remainingBalance - totalMonthly)).toFixed(
-                    2,
-                  ),
+                  Math.floor(
+                    Math.abs(
+                      remainingBalance -
+                        (paymentInDate?.amount || totalMonthly),
+                    ),
+                  ).toFixed(2),
                 ),
                 transactionType: "MONTHLY_PAYMENT",
                 paid: !!paymentInDate,
@@ -1657,7 +1664,10 @@ export class PaymentService {
             paidAmount: paymentInDate?.amount || 0,
             remainingBalance: Number(
               Math.floor(
-                Math.abs(remainingBalance - (totalCashPayment || 0)),
+                Math.abs(
+                  remainingBalance -
+                    (paymentInDate?.amount || totalCashPayment || 0),
+                ),
               ).toFixed(2),
             ),
             transactionType: "TCP_FULL_PAYMENT",
