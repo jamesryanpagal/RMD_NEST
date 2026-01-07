@@ -53,7 +53,14 @@ export class RequestController {
     return this.requestService.updateClientRequest(requestId, dto, req.user);
   }
 
-  // ? create request update for request model
+  @Roles($Enums.ROLE.ADMIN)
+  @Get(":module/:id")
+  onGetRequestDetails(
+    @Param("module") module: $Enums.REQUEST_MODULE,
+    @Param("id") id: string,
+  ) {
+    return this.requestService.getRequestDetails(module, id);
+  }
 
   @Roles($Enums.ROLE.ADMIN)
   @Get(":module")

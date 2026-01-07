@@ -559,6 +559,9 @@ export class RequestService {
           omit: {
             dateDeleted: true,
           },
+          orderBy: {
+            dateCreated: "desc",
+          },
         });
 
         if (!moduleResponse.length) {
@@ -590,6 +593,79 @@ export class RequestService {
       });
 
       return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getRequestDetails(module: $Enums.REQUEST_MODULE, id: string) {
+    try {
+      const response = await this.prismaService[
+        this.moduleModel[module]
+      ].findFirst({
+        where: {
+          AND: [
+            {
+              id,
+            },
+            {
+              status: { not: "DELETED" },
+            },
+          ],
+        },
+        omit: {
+          updatedBy: true,
+          deletedBy: true,
+          dateUpdated: true,
+          dateDeleted: true,
+          dateRejected: true,
+          dateApproved: true,
+        },
+      });
+
+      const { targetId, createdBy, approvedBy, rejectedBy, ...rest } = response;
+
+      const userCreated = await this.prismaService.user.findFirst({
+        where: {
+          id: createdBy,
+        },
+      });
+
+      const userApproved = await this.prismaService.user.findFirst({
+        where: {
+          id: approvedBy || "",
+        },
+      });
+
+      const userRejected = await this.prismaService.user.findFirst({
+        where: {
+          id: rejectedBy || "",
+        },
+      });
+
+      const targetResponse = await this.prismaService[
+        this.targetModuleModel[module]
+      ].findFirst({
+        where: {
+          id: targetId,
+        },
+        omit: {
+          createdBy: true,
+          updatedBy: true,
+          deletedBy: true,
+          dateCreated: true,
+          dateUpdated: true,
+          dateDeleted: true,
+        },
+      });
+
+      return {
+        ...rest,
+        createdBy: userCreated,
+        approvedBy: userApproved,
+        rejectedBy: userRejected,
+        target: targetResponse,
+      };
     } catch (error) {
       throw error;
     }
